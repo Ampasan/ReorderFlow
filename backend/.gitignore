@@ -1,0 +1,17 @@
+# Executables & Binaries
+*.exe
+*.exe-e
+*.bat
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+main
+app
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.production
