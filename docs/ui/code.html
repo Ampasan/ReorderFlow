@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="id" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>ReorderFlow - Dashboard Overview</title>
+<!-- Tailwind CSS v3 with Forms & Container-Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<!-- Tailwind Custom Configuration -->
+<script data-purpose="tailwind-config">
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              cream: '#FEF3E2',
+              dark: '#2A1A0E',
+              orange: '#D4621A',
+              amber: '#F4AE52',
+            }
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom CSS for specialized layout & scroll behavior -->
+<style data-purpose="custom-styling">
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #FEF3E2;
+      color: #2A1A0E;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-brand-cream text-brand-dark flex antialiased selection:bg-brand-orange selection:text-white">
+<!-- BEGIN: LeftSidebar -->
+<!-- Sidebar Navigation Panel (Fixed Left) -->
+<aside class="fixed top-0 left-0 h-screen w-64 bg-[#E2CBB0] border-r border-[#CEB394] text-[#2A1A0E] p-5 flex flex-col justify-between z-30 shadow-sm" data-purpose="sidebar-navigation">
+<!-- Top Area: Brand Logo & Navigation Links -->
+<div>
+<!-- Brand Logo Container -->
+<div class="mb-8 px-2 flex items-center justify-start" data-purpose="brand-logo-container"><div class="flex items-center gap-3">
+  <div class="w-14 h-14 rounded-xl bg-white/70 border border-[#CEB394]/60 flex items-center justify-center p-1.5 flex-shrink-0 shadow-sm">
+    <img alt="ReorderFlow" class="h-full w-full object-contain brightness-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqF2EwznCQq5UiTlxqdGgEb-dN2I9ZGbAPUDXGlVCdwYFzD3-T-y7A2r8BFlGIxy2OuC37nzQICaEPCcWDUCgE6FhV4OmQijCZTdjiq_mkyQaXwU0fq2maLOFS-cQJgLJ4bEyVPXfkSD4XPEzx77KTEPZKJXulRI47s9QbrQ4LiaoXErBf96NcZTzDMHeA5f_fsMapafD1BwUmpTyqjifFAj2SqxhhFf6iRU99FANt1GdX-x7r9zG_Q9nowBnSjd6sRA">
+  </div>
+  <div>
+    <div class="font-bold text-xl text-[#2A1A0E] tracking-tight leading-tight flex items-center gap-0.5">
+      <span class="">Reorder</span><span class="text-brand-orange">Flow</span>
+    </div>
+    <span class="block text-[11px] font-semibold text-[#2A1A0E]/70 tracking-normal">Sistem Otomasi ROP</span>
+  </div>
+</div></div>
+<!-- Main Navigation Menu -->
+<nav class="space-y-2" data-purpose="main-nav"><!-- Active Nav Item: Dashboard Overview -->
+<a aria-current="page" class="bg-brand-orange text-white font-semibold rounded-xl px-4 py-3 flex items-center gap-3 transition-colors shadow-sm" href="#dashboard">
+<svg aria-hidden="true" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-sm tracking-wide">Dashboard Overview</span>
+</a>
+<!-- Inactive Nav Item: Data Stok -->
+<a class="text-[#2A1A0E]/85 hover:text-[#2A1A0E] hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 transition-all text-sm font-medium" href="#stok">
+<svg aria-hidden="true" class="w-5 h-5 flex-shrink-0 text-[#2A1A0E]/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Data Stok</span>
+</a>
+<!-- Inactive Nav Item: Riwayat PO -->
+<a class="text-[#2A1A0E]/85 hover:text-[#2A1A0E] hover:bg-black/5 rounded-xl px-4 py-3 flex items-center gap-3 transition-all text-sm font-medium" href="#riwayat-po">
+<svg aria-hidden="true" class="w-5 h-5 flex-shrink-0 text-[#2A1A0E]/70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Riwayat PO</span>
+</a></nav>
+</div>
+<!-- Bottom Profile / UMKM Information Box -->
+<div class="pt-4 border-t border-[#CEB394]/60" data-purpose="sidebar-footer-profile"><div class="flex items-center gap-3 bg-white/70 rounded-xl p-3 border border-[#CEB394]/50 shadow-sm">
+<!-- Store Avatar Badge -->
+<div class="w-10 h-10 rounded-lg bg-brand-orange/15 text-brand-orange flex items-center justify-center font-bold text-sm border border-brand-orange/30">
+          SB
+        </div>
+<!-- Store Name & Status -->
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-[#2A1A0E] truncate">Toko Sembako Berkah</p>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-[11px] text-[#2A1A0E]/70 font-semibold">UMKM Aktif</span>
+</div>
+</div>
+</div></div>
+</aside>
+<!-- END: LeftSidebar -->
+<!-- BEGIN: MainContentCanvas -->
+<!-- Main Operational Canvas with Offset for Fixed Sidebar -->
+<main class="flex-1 ml-64 min-h-screen bg-brand-cream p-8">
+<div class="max-w-7xl mx-auto space-y-6">
+<!-- BEGIN: HeaderBar -->
+<!-- Top Action & Page Identity Bar -->
+<header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2" data-purpose="header-bar">
+<div>
+<h1 class="text-2xl lg:text-3xl font-bold tracking-tight text-brand-dark">Ringkasan Operasional</h1>
+<p class="text-sm text-brand-dark/70 mt-1">Pantau stok harian dan persetujuan PO dalam satu klik.</p>
+</div>
+<!-- Date & Role Badges -->
+<div class="flex items-center gap-3 self-start sm:self-auto">
+<!-- Calendar Date Badge -->
+<div class="flex items-center gap-2 bg-white border border-brand-dark/10 px-3.5 py-1.5 rounded-lg text-sm font-medium text-brand-dark shadow-sm">
+<svg class="w-4 h-4 text-brand-orange" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">26 Oktober 2026</span>
+</div>
+<!-- User Role Badge -->
+<div class="bg-brand-orange/10 text-brand-orange border border-brand-orange/20 font-semibold px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-brand-orange"></span>
+<span class="">Staf Operasional</span>
+</div>
+</div>
+</header>
+<!-- END: HeaderBar -->
+<!-- BEGIN: AlertBanner -->
+<!-- High Priority Reorder Alert Notification -->
+<section class="bg-brand-amber/20 border border-brand-amber rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm" data-purpose="reorder-alert-banner">
+<div class="flex items-center gap-3.5">
+<!-- Alert Warning Icon -->
+<div class="w-10 h-10 rounded-xl bg-brand-orange/10 border border-brand-orange/20 flex items-center justify-center text-brand-orange flex-shrink-0">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- Alert Text Description -->
+<p class="text-sm sm:text-base font-semibold text-brand-dark leading-snug">
+            Perhatian: Ada <span class="text-brand-orange underline decoration-2 underline-offset-2">3 produk</span> berada di bawah batas Reorder Point (ROP) yang membutuhkan pembuatan PO hari ini.
+          </p>
+</div>
+<!-- Banner Action Button -->
+<button class="bg-brand-orange hover:bg-[#b85114] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition duration-150 shadow-sm flex items-center gap-2 whitespace-nowrap self-end md:self-auto cursor-pointer" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="">Buat PO Sekaligus</span>
+</button>
+</section>
+<!-- END: AlertBanner -->
+<!-- BEGIN: KPICardsGrid -->
+<!-- Overview KPI Metrics Section -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6" data-purpose="kpi-metrics-grid">
+<!-- KPI 1: Total SKU -->
+<article class="bg-white rounded-2xl p-6 border border-brand-dark/10 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-brand-dark/70">Total Produk (SKU)</span>
+
+</div>
+<div>
+<div class="text-3xl font-extrabold text-brand-dark tracking-tight">20 SKU</div>
+
+</div>
+</article>
+<!-- KPI 2: Low Stock Alert -->
+<article class="bg-white rounded-2xl p-6 border border-brand-dark/10 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-brand-dark/70">Stok Rendah (Butuh Reorder)</span>
+
+</div>
+<div>
+<div class="text-3xl font-extrabold text-brand-orange tracking-tight">3 SKU</div>
+
+</div>
+</article>
+<!-- KPI 3: Draft PO Waiting Approval -->
+<article class="bg-white rounded-2xl p-6 border border-brand-dark/10 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-medium text-brand-dark/70">Draf PO Menunggu Disetujui</span>
+
+</div>
+<div>
+<div class="text-3xl font-extrabold text-brand-dark tracking-tight">1 PO</div>
+
+</div>
+</article>
+</section>
+<!-- END: KPICardsGrid -->
+<!-- BEGIN: ActionWidgetTable -->
+<!-- Daily Quick Action Table for Low Stock Inventory -->
+<section class="bg-white rounded-2xl p-6 border border-brand-dark/10 shadow-sm" data-purpose="reorder-action-widget">
+<!-- Table Card Header -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-brand-dark/5 gap-2"><div class="flex flex-col gap-1 items-start">
+  <h2 class="text-lg font-bold text-brand-dark">Low Stock</h2>
+  <p class="text-xs text-brand-dark/70 font-normal">Daftar produk yang telah mencapai atau berada di bawah batas Reorder Point (ROP) dan butuh restok segera</p>
+</div>
+<span class="text-xs font-semibold px-2.5 py-1 bg-brand-cream border border-brand-dark/10 rounded-lg text-brand-dark/80 self-start sm:self-auto">
+  Prioritas Otomatis
+</span></div>
+<!-- High-Contrast Clean Table -->
+<div class="overflow-x-auto mt-4">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-brand-dark/10 text-[11px] font-bold text-brand-dark/60 uppercase tracking-wider bg-brand-cream/50">
+<th class="py-3.5 px-4 rounded-l-lg" scope="col">SKU</th>
+<th class="py-3.5 px-4" scope="col">Nama Produk</th>
+<th class="py-3.5 px-4" scope="col">Stok Saat Ini</th>
+<th class="py-3.5 px-4" scope="col">Reorder Point (ROP)</th>
+
+<th class="py-3.5 px-4 text-right rounded-r-lg" scope="col">Aksi</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-brand-dark/5 text-sm">
+<!-- Item Row 1 -->
+<tr class="hover:bg-brand-cream/40 transition-colors">
+<td class="py-4 px-4 font-mono font-medium text-xs text-brand-dark/80">RF-BRG-001</td>
+<td class="py-4 px-4 font-semibold text-brand-dark">
+                  Beras Premium Ramos 5kg
+                  <span class="block text-xs font-normal text-brand-dark/50">Kategori: Sembako Pokok</span>
+</td>
+<td class="py-4 px-4">
+<span class="font-bold text-rose-600 text-base">4</span>
+<span class="text-xs text-brand-dark/70 font-medium"> Sak</span>
+</td>
+<td class="py-4 px-4 font-medium text-brand-dark">
+                  15 Sak
+                </td>
+
+<td class="py-4 px-4 text-right">
+<button class="bg-brand-orange hover:bg-[#b85114] text-white font-medium px-4 py-1.5 rounded-lg text-sm transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="">Proses PO</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</td>
+</tr>
+<!-- Item Row 2 -->
+<tr class="hover:bg-brand-cream/40 transition-colors">
+<td class="py-4 px-4 font-mono font-medium text-xs text-brand-dark/80">RF-MIN-004</td>
+<td class="py-4 px-4 font-semibold text-brand-dark">
+                  Minyak Goreng Sawit 2L
+                  <span class="block text-xs font-normal text-brand-dark/50">Kategori: Minyak &amp; Mentega</span>
+</td>
+<td class="py-4 px-4">
+<span class="font-bold text-rose-600 text-base">6</span>
+<span class="text-xs text-brand-dark/70 font-medium"> Pcs</span>
+</td>
+<td class="py-4 px-4 font-medium text-brand-dark">
+                  24 Pcs
+                </td>
+
+<td class="py-4 px-4 text-right">
+<button class="bg-brand-orange hover:bg-[#b85114] text-white font-medium px-4 py-1.5 rounded-lg text-sm transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="">Proses PO</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</td>
+</tr>
+<!-- Item Row 3 -->
+<tr class="hover:bg-brand-cream/40 transition-colors">
+<td class="py-4 px-4 font-mono font-medium text-xs text-brand-dark/80">RF-GUL-012</td>
+<td class="py-4 px-4 font-semibold text-brand-dark">
+                  Gula Pasir Putih 1kg
+                  <span class="block text-xs font-normal text-brand-dark/50">Kategori: Bumbu &amp; Pemanis</span>
+</td>
+<td class="py-4 px-4">
+<span class="font-bold text-rose-600 text-base">10</span>
+<span class="text-xs text-brand-dark/70 font-medium"> Pcs</span>
+</td>
+<td class="py-4 px-4 font-medium text-brand-dark">
+                  30 Pcs
+                </td>
+
+<td class="py-4 px-4 text-right">
+<button class="bg-brand-orange hover:bg-[#b85114] text-white font-medium px-4 py-1.5 rounded-lg text-sm transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer" type="button">
+<span class="">Proses PO</span>
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Footer / Helper Info -->
+<div class="mt-4 pt-4 border-t border-brand-dark/5 flex flex-col sm:flex-row items-center justify-between text-xs text-brand-dark/60 gap-2">
+<span class="">Menampilkan 3 produk mendesak teratas dari total stok yang dipantau sistem.</span>
+<a class="font-semibold text-brand-orange hover:underline inline-flex items-center gap-1" href="#stok">
+<span class="">Lihat Semua Stok di Katalog</span>
+<span class="">→</span>
+</a>
+</div>
+</section>
+<!-- END: ActionWidgetTable -->
+</div>
+</main>
+<!-- END: MainContentCanvas -->
+
+
+
+
+</body></html>
