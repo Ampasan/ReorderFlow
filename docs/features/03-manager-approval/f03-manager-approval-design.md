@@ -21,7 +21,7 @@ Redis Key Structure (Optional Fast Idempotency Cache):
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin)
-###### A. GET /api/v1/po/approval
+###### A. GET /api/po/approval
 *   **Deskripsi** : Endpoint publik penanganan klik tombol Approve / Reject di email Manager.
 *   **Query Parameters** :
     *   token (string, required) - Token 32 karakter
@@ -60,5 +60,5 @@ backend/internal/
 │   ├── token_generator.go        # Crypto Secure Token Randomizer
 │   └── email_sender.go           # SMTP Client & HTML Template Compiler
 └── handler/
-    └── approval_handler.go       # HTTP GET /api/v1/po/approval
+    └── approval_handler.go       # HTTP GET /api/po/approval
 ```

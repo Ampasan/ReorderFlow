@@ -106,8 +106,8 @@ Alur kerja manajer saat menerima email notifikasi dari sistem.
         ▼
 [Manager Klik Tombol di Email]
         │
-        ├── Tombol [APPROVE] ──► GET /api/v1/po/approval?token=xxx&action=approve
-        └── Tombol [REJECT]  ──► GET /api/v1/po/approval?token=xxx&action=reject
+        ├── Tombol [APPROVE] ──► GET /api/po/approval?token=xxx&action=approve
+        └── Tombol [REJECT]  ──► GET /api/po/approval?token=xxx&action=reject
                                         │
                                         ▼
                         [Backend: Validasi Token & Redis Lock]

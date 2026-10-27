@@ -26,13 +26,13 @@ CREATE TABLE IF NOT EXISTS po_detail (
 
 ##### 2. API Contract Specification (Internal Go Service / Storage API)
 ###### A. REST Upload to Supabase Storage Bucket
-*   **Endpoint** : `POST /storage/v1/object/po-documents/filename.pdf`
+*   **Endpoint** : `POST /storage/object/po-documents/filename.pdf`
 *   **Headers** : `Content-Type: application/pdf`
 *   **Response 200 OK** :
 ```json
 {
   "Key": "po-documents/PO-20261025-101-001.pdf",
-  "Url": "https://example.com/storage/v1/object/public/po-documents/PO-20261025-101-001.pdf"
+  "Url": "https://example.com/storage/object/public/po-documents/PO-20261025-101-001.pdf"
 }
 ```
 

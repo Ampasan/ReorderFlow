@@ -7,7 +7,7 @@
     *   **AC-3.1.1** : Token acak `tok_a8f9c123456789012345678901234567` (32 karakter) dibuat dan disimpan pada kolom `token` di tabel `po_log`.
 *   **K-3.2 (Pengiriman Email Ringkasan PO ke Manager)** : KETIKA token terbentuk, sistem menyusun email HTML ringkasan persetujuan untuk Operations Manager berisi detail nomor PO, nama pemasok, daftar barang, total estimasi, serta dua tombol aksi: **Approve** dan **Reject**.
     *   **AC-3.2.1** : Email dikirimkan via SMTP ke inbox Manager memuat tombol Approve (`action=approve`) dan Reject (`action=reject`).
-*   **K-3.3 (Pemrosesan Persetujuan / Approval Action)** : KETIKA Operations Manager mengklik tombol **Approve**, request HTTP GET dikirim ke `/api/v1/po/approval?token=xxx&action=approve`. Backend Go memverifikasi token dan status PO `DRAFT`, mengubah status PO menjadi `SENT`, memicu pengiriman email resmi berlampiran PDF ke Pemasok, dan menampilkan halaman konfirmasi sukses di browser.
+*   **K-3.3 (Pemrosesan Persetujuan / Approval Action)** : KETIKA Operations Manager mengklik tombol **Approve**, request HTTP GET dikirim ke `/api/po/approval?token=xxx&action=approve`. Backend Go memverifikasi token dan status PO `DRAFT`, mengubah status PO menjadi `SENT`, memicu pengiriman email resmi berlampiran PDF ke Pemasok, dan menampilkan halaman konfirmasi sukses di browser.
     *   **AC-3.3.1** : Mengklik Approve mengubah status PO di DB dari `DRAFT` ke `SENT`, mengirimkan PDF PO ke email Pemasok, dan menampilkan pesan "Persetujuan PO Berhasil Diproses".
 *   **Pengecualian & Batasan (JIKA / SELAMA)** :
     *   **JIKA** Manager mengklik tombol **Reject**, sistem mengubah status PO menjadi `REJECTED`, membatalkan pengiriman ke Pemasok, dan menampilkan halaman konfirmasi penolakan.
@@ -46,7 +46,7 @@
 
 ##### 5. Aspek: Hak Akses
 *   **Public HTTP Access (Protected by Token)** :
-    *   Endpoint `/api/v1/po/approval` dapat diakses tanpa login password, dilindungi oleh token acak high-entropy 32 karakter.
+    *   Endpoint `/api/po/approval` dapat diakses tanpa login password, dilindungi oleh token acak high-entropy 32 karakter.
 *   **Operations Manager** :
     *   Memiliki wewenang eksklusif untuk menyetujui (`SENT`) atau menolak (`REJECTED`) dokumen PO.
 

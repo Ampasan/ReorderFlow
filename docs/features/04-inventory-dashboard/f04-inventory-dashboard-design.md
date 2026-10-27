@@ -37,7 +37,7 @@ export interface POLog {
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin Backend)
-###### A. GET /api/v1/stok
+###### A. GET /api/stok
 *   **Response 200 OK** :
 ```json
 {
@@ -57,7 +57,7 @@ export interface POLog {
   "error": null
 }
 ```
-###### B. GET /api/v1/po
+###### B. GET /api/po
 *   **Response 200 OK** :
 ```json
 {
@@ -70,7 +70,7 @@ export interface POLog {
       "id_pemasok": 1,
       "pemasok": { "id": 1, "nama": "PT Kopi Mandiri", "email": "order@kopimandiri.com" },
       "status": "SENT",
-      "tautan_pdf": "https://example.com/storage/v1/object/public/po-documents/PO-20261025-01-001.pdf",
+      "tautan_pdf": "https://example.com/storage/object/public/po-documents/PO-20261025-01-001.pdf",
       "created_at": "2026-10-25T08:15:00Z"
     }
   ],

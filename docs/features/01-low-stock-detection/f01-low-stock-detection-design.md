@@ -34,7 +34,7 @@ Redis Key Structure:
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin)
-###### A. POST /api/v1/stok/scan
+###### A. POST /api/stok/scan
 *   **Deskripsi** : Memicu pemindaian stok low-stock secara manual / via cron runner.
 *   **Headers** : `Content-Type: application/json`
 *   **Response 200 OK** :
@@ -74,5 +74,5 @@ backend/internal/
 │   ├── stok_repository.go        # Query DB: GetLowStockItems()
 │   └── po_repository.go          # Query DB: HasActivePO()
 └── handler/
-    └── stock_handler.go          # HTTP Handler POST /api/v1/stok/scan
+    └── stock_handler.go          # HTTP Handler POST /api/stok/scan
 ```

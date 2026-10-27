@@ -98,7 +98,7 @@ Fitur ini dipecah menjadi 2 fungsi teknis:
 
 #### 1. Perilaku (Kebutuhan & AC)
 * **K-F02.2a:** **KETIKA** grup PO dibentuk, fungsi menyusun file PDF A4 menggunakan `gofpdf`, mengunggahnya ke Supabase Storage, dan mencatat `tautan_pdf` ke `po_log`.
-* **AC:** Given Group A (`PO-20261025-101-001`). When `F-02.2` me-render PDF dan mengunggah ke Supabase, Then dihasilkan file `PO-20261025-101-001.pdf` dan URL `https://example.com/storage/v1/object/public/po-documents/PO-20261025-101-001.pdf` tercatat di DB dengan `status = 'DRAFT'`.
+* **AC:** Given Group A (`PO-20261025-101-001`). When `F-02.2` me-render PDF dan mengunggah ke Supabase, Then dihasilkan file `PO-20261025-101-001.pdf` dan URL `https://example.com/storage/object/public/po-documents/PO-20261025-101-001.pdf` tercatat di DB dengan `status = 'DRAFT'`.
 
 #### 2. Tampilan & Kondisi Layar
 * *Backend Log*: `"PDF generated & uploaded: PO-20261025-101-001.pdf (Size: 42 KB)"`.
