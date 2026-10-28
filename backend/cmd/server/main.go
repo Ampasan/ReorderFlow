@@ -41,7 +41,7 @@ func main() {
 	}
 
 	if cfg.Env != "production" {
-		if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}, &model.User{}); err != nil {
+		if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}, &model.User{}, &model.StockOpname{}); err != nil {
 			utils.Logger.Error("auto migrate failed", "error", err)
 			panic(err)
 		}
@@ -103,6 +103,7 @@ func main() {
 			protected.GET("/auth/me", authHandler.Me)
 			protected.GET("/stok", stockHandler.List)
 			protected.POST("/stok/scan", middleware.RequireRole(model.RoleAdmin), stockHandler.Scan)
+			protected.PATCH("/stok/:sku", middleware.RequireRole(model.RoleAdmin), stockHandler.Opname)
 			protected.GET("/dashboard", dashboardHandler.Summary)
 			protected.GET("/po", dashboardHandler.ListPO)
 			protected.GET("/po-log", dashboardHandler.ListPO)

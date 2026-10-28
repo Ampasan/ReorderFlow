@@ -55,3 +55,8 @@ export async function post<T>(url: string, body?: unknown): Promise<T> {
   const response = await client.post<ApiResponse<T>>(url, body)
   return response.data.data
 }
+
+export async function patch<T>(url: string, body?: unknown): Promise<T> {
+  const response = await client.patch<ApiResponse<T>>(url, body)
+  return response.data.data
+}

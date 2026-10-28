@@ -52,3 +52,8 @@ type ApprovalResult struct {
 	Message     string `json:"message"`
 	AlreadyUsed bool   `json:"already_used"`
 }
+
+type StockOpnameRequest struct {
+	StokSaatIni *int   `json:"stok_saat_ini" binding:"required,gte=0"`
+	Alasan      string `json:"alasan" binding:"required,oneof=DAMAGED MISCOUNT RETURN"`
+}

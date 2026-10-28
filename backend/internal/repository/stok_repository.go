@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 
 	"reorderflow-backend/internal/model"
@@ -57,6 +59,46 @@ func (r *StokRepository) GetBySKU(sku string) (*model.Stok, error) {
 
 func (r *StokRepository) UpdateStock(sku string, stock int) error {
 	return r.db.Model(&model.Stok{}).Where("sku = ?", sku).Update("stok_saat_ini", stock).Error
+}
+
+func (r *StokRepository) RecordOpname(sku string, newStock int, alasan string, actorID int64) (*model.Stok, error) {
+	var updated model.Stok
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var current model.Stok
+		if err := tx.First(&current, "sku = ?", sku).Error; err != nil {
+			return err
+		}
+
+		now := time.Now()
+		if err := tx.Model(&model.Stok{}).
+			Where("sku = ?", sku).
+			Updates(map[string]interface{}{
+				"stok_saat_ini": newStock,
+				"updated_at":     now,
+			}).Error; err != nil {
+			return err
+		}
+
+		audit := model.StockOpname{
+			SKU:         sku,
+			StokSebelum:  current.StokSaatIni,
+			StokSesudah:  newStock,
+			Alasan:       alasan,
+			ActorID:      actorID,
+		}
+		if err := tx.Create(&audit).Error; err != nil {
+			return err
+		}
+
+		current.StokSaatIni = newStock
+		current.UpdatedAt = now
+		updated = current
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &updated, nil
 }
 
 func (r *StokRepository) Count() (int64, error) {

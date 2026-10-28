@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"reorderflow-backend/internal/cache"
 	"reorderflow-backend/internal/model"
@@ -64,6 +65,38 @@ func (h *StockHandler) List(c *gin.Context) {
 
 	h.cache.Set(key, view)
 	Success(c, http.StatusOK, "Berhasil mengambil data stok", view)
+}
+
+func (h *StockHandler) Opname(c *gin.Context) {
+	sku := c.Param("sku")
+
+	var req model.StockOpnameRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		Error(c, http.StatusBadRequest, "Stok hasil opname dan alasan wajib diisi dengan benar", err.Error())
+		return
+	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		Error(c, http.StatusUnauthorized, "Token tidak valid", "user_id not found")
+		return
+	}
+
+	updated, err := h.stokRepo.RecordOpname(sku, *req.StokSaatIni, req.Alasan, userID.(int64))
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			Error(c, http.StatusNotFound, "SKU tidak ditemukan", err.Error())
+			return
+		}
+		Error(c, http.StatusInternalServerError, "Gagal memperbarui stok", err.Error())
+		return
+	}
+
+	h.cache.Invalidate()
+	Success(c, http.StatusOK, "Stok berhasil diperbarui", gin.H{
+		"sku":          updated.SKU,
+		"stok_saat_ini": updated.StokSaatIni,
+	})
 }
 
 func normalizeStokFilter(filter string) string {

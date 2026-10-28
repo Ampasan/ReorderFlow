@@ -6,10 +6,11 @@ import { StatusBadge } from './StatusBadge'
 interface StockTableProps {
   items: StockItem[]
   onSelect: (item: StockItem) => void
+  onOpname?: (item: StockItem) => void
   compact?: boolean
 }
 
-export function StockTable({ items, onSelect, compact = false }: StockTableProps) {
+export function StockTable({ items, onSelect, onOpname, compact = false }: StockTableProps) {
   return (
     <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
       <table className="w-full min-w-[640px] border-collapse text-left">
@@ -78,14 +79,25 @@ export function StockTable({ items, onSelect, compact = false }: StockTableProps
                   </>
                 )}
                 <td className="whitespace-nowrap px-4 py-4 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onSelect(item)}
-                    className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-brand-orange px-3 text-sm font-semibold text-white hover:bg-brand-orange-strong"
-                  >
-                    Detail
-                    <ChevronRightIcon className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    {onOpname ? (
+                      <button
+                        type="button"
+                        onClick={() => onOpname(item)}
+                        className="inline-flex min-h-11 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-3 text-sm font-semibold text-brand-dark hover:bg-brand-cream"
+                      >
+                        Opname
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => onSelect(item)}
+                      className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-brand-orange px-3 text-sm font-semibold text-white hover:bg-brand-orange-strong"
+                    >
+                      Detail
+                      <ChevronRightIcon className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             )

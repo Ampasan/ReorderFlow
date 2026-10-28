@@ -1,5 +1,5 @@
 import type { POFilter, POStatus } from '../types/po'
-import type { StockFilter } from '../types/stok'
+import type { OpnameReason, StockFilter } from '../types/stok'
 import type { UserRole } from '../types/auth'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
@@ -18,6 +18,12 @@ export const STOCK_FILTERS: FilterOption<StockFilter>[] = [
   { value: 'all', label: 'Semua' },
   { value: 'low', label: 'Perlu Reorder' },
   { value: 'manual', label: 'Perlu Peninjauan' },
+]
+
+export const OPNAME_REASONS: FilterOption<OpnameReason>[] = [
+  { value: 'DAMAGED', label: 'Rusak' },
+  { value: 'MISCOUNT', label: 'Salah hitung' },
+  { value: 'RETURN', label: 'Retur' },
 ]
 
 export const PO_FILTERS: FilterOption<POFilter>[] = [

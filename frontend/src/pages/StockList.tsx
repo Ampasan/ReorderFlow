@@ -5,6 +5,7 @@ import { DetailDialog } from '../components/DetailDialog'
 import { EmptyState } from '../components/EmptyState'
 import { ErrorState } from '../components/ErrorState'
 import { FilterTabs } from '../components/FilterTabs'
+import { OpnameDialog } from '../components/OpnameDialog'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBadge } from '../components/StatusBadge'
 import { StockTable } from '../components/StockTable'
@@ -13,7 +14,8 @@ import { PlusIcon } from '../components/icons'
 import { useAuth } from '../hooks/useAuth'
 import { useScan } from '../hooks/useScan'
 import { useStock } from '../hooks/useStock'
-import type { StockFilter, StockItem } from '../types/stok'
+import { useStockCorrection } from '../hooks/useStockCorrection'
+import type { OpnameReason, StockFilter, StockItem } from '../types/stok'
 import { STOCK_FILTERS, isStockFilter } from '../utils/constants'
 import { formatDateWIB, formatNumber } from '../utils/formatter'
 
@@ -46,7 +48,9 @@ export function StockList() {
   const { data, loading, error, refetch } = useStock(status)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [selected, setSelected] = useState<StockItem | null>(null)
+  const [opnameItem, setOpnameItem] = useState<StockItem | null>(null)
   const { scan, pending } = useScan(refetch)
+  const { correct, pending: opnamePending } = useStockCorrection(refetch)
   const { user } = useAuth()
   const canScan = user?.role === 'admin'
 
@@ -55,6 +59,12 @@ export function StockList() {
   async function handleScan() {
     const success = await scan()
     if (success) setConfirmOpen(false)
+  }
+
+  async function handleOpname(stokSaatIni: number, alasan: OpnameReason) {
+    if (!opnameItem) return
+    const success = await correct(opnameItem.sku, { stok_saat_ini: stokSaatIni, alasan })
+    if (success) setOpnameItem(null)
   }
 
   return (
@@ -105,7 +115,7 @@ export function StockList() {
           ) : items.length === 0 ? (
             <EmptyState title={EMPTY_COPY[status].title} description={EMPTY_COPY[status].description} />
           ) : (
-            <StockTable items={items} onSelect={setSelected} />
+            <StockTable items={items} onSelect={setSelected} onOpname={canScan ? setOpnameItem : undefined} />
           )}
         </div>
       </section>
@@ -142,6 +152,15 @@ export function StockList() {
               ]
             : []
         }
+      />
+
+      <OpnameDialog
+        key={opnameItem?.sku ?? 'closed'}
+        open={opnameItem !== null}
+        item={opnameItem}
+        pending={opnamePending}
+        onConfirm={handleOpname}
+        onClose={() => setOpnameItem(null)}
       />
     </div>
   )

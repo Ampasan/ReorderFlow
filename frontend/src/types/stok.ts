@@ -27,3 +27,15 @@ export interface ScanResult {
   skipped_active_po: number
   manual_review: number
 }
+
+export type OpnameReason = 'DAMAGED' | 'MISCOUNT' | 'RETURN'
+
+export interface StockCorrectionRequest {
+  stok_saat_ini: number
+  alasan: OpnameReason
+}
+
+export interface StockCorrectionResult {
+  sku: string
+  stok_saat_ini: number
+}
