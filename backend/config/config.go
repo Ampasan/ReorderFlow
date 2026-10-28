@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,13 @@ type Config struct {
 	Port   string
 	Env    string
 	AppURL string
+
+	JWTSecret string
+	JWTExpiry time.Duration
+
+	AdminEmail      string
+	AdminPassword   string
+	ManagerPassword string
 
 	DatabaseURL string
 
@@ -42,6 +50,13 @@ func Load() *Config {
 		Port:   getEnv("PORT", "8080"),
 		Env:    getEnv("ENV", "development"),
 		AppURL: getEnv("APP_URL", "http://localhost:8080"),
+
+		JWTSecret: getEnv("JWT_SECRET", "dev-secret-change-me"),
+		JWTExpiry: time.Duration(getEnvInt("JWT_TTL_HOURS", 24)) * time.Hour,
+
+		AdminEmail:      getEnv("ADMIN_EMAIL", ""),
+		AdminPassword:   getEnv("ADMIN_PASSWORD", ""),
+		ManagerPassword: getEnv("MANAGER_PASSWORD", ""),
 
 		DatabaseURL: getEnv("DATABASE_URL", ""),
 

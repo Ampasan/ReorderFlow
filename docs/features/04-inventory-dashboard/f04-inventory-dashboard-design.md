@@ -32,12 +32,61 @@ export interface POLog {
   tautan_pdf: string;
   created_at: string;
 }
+
+export type UserRole = 'admin' | 'manager';
+
+export interface User {
+  id: number;
+  email: string;
+  nama: string;
+  role: UserRole;
+  created_at: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
 ```
 
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin Backend)
-###### A. GET /api/stok
+Semua endpoint data memerlukan header `Authorization: Bearer <token>`. Endpoint `/api/auth/login` bersifat publik.
+
+###### A. POST /api/auth/login
+*   **Request Body** :
+```json
+{ "email": "admin@example.com", "password": "your-password" }
+```
+*   **Response 200 OK** :
+```json
+{
+  "success": true,
+  "message": "Login berhasil",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": 1,
+      "email": "admin@example.com",
+      "nama": "Admin",
+      "role": "admin",
+      "created_at": "2026-10-28T08:00:00Z"
+    }
+  }
+}
+```
+*   **Response 401 Unauthorized** :
+```json
+{ "success": false, "message": "Email atau password salah", "data": null, "error": "email atau password salah" }
+```
+
+###### B. GET /api/auth/me
+*   **Headers** : `Authorization: Bearer <token>`
+*   **Response 200 OK** : envelope `success` dengan `data` berisi objek `User`.
+
+###### C. GET /api/stok
+*   **Headers** : `Authorization: Bearer <token>`
 *   **Response 200 OK** :
 ```json
 {
@@ -57,7 +106,8 @@ export interface POLog {
   "error": null
 }
 ```
-###### B. GET /api/po
+###### D. GET /api/po
+*   **Headers** : `Authorization: Bearer <token>`
 *   **Response 200 OK** :
 ```json
 {
@@ -78,6 +128,24 @@ export interface POLog {
 }
 ```
 
+###### E. GET /api/dashboard
+*   **Headers** : `Authorization: Bearer <token>`
+*   **Response 200 OK** :
+```json
+{
+  "success": true,
+  "message": "Berhasil mengambil ringkasan dashboard",
+  "data": {
+    "total_sku": 20,
+    "low_stock_count": 6,
+    "manual_review": 1,
+    "pending_po_count": 2,
+    "sent_po_count": 1,
+    "rejected_po_count": 0
+  }
+}
+```
+
 --------------------------------------------------------------------------------
 
 ##### 3. Frontend Component Structure (React + Vite + TypeScript)
@@ -85,18 +153,34 @@ export interface POLog {
 src/
 ├── components/
 │   ├── Sidebar.tsx               # Navigasi utama (Dashboard, Data Stok, Riwayat PO)
+│   ├── Navbar.tsx                # Header + indikator sistem + logout
+│   ├── ProtectedRoute.tsx        # Route guard, redirect ke /login jika 401
 │   ├── KPICard.tsx               # Kartu statistik ringkasan
 │   ├── StatusBadge.tsx           # Badge warna (LOW STOCK, NORMAL, DRAFT, SENT, REJECTED)
 │   ├── StockTable.tsx            # Tabel daftar inventori SKU
 │   ├── POLogTable.tsx            # Tabel riwayat Purchase Order + Tautan PDF
 │   └── TableSkeleton.tsx         # Skeleton loader saat fetching data
+├── context/
+│   └── AuthContext.tsx           # State token, user, login, logout
 ├── hooks/
+│   ├── useAuth.ts                # Konsumsi AuthContext
 │   ├── useStock.ts               # Custom React hook untuk fetch stok
 │   └── usePOLog.ts               # Custom React hook untuk fetch log PO
 ├── services/
-│   └── api.ts                    # Axios client instance
+│   ├── api.ts                    # Axios instance + request/response interceptor
+│   └── auth.ts                   # login(), me(), logout()
+├── types/
+│   ├── auth.ts                   # User, UserRole, LoginResponse
+│   ├── stok.ts
+│   └── po.ts
 └── pages/
+    ├── LoginPage.tsx             # Form login email/password
     ├── Dashboard.tsx             # Halaman utama ringkasan KPI
     ├── StockList.tsx             # Halaman manajemen tabel stok
     └── POLogList.tsx             # Halaman tabel riwayat PO
 ```
+
+**Axios interceptor**:
+- Request: sisipkan `Authorization: Bearer <token>` dari storage.
+- Response `401`: hapus token, reset `AuthContext`, redirect `/login`.
+- Response `403`: tampilkan toast "Anda tidak memiliki akses untuk aksi ini".

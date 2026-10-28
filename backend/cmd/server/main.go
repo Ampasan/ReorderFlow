@@ -36,8 +36,12 @@ func main() {
 		panic(err)
 	}
 
+	if cfg.Env == "production" && cfg.JWTSecret == "dev-secret-change-me" {
+		utils.Logger.Warn("JWT_SECRET masih memakai nilai default, ganti sebelum produksi")
+	}
+
 	if cfg.Env != "production" {
-		if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}); err != nil {
+		if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}, &model.User{}); err != nil {
 			utils.Logger.Error("auto migrate failed", "error", err)
 			panic(err)
 		}
@@ -53,6 +57,7 @@ func main() {
 	stokRepo := repository.NewStokRepository(db)
 	poRepo := repository.NewPORepository(db)
 	pemasokRepo := repository.NewPemasokRepository(db)
+	userRepo := repository.NewUserRepository(db)
 	redisRepo := repository.NewRedisRepository(redisClient)
 	cacheStore := cache.New(redisRepo)
 
@@ -64,10 +69,19 @@ func main() {
 	pdfService := service.NewPDFService(poRepo, pemasokRepo, storage, emailService)
 	detectionService := service.NewDetectionService(stokRepo, poRepo, redisRepo, pdfService)
 	approvalService := service.NewApprovalService(poRepo, redisRepo, emailService, storage)
+	authService := service.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTExpiry)
 
 	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore)
 	dashboardHandler := handler.NewDashboardHandler(stokRepo, poRepo, cacheStore)
 	approvalHandler := handler.NewApprovalHandler(approvalService, cacheStore)
+	authHandler := handler.NewAuthHandler(authService, userRepo)
+
+	if err := authService.EnsureUser(cfg.AdminEmail, cfg.AdminPassword, "Admin", model.RoleAdmin); err != nil {
+		utils.Logger.Error("ensure admin failed", "error", err)
+	}
+	if err := authService.EnsureUser(cfg.ManagerEmail, cfg.ManagerPassword, "Operations Manager", model.RoleManager); err != nil {
+		utils.Logger.Error("ensure manager failed", "error", err)
+	}
 
 	lowStockJob := job.NewLowStockJob(detectionService)
 	scheduler := job.NewScheduler(lowStockJob.Run)
@@ -80,12 +94,19 @@ func main() {
 
 	api := router.Group("/api")
 	{
-		api.GET("/stok", stockHandler.List)
-		api.POST("/stok/scan", stockHandler.Scan)
-		api.GET("/dashboard", dashboardHandler.Summary)
-		api.GET("/po", dashboardHandler.ListPO)
-		api.GET("/po-log", dashboardHandler.ListPO)
+		api.POST("/auth/login", authHandler.Login)
 		api.GET("/po/approval", approvalHandler.Approval)
+
+		protected := api.Group("")
+		protected.Use(middleware.Auth(cfg.JWTSecret))
+		{
+			protected.GET("/auth/me", authHandler.Me)
+			protected.GET("/stok", stockHandler.List)
+			protected.POST("/stok/scan", middleware.RequireRole(model.RoleAdmin), stockHandler.Scan)
+			protected.GET("/dashboard", dashboardHandler.Summary)
+			protected.GET("/po", dashboardHandler.ListPO)
+			protected.GET("/po-log", dashboardHandler.ListPO)
+		}
 	}
 
 	srv := &http.Server{

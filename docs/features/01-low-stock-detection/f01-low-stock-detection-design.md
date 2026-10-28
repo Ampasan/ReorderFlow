@@ -36,7 +36,7 @@ Redis Key Structure:
 ##### 2. API Contract Specification (Golang Gin)
 ###### A. POST /api/stok/scan
 *   **Deskripsi** : Memicu pemindaian stok low-stock secara manual / via cron runner.
-*   **Headers** : `Content-Type: application/json`
+*   **Headers** : `Content-Type: application/json`, `Authorization: Bearer <token>` (role `admin`)
 *   **Response 200 OK** :
 ```json
 {
@@ -50,6 +50,14 @@ Redis Key Structure:
   },
   "error": null
 }
+```
+*   **Response 401 Unauthorized** :
+```json
+{ "success": false, "message": "Token otentikasi diperlukan", "data": null, "error": "missing bearer token" }
+```
+*   **Response 403 Forbidden (role manager)** :
+```json
+{ "success": false, "message": "Anda tidak memiliki akses untuk aksi ini", "data": null, "error": "insufficient role" }
 ```
 *   **Response 500 Internal Server Error** :
 ```json

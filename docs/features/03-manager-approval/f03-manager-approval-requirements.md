@@ -47,8 +47,10 @@
 ##### 5. Aspek: Hak Akses
 *   **Public HTTP Access (Protected by Token)** :
     *   Endpoint `/api/po/approval` dapat diakses tanpa login password, dilindungi oleh token acak high-entropy 32 karakter.
+    *   Endpoint ini tidak memerlukan header `Authorization: Bearer`; autentikasi JWT hanya berlaku untuk dashboard dan endpoint data.
 *   **Operations Manager** :
     *   Memiliki wewenang eksklusif untuk menyetujui (`SENT`) atau menolak (`REJECTED`) dokumen PO.
+    *   Manager dapat login ke dashboard dengan role `manager` (read-only), tetapi aksi approve/reject tetap dilakukan dari tautan email, bukan dari sesi dashboard.
 
 --------------------------------------------------------------------------------
 

@@ -55,7 +55,8 @@
 *   **Backend PDF Builder Service** :
     *   Memiliki izin Service Role Key untuk menulis ke Supabase Storage Bucket `po-documents` dan tabel `po_log`.
 *   **Manager & Admin** :
-    *   Dapat mengakses tautan URL publik PDF untuk membaca/mengunduh dokumen.
+    *   Harus login ke dashboard (JWT) untuk melihat riwayat PO. Tautan PDF yang dikembalikan API berupa URL publik Supabase Storage dan dapat dibuka langsung.
+    *   Role `manager` bersifat read-only; role `admin` dapat memicu pembuatan draf PO baru lewat scan.
 
 --------------------------------------------------------------------------------
 

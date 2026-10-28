@@ -82,3 +82,15 @@
   - Tata letak terpusat penuh (*Centered Card* `max-w-[560px] bg-white rounded-3xl p-8 border border-[#2A1A0E]/10 shadow-xl`).
   - Bar indikator warna status di tepi atas kartu (Hijau untuk sukses disetujui, Amber untuk tautan telah terpakai, Merah untuk token kedaluwarsa).
   - Penjelasan idempotent eksplisit agar manajer yakin pemesanan ganda tidak akan pernah terjadi.
+
+### 6. Login Page (Public)
+- **Layout**: kanvas penuh `min-h-screen bg-[#FEF3E2]` tanpa sidebar. Kartu terpusat `max-w-[420px] w-full bg-white rounded-3xl p-8 border border-[#2A1A0E]/10 shadow-xl`.
+- **Brand**: logo ReorderFlow di kontainer putih rounded-xl, judul "Masuk ke ReorderFlow", subjudul "Sistem Otomasi ROP".
+- **Form**:
+  - Field `Email` dan `Password` dengan label `text-xs font-bold uppercase tracking-wider`.
+  - Input `w-full rounded-xl border border-[#2A1A0E]/15 px-4 py-3 text-sm`, focus ring terracotta `focus:ring-2 focus:ring-[#D4621A]/30 focus:border-[#D4621A]`.
+  - Tombol utama full-width `bg-[#D4621A] text-white rounded-xl py-3 font-bold` dengan label "Masuk".
+- **Loading state**: tombol disabled + spinner, input disabled, teks "Memproses...".
+- **Error state**: banner `bg-rose-50 text-rose-700 border border-rose-200 rounded-xl px-4 py-3 text-sm` berisi "Email atau password salah" atau pesan koneksi.
+- **Session behavior**: setelah sukses simpan JWT dan redirect ke `/`; respons `401` dari request berikutnya menghapus sesi dan kembali ke `/login`.
+- **Role behavior**: admin dan manager memakai halaman login yang sama. Tombol "Pindai Stok Sekarang" hanya dirender untuk role `admin`; manager melihat dashboard read-only.

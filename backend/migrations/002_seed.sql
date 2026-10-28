@@ -27,3 +27,6 @@ INSERT INTO stok (sku, nama, stok_saat_ini, reorder_point, qty_min_order, id_pem
     ('SKU-SEM-07', 'Saus Sambal 335ml', 9, 8, 12, 104),
     ('SKU-SEM-08', 'Sabun Mandi 100g', 25, 10, 24, 104)
 ON CONFLICT (sku) DO NOTHING;
+
+SELECT setval(pg_get_serial_sequence('pemasok', 'id'), (SELECT MAX(id) FROM pemasok))
+WHERE EXISTS (SELECT 1 FROM pemasok);

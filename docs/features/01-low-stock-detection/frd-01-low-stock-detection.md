@@ -7,11 +7,11 @@ Fitur ini bertujuan untuk memindai basis data persediaan secara otomatis dan men
 
 ## 2. Peran & Hak Akses
 
-| Peran | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
-| :--- | :--- | :--- | :--- | :--- |
-| **System Cron Runner** | Seluruh data pada tabel `stok` & `po_log` | Draf entri di memori / antrean | - | - |
-| **Staf Inventori / Admin** | Daftar SKU terdeteksi *Low-Stock* | - | Nilai `stok_saat_ini` (Koreksi) | - |
-| **Operations Manager** | Ringkasan statistik barang *Low-Stock* | - | - | - |
+| Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System Cron Runner** | Tidak | Seluruh data pada tabel `stok` & `po_log` | Draf entri di memori / antrean | - | - |
+| **Staf Inventori / Admin** | Ya (`admin`) | Daftar SKU terdeteksi *Low-Stock* | Trigger scan (`POST /api/stok/scan`) | Nilai `stok_saat_ini` (Koreksi) | - |
+| **Operations Manager** | Ya (`manager`, read-only) | Ringkasan statistik barang *Low-Stock* | - | - | - |
 
 ---
 

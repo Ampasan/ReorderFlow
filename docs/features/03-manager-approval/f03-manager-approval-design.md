@@ -23,6 +23,7 @@ Redis Key Structure (Optional Fast Idempotency Cache):
 ##### 2. API Contract Specification (Golang Gin)
 ###### A. GET /api/po/approval
 *   **Deskripsi** : Endpoint publik penanganan klik tombol Approve / Reject di email Manager.
+*   **Headers** : tidak memerlukan `Authorization`; endpoint dikecualikan dari middleware JWT.
 *   **Query Parameters** :
     *   token (string, required) - Token 32 karakter
     *   action (string, required) - `'approve'` atau `'reject'`

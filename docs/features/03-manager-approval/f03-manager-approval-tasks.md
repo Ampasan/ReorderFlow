@@ -15,3 +15,5 @@
 *  [ ] **T-3.6** : Lakukan pengujian pengiriman email menggunakan Mailtrap / SMTP Test Server.
 *  [ ] **T-3.7** : Uji skenario persetujuan: klik tombol Approve di email dan verifikasi status DB berubah menjadi `SENT` serta email terkirim ke Pemasok.
 *  [ ] **T-3.8** : Uji skenario idempotency: klik ulang tautan persetujuan dan pastikan sistem menolak eksekusi ganda dengan pesan warning.
+*  [ ] **T-3.9** : Verifikasi `/api/po/approval` tetap dapat diakses tanpa login/Bearer token.
+*  [ ] **T-3.10** : Verifikasi login manager (role `manager`) tidak membuka akses approve/reject dari dashboard; aksi tetap hanya lewat tautan email.

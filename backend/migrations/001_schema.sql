@@ -41,3 +41,14 @@ CREATE TABLE IF NOT EXISTS po_detail (
 
 CREATE INDEX IF NOT EXISTS idx_po_detail_po_id ON po_detail(po_id);
 CREATE INDEX IF NOT EXISTS idx_po_detail_sku ON po_detail(sku);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    nama VARCHAR(150),
+    role VARCHAR(30) NOT NULL DEFAULT 'admin' CHECK (role IN ('admin', 'manager')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));

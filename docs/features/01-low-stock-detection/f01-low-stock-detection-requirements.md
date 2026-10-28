@@ -59,8 +59,10 @@
 *   **System Cron Runner & Service Account Go** :
     *   Hak akses: **Full Read & Internal Processing**.
     *   Eksekusi berjalan secara otomatis via jadwal cron atau internal API trigger.
-*   **Staf Inventori & Manager** :
-    *   Dapat melihat hasil deteksi SKU low-stock melalui antarmuka Dashboard.
+*   **Staf Inventori / Admin (`admin`)** :
+    *   Login wajib. Dapat memicu `POST /api/stok/scan` dari dashboard dan melihat hasil deteksi.
+*   **Operations Manager (`manager`)** :
+    *   Login wajib. Dapat melihat hasil deteksi SKU low-stock secara read-only, tetapi tidak dapat memicu pemindaian (`403`).
 
 --------------------------------------------------------------------------------
 

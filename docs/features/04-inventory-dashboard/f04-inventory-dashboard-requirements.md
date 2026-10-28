@@ -3,7 +3,10 @@
 --------------------------------------------------------------------------------
 
 ##### 1. Aspek: Perilaku (Kebutuhan & AC)
-*   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka halaman Dashboard di browser, antarmuka mengirimkan request HTTP GET ke `/api/stok` dan `/api/po` untuk memuat statistik ringkasan.
+*   **K-4.0 (Autentikasi Dashboard)** : KETIKA pengguna membuka halaman dashboard, antarmuka memeriksa JWT di storage. Jika tidak ada atau sudah kedaluwarsa, pengguna diarahkan ke `/login`.
+    *   **AC-4.0.1** : Login sukses menyimpan JWT dan menampilkan dashboard sesuai role (`admin` / `manager`).
+    *   **AC-4.0.2** : Setiap request data mengirim header `Authorization: Bearer <token>`; respons `401` menghapus sesi dan redirect ke `/login`.
+*   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka halaman Dashboard di browser, antarmuka mengirimkan request HTTP GET ke `/api/dashboard`, `/api/stok`, dan `/api/po` untuk memuat statistik ringkasan.
     *   **AC-4.1.1** : Dashboard merender 4 Kartu KPI: Total SKU, Jumlah Low Stock, Pending PO (DRAFT), dan PO Terkirim (SENT).
 *   **K-4.2 (Tabel Data Stok & Badge ROP)** : KETIKA pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU lengkap dengan status badge visual.
     *   **AC-4.2.1** : SKU dengan `stok_saat_ini <= reorder_point` menampilkan Badge Merah `LOW STOCK`. SKU dengan stok aman menampilkan Badge Hijau `NORMAL`.
@@ -43,14 +46,20 @@
 ##### 4. Aspek: Error & Pengecualian
 *   **Backend Off / 500 Server Error** :
     *   Frontend menangkap error via Axios Interceptor dan memunculkan notifikasi Toast Error tanpa menyebabkan aplikasi React crash.
+*   **401 Unauthorized (Token Kosong / Kedaluwarsa)** :
+    *   Axios Interceptor menghapus token, mengosongkan state auth, dan mengarahkan pengguna ke `/login`.
+*   **403 Forbidden (Role Tidak Cukup)** :
+    *   Tombol "Pindai Stok Sekarang" disembunyikan untuk role `manager`. Jika endpoint tetap dipanggil, tampilkan toast "Anda tidak memiliki akses untuk aksi ini".
 *   **Tautan PDF Broken (404 Not Found)** :
     *   JIKA URL PDF tidak ditemukan, munculkan toast "File PDF tidak ditemukan di Supabase Storage".
 
 --------------------------------------------------------------------------------
 
 ##### 5. Aspek: Hak Akses
-*   **Staf Inventori & Operations Manager** :
-    *   Hak akses: **Read-Only Dashboard View** (Dapat melihat ringkasan stok, tabel SKU, riwayat PO, dan mengunduh PDF).
+*   **Staf Inventori / Admin (`admin`)** :
+    *   Login wajib. Dapat melihat dashboard, tabel SKU, riwayat PO, mengunduh PDF, dan memicu "Pindai Stok Sekarang".
+*   **Operations Manager (`manager`)** :
+    *   Login wajib. Hak akses read-only: dashboard, tabel SKU, riwayat PO, dan unduh PDF. Tidak dapat memicu pemindaian stok.
 
 --------------------------------------------------------------------------------
 

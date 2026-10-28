@@ -14,6 +14,7 @@
 --------------------------------------------------------------------------------
 
 ##### Phase 2: Testing & Validation Tasks
-*  [ ] **T-1.8** : Lakukan pengujian unit/manual pada endpoint `POST /api/stok/scan` via Postman/cURL.
+*  [ ] **T-1.8** : Lakukan pengujian unit/manual pada endpoint `POST /api/stok/scan` via Postman/cURL dengan Bearer token admin.
 *  [ ] **T-1.9** : Uji skenario duplikasi: jalankan scan 2x berturut-turut untuk memastikan `skipped_active_po` berfungsi.
 *  [ ] **T-1.10** : Verifikasi penanganan anomali data (stok negatif & ROP `<= 0`) dengan status `REQUIRES_MANUAL_REVIEW`.
+*  [ ] **T-1.11** : Verifikasi `POST /api/stok/scan` tanpa token menghasilkan `401` dan dengan token manager menghasilkan `403`.

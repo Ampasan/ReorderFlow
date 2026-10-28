@@ -4,4 +4,5 @@
 - Reads and understands all spec files in /docs before writing any code. Confidence: 0.7
 - Prefers thorough, step-by-step explanations and written docs ("kasih tau yang detail dan lengkap serta mudah dipahami", "lengkap dan detail tetapi mudah dipahami") — comprehensive yet easy to follow — over terse output. Confidence: 0.7
 - Works backend-only; never touches frontend/UI code (no React, HTML/CSS, or other frontend files). Confidence: 0.8
+- Wants DB migrations kept minimal and separated by purpose: just two files, one for schema (`001_schema.sql`) and one for seed data (`002_seed.sql`) — no extra consolidated/all-in-one migration. Confidence: 0.7
 - Treats API latency as a standing quality bar, not an optional extra: expects the backend to feel near-instant ("tidak lag/load lama") and wants performance work done proactively before handing it to the frontend. Confidence: 0.65

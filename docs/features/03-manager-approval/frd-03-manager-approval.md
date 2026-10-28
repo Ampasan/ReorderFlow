@@ -7,11 +7,13 @@ Fitur ini mengelola alur kerja persetujuan persetujuan pemesanan ulang (*Human-i
 
 ## 2. Peran & Hak Akses
 
-| Peran | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Operations Manager** | Email Ringkasan PO & Tautan Action | - | - | Ya (Mengklik Approve / Reject di Email) |
-| **System Mailer & Handler** | Data `po_log`, Token Persetujuan | Token Acak, Pesan Email SMTP | Status PO ke `SENT` / `REJECTED` | - |
-| **Pemasok / Vendor** | Dokumen PDF PO (via Lampiran Email) | - | - | - |
+| Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Operations Manager** | Ya (role `manager`, read-only) | Email Ringkasan PO & Tautan Action | - | - | Ya (Mengklik Approve / Reject di Email) |
+| **System Mailer & Handler** | Tidak (service account) | Data `po_log`, Token Persetujuan | Token Acak, Pesan Email SMTP | Status PO ke `SENT` / `REJECTED` | - |
+| **Pemasok / Vendor** | Tidak | Dokumen PDF PO (via Lampiran Email) | - | - | - |
+
+Persetujuan PO tidak memerlukan login dashboard: tautan email bersifat publik dan dilindungi token sekali pakai.
 
 ---
 

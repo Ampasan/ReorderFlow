@@ -20,6 +20,7 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
   2. Pembuatan draf dokumen PO berbentuk PDF secara otomatis terkelompok per pemasok.
   3. Alur persetujuan manajer via email (*Human-in-the-Loop*) sebelum dokumen PO dikirimkan ke email pemasok.
   4. Antarmuka monitoring status inventori dan pencatatan riwayat status PO.
+  5. Autentikasi login staf admin dan operations manager dengan email/password serta token JWT untuk melindungi dashboard dan endpoint data.
 * **Yang Tidak Dibuat (Out-of-Scope):**
   1. Prediksi stok atau estimasi persediaan berbasis kecerdasan buatan (*AI / Machine Learning*).
   2. Integrasi langsung ke API marketplace, e-commerce, atau aplikasi POS pihak ketiga.
@@ -29,6 +30,7 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
 * **Pendekatan Sistem:** Wajib menggunakan automasi berbasis aturan (*rule-based*) tanpa AI guna menjamin kepastian logika dan menghindari risiko halusinasi data.
 * **Arsitektur Teknis:** Backend wajib menggunakan Go (Gin) yang di-deploy ke Railway; Frontend menggunakan React (Vite) yang di-deploy ke Vercel; basis data PostgreSQL dan penyimpanan PDF menggunakan Supabase; serta Redis untuk *cache* dan *retry logic*.
 * **Keamanan Persetujuan:** Tautan persetujuan manajer wajib menggunakan token acak sekali pakai (*idempotent*) dengan masa berlaku terbatas.
+* **Autentikasi Dashboard:** Endpoint data dan dashboard wajib dilindungi login email/password dengan token JWT. Endpoint persetujuan via email tetap publik dan hanya dilindungi token sekali pakai.
 * **Penanganan Data Abnormal:** Data stok yang bernilai negatif, kosong, atau ROP yang tidak terisi wajib dialihkan ke status `REQUIRES_MANUAL_REVIEW` dan tidak diproses otomatis.
 * **Dataset:** Pengembangan dan pengujian dilakukan menggunakan dataset sintetis 20 SKU dan kredensial aman di *environment variables*.
 
@@ -41,6 +43,7 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
 2. **[Prioritas 2] Generator Draf PO PDF Per Pemasok:** Mengelompokkan barang *low-stock* per pemasok, menerbitkan nomor PO unik, dan memicu penuangan dokumen ke file PDF di Supabase Storage.
 3. **[Prioritas 3] Persetujuan & Pengiriman Otomatis:** Pengiriman email draf ke manajer berisi tautan *Approve/Reject*, serta penerusan PDF PO ke email pemasok secara otomatis setelah disetujui.
 4. **[Prioritas 4] Monitoring Status Inventori & Log PO:** Dashboard antarmuka untuk memantau ringkasan kondisi stok dan riwayat status pengiriman PO.
+5. **[Prioritas 5] Autentikasi & Kontrol Akses:** Login email/password untuk admin dan manager, proteksi endpoint data dengan JWT, serta pembatasan aksi pemindaian stok hanya untuk role admin.
 
 ### 8. Keputusan Terbuka
 * **Validasi Dampak Lapangan:** Pengukuran tingkat penghematan waktu dan penurunan biaya operasional secara riil pada operasional UMKM nyata (saat ini masih berupa data simulasi).

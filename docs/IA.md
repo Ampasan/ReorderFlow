@@ -11,35 +11,73 @@ Aplikasi ReorderFlow menggunakan struktur navigasi datar (*flat hierarchy*) deng
 
 ```text
 [ReorderFlow Web App]
-├── 1.0 Dashboard Utama (`/`)
+├── 0.0 Login (`/login`) [Public]
+│   ├── 0.1 Form Email & Password
+│   ├── 0.2 State Loading / Error Login
+│   └── 0.3 Redirect ke Dashboard setelah JWT tersimpan
+│
+├── 1.0 Dashboard Utama (`/`) [Protected]
 │   ├── 1.1 Ringkasan KPI (Total SKU, Low-Stock Alert, PO Pending, PO Sent)
 │   ├── 1.2 Banner Peringatan Anomali (`REQUIRES_MANUAL_REVIEW`)
 │   ├── 1.3 Tabel Cepat SKU Kritis (Top 5 Low Stock)
 │   └── 1.4 Aktivitas Terakhir PO (Recent PO Stream)
 │
-├── 2.0 Data Inventori & ROP (`/stok`)
+├── 2.0 Data Inventori & ROP (`/stok`) [Protected]
 │   ├── 2.1 Tab: Semua Barang
 │   ├── 2.2 Tab: Perlu Reorder (`stok <= ROP`)
 │   ├── 2.3 Tab: Perlu Peninjauan Manual (`REQUIRES_MANUAL_REVIEW`)
-│   ├── 2.4 Pemicu Pemindaian Manual ("Pindai Stok Sekarang")
+│   ├── 2.4 Pemicu Pemindaian Manual ("Pindai Stok Sekarang") [Admin only]
 │   └── 2.5 Modal Detail SKU & Riwayat Pemasok
 │
-├── 3.0 Riwayat Purchase Order (`/po-log`)
+├── 3.0 Riwayat Purchase Order (`/po-log`) [Protected]
 │   ├── 3.1 Tab Filter Status: All | DRAFT | SENT | REJECTED
 │   ├── 3.2 Tabel Log PO (Nomor PO, Pemasok, Jumlah SKU, Total Qty, Status, Tanggal)
 │   ├── 3.3 Aksi: Unduh PDF PO
 │   └── 3.4 Modal Preview PDF Dokumentasi PO
 │
-└── 4.0 Halaman Konfirmasi Persetujuan Manager (`/approval?token={token}&action={action}`) [Public/External Landing]
+└── 4.0 Halaman Konfirmasi Persetujuan Manager (`/api/po/approval?token={token}&action={action}`) [Public/External Landing, HTML dari backend]
     ├── 4.1 State Processing (Validasi Token)
     ├── 4.2 State Success (Konfirmasi Approve/Reject Terproses)
     ├── 4.3 State Expired / Used (Token Kadaluarsa atau Sudah Digunakan)
     └── 4.4 State Error (Token Tidak Valid / Server Connection Error)
 ```
 
+Rute `1.0` sampai `3.0` dilindungi login. Akses tanpa JWT valid diarahkan ke `/login`. Rute `0.0` dan `4.0` bersifat publik.
+
 ---
 
 ## 2. Peta Alur Pengguna (User Flows)
+
+### Flow 0: Login & Session Guard (Admin / Manager)
+
+```text
+[Pengguna Buka Dashboard (/)]
+        │
+        ├── JIKA token valid di storage ──► [Dashboard]
+        │
+        └── JIKA tidak ada / token kedaluwarsa ──► [Redirect /login]
+                                                    │
+                                                    ▼
+                                     [Isi Email & Password]
+                                                    │
+                                                    ▼
+                                     [POST /api/auth/login]
+                                                    │
+                        ┌───────────────────────────┴───────────────────────────┐
+                        ▼                                                       ▼
+                [200: Simpan JWT + user]                              [401: Tampilkan error]
+                        │                                                       │
+                        ▼                                                       ▼
+                [Redirect Dashboard]                                   [Tetap di /login]
+                        │
+                        ▼
+        [Request data dengan Authorization: Bearer <token>]
+                        │
+                        ├── 401 ──► [Hapus token, redirect /login]
+                        └── 403 ──► [Tampilkan pesan akses ditolak]
+```
+
+---
 
 ### Flow 1: Alur Kerja Otomatisasi Harian (System-Driven Flow)
 Alur berjalan di latar belakang (*background job*) tanpa intervensi manual pengguna.
@@ -74,7 +112,7 @@ Alur berjalan di latar belakang (*background job*) tanpa intervensi manual pengg
 Alur kerja staf admin saat menggunakan dashboard web.
 
 ```text
-[Admin Masuk Dashboard (/)]
+[Admin Login (/login)] ──► [Masuk Dashboard (/)]
         │
         ├──────────────────────────────────────────────────────┐
         ▼                                                      ▼
@@ -124,7 +162,7 @@ Alur kerja manajer saat menerima email notifikasi dari sistem.
                                         └── JIKA Token Invalid / Already Used ──► [Tampilkan Error Page]
                                         │
                                         ▼
-                        [Redirect ke Halaman Konfirmasi Web (/approval)]
+                        [Render Halaman Konfirmasi dari Backend (/api/po/approval)]
 ```
 
 ---
@@ -158,6 +196,8 @@ Hubungan antar entitas utama dalam antarmuka dan struktur informasi sistem:
                                                    +------------------------+
 ```
 
+Tabel `users` berdiri sendiri (tidak berelasi ke entitas inventori) dan dipakai untuk autentikasi dashboard: `id`, `email`, `password_hash`, `nama`, `role` (`admin` / `manager`).
+
 ---
 
 ## 4. Peta Kondisi Layar (Screen State Map)
@@ -166,10 +206,11 @@ Setiap halaman pada ReorderFlow wajib menangani 4 kondisi visual standar (*UI St
 
 | Halaman | Condition: Loading | Condition: Empty State | Condition: Data Available | Condition: Error State |
 | :--- | :--- | :--- | :--- | :--- |
+| **Login (`/login`)** | Tombol submit disabled + spinner saat request login. | - | Form email/password, redirect ke dashboard setelah sukses. | Pesan merah "Email atau password salah" / "Gagal terhubung ke server". |
 | **Dashboard (`/`)** | Skeleton card KPI & skeleton table. | KPI bernilai `0`, tabel "Semua Stok Aman". | Kartu KPI terisi, alert banner jika ada anomali. | Banner Merah: "Gagal memuat data dashboard". |
 | **Data Stok (`/stok`)** | Table Skeleton Rows (5 baris). | "Tidak ada barang yang perlu reorder". | Tabel data SKU lengkap dengan badge status ROP. | "Gagal menghubungkan ke Supabase Database". |
 | **Riwayat PO (`/po-log`)** | Table Skeleton Rows (5 baris). | "Belum ada riwayat Purchase Order". | Tabel daftar PO dengan tombol unduh PDF. | "Gagal memuat riwayat PO". |
-| **Approval Landing (`/approval`)** | Spinner memuat: "Memproses persetujuan...". | - | Card Hijau (Approve Success) / Card Merah (Reject Success). | Card Kuning: "Tautan tidak valid atau sudah kadaluarsa". |
+| **Approval Landing (`/api/po/approval`)** | Halaman HTML backend menampilkan status proses. | - | Card Hijau (Approve Success) / Card Merah (Reject Success). | Card Kuning: "Tautan tidak valid atau sudah kadaluarsa". |
 
 ---
 
@@ -177,26 +218,32 @@ Setiap halaman pada ReorderFlow wajib menangani 4 kondisi visual standar (*UI St
 
 ```text
 <App>
-  ├── <Sidebar /> (Navigasi Kiri)
-  ├── <Navbar /> (Header, Indikator Sistem & Refresh)
+  ├── <AuthProvider /> (token, user, login, logout, loading)
   └── <Routes>
-        ├── <DashboardPage>
-        │     ├── <KPICardGroup />
-        │     ├── <AnomalyAlertBanner />
-        │     └── <LowStockQuickTable />
+        ├── <LoginPage />
+        │     ├── <LoginForm />
+        │     └── <LoginErrorBanner />
         │
-        ├── <StockListPage>
-        │     ├── <TabFilterGroup /> (All | Need Reorder | Manual Review)
-        │     ├── <ScanTriggerButton />
-        │     └── <StockTable>
-        │           └── <ROPBadge />
+        ├── <ProtectedRoute /> (redirect /login jika 401 / token kosong)
+        │     ├── <Sidebar /> (Navigasi Kiri)
+        │     ├── <Navbar /> (Header, Indikator Sistem & Refresh, Logout)
+        │     └── <AppRoutes>
+        │           ├── <DashboardPage>
+        │           │     ├── <KPICardGroup />
+        │           │     ├── <AnomalyAlertBanner />
+        │           │     └── <LowStockQuickTable />
+        │           │
+        │           ├── <StockListPage>
+        │           │     ├── <TabFilterGroup /> (All | Need Reorder | Manual Review)
+        │           │     ├── <ScanTriggerButton /> [Admin only]
+        │           │     └── <StockTable>
+        │           │           └── <ROPBadge />
+        │           │
+        │           └── <POLogListPage>
+        │                 ├── <POStatusTabFilter />
+        │                 └── <POLogTable>
+        │                       ├── <StatusBadge />
+        │                       └── <PDFDownloadButton />
         │
-        ├── <POLogListPage>
-        │     ├── <POStatusTabFilter />
-        │     └── <POLogTable>
-        │           ├── <StatusBadge />
-        │           └── <PDFDownloadButton />
-        │
-        └── <ApprovalPage>
-              └── <ApprovalResultCard />
+        └── (Approval tidak punya route React; link email diarahkan ke HTML backend `/api/po/approval`)
 ```

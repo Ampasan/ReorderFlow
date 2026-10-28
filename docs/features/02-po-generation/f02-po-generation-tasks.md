@@ -20,3 +20,4 @@
 ##### Phase 3: Testing & Validation Tasks
 *  [ ] **T-2.8** : Lakukan pengujian pembuatan PDF dengan data 5 SKU dan verifikasi tampilan layout file PDF A4.
 *  [ ] **T-2.9** : Uji akses tautan URL publik PDF di browser untuk memastikan dokumen dapat diunduh tanpa error 403/404.
+*  [ ] **T-2.10** : Verifikasi `GET /api/po` memerlukan Bearer token (admin/manager) dan URL PDF tetap dapat dibuka langsung dari Supabase Storage.

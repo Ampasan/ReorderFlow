@@ -7,11 +7,11 @@ Fitur ini bertanggung jawab untuk mengambil daftar SKU *low-stock* hasil penyari
 
 ## 2. Peran & Hak Akses
 
-| Peran | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
-| :--- | :--- | :--- | :--- | :--- |
-| **System PDF Builder** | Data SKU *low-stock*, Detail Pemasok | File PDF di Supabase Storage, Record `po_log` | Status PO ke `DRAFT` | - |
-| **Operations Manager** | Dokumen PDF PO via tautan Supabase Storage | - | - | - |
-| **Staf Inventori / Admin** | Dokumen PDF PO via Dashboard | - | - | - |
+| Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System PDF Builder** | Tidak | Data SKU *low-stock*, Detail Pemasok | File PDF di Supabase Storage, Record `po_log` | Status PO ke `DRAFT` | - |
+| **Operations Manager** | Ya (`manager`, read-only) | Dokumen PDF PO via tautan Supabase Storage | - | - | - |
+| **Staf Inventori / Admin** | Ya (`admin`) | Dokumen PDF PO via Dashboard | Trigger pembuatan draf PO lewat scan | - | - |
 
 ---
 

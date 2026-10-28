@@ -7,15 +7,29 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
 
 ## 2. Peran & Hak Akses
 
-| Peran | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Staf Inventori / Admin** | Data Stok, Data Pemasok, Riwayat PO_Log | Draf Reorder Manual | Data Stok (Koreksi Opnam) | Tidak Boleh |
-| **Operations Manager** | Dashboard, Data Stok, Riwayat PO_Log, Email Ringkasan | - | - | Ya (Approve / Reject PO via Email Link) |
-| **System Cron / Worker** | Pemindaian Tabel Stok & Pemasok | Record PO_Log, File PDF PO di Storage | Status PO_Log (`DRAFT` -> `SENT`/`REJECTED`) | - |
+| Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Staf Inventori / Admin** | Ya (`admin`) | Data Stok, Data Pemasok, Riwayat PO_Log | Draf Reorder Manual (trigger scan) | Data Stok (Koreksi Opnam) | Tidak Boleh |
+| **Operations Manager** | Ya (`manager`) | Dashboard, Data Stok, Riwayat PO_Log, Email Ringkasan | - | - | Ya (Approve / Reject PO via Email Link) |
+| **System Cron / Worker** | Tidak (service account) | Pemindaian Tabel Stok & Pemasok | Record PO_Log, File PDF PO di Storage | Status PO_Log (`DRAFT` -> `SENT`/`REJECTED`) | - |
+
+Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujuan PO tetap dilakukan lewat tautan email publik bertoken, bukan lewat sesi login.
 
 ---
 
 ## 3. Alur Utama Sistem
+
+### 3.1 Autentikasi & Sesi
+
+* **K-AUTH-1.1:** **KETIKA** pengguna membuka dashboard tanpa sesi aktif, sistem mengarahkan ke halaman `/login`.
+* **K-AUTH-1.2:** **KETIKA** pengguna mengirim email dan password ke `POST /api/auth/login`, sistem memverifikasi hash bcrypt dan mengembalikan JWT Bearer beserta profil pengguna.
+* **K-AUTH-1.3:** **KETIKA** pengguna mengakses endpoint data tanpa header `Authorization: Bearer <token>` atau dengan token tidak valid/kedaluwarsa, sistem mengembalikan HTTP `401`.
+* **K-AUTH-1.4:** **SELAMA** token berlaku, pengguna dapat mengakses `GET /api/auth/me`, `/api/stok`, `/api/dashboard`, `/api/po`, dan `/api/po-log` sesuai role.
+* **K-AUTH-1.5:** **JIKA** role `manager` memicu `POST /api/stok/scan`, sistem menolak dengan HTTP `403`.
+* **K-AUTH-1.6:** **SELAMA** proses persetujuan PO, endpoint `/api/po/approval` tetap publik dan hanya dilindungi token sekali pakai, tanpa memerlukan login.
+* **K-AUTH-1.7:** **KETIKA** pengguna logout, frontend menghapus token dari penyimpanan dan mengarahkan kembali ke `/login`.
+
+### 3.2 Alur Otomasi & Persetujuan
 
 * **K-IND-1.1:** **KETIKA** *scheduled cron job* harian berjalan pada pukul 08:00 WIB, sistem memindai tabel `stok` di Supabase untuk mengidentifikasi SKU yang memenuhi kriteria `stok_saat_ini <= reorder_point`.
 * **K-IND-1.2:** **KETIKA** ditemukan SKU *low-stock* yang tidak memiliki PO aktif, sistem mengelompokkan SKU tersebut berdasarkan `id_pemasok`.
@@ -41,6 +55,9 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
 | 4 | AB-IND-04 | Email Pemasok kosong / format email tidak valid pada tabel `pemasok` | Buat PDF PO, tetapi ubah status PO menjadi `REQUIRES_MANUAL_REVIEW` dan kirimkan notifikasi email tidak valid ke Manager. |
 | 5 | AB-IND-05 | Token persetujuan diklik ketika status PO di DB != `DRAFT` | Buka halaman konfirmasi dengan status: "Tautan persetujuan ini sudah pernah digunakan sebelumnya." |
 | 6 | AB-IND-06 | Kegagalan koneksi SMTP / Storage saat pengiriman | Jalankan *exponential backoff retry* (15s, 30s, 60s) hingga maksimal 3 kali percobaan. |
+| 7 | AB-AUTH-01 | Request ke endpoint data tanpa Bearer token / token tidak valid / kedaluwarsa | Kembalikan HTTP `401` dan arahkan frontend ke `/login`. |
+| 8 | AB-AUTH-02 | Role `manager` memicu `POST /api/stok/scan` | Kembalikan HTTP `403` tanpa menjalankan pemindaian. |
+| 9 | AB-AUTH-03 | Password salah atau email tidak terdaftar pada login | Kembalikan HTTP `401` dengan pesan generik "Email atau password salah". |
 
 ---
 
@@ -60,6 +77,7 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
 1. **`stok`**: Menampung katalog SKU, jumlah persediaan, ROP, minimum order, dan relasi pemasok.
 2. **`pemasok`**: Menyimpan master data vendor/pemasok dan alamat email resmi.
 3. **`po_log`**: Mencatat riwayat penerbitan PO, nomor PO, status, tautan dokumen PDF, dan token persetujuan.
+4. **`users`**: Menyimpan akun login dashboard (`email`, `password_hash` bcrypt, `nama`, `role`).
 
 ### 6.2 Status PO (POStatus Lifecycle)
 ```text
@@ -76,6 +94,7 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
 2. **F-02 (PDF PO Generator):** Mengelompokkan SKU per pemasok, menghitung total pesanan, dan mengunggah PDF PO ke Supabase Storage.
 3. **F-03 (Persetujuan & Workflow Email):** Mengirimkan email draf ke Manager, mengesahkan action link, dan meneruskan PO ke Pemasok.
 4. **F-04 (Dashboard UI Monitoring):** Menyajikan visibilitas data stok, indikator badge ROP, dan tabel riwayat PO.
+5. **F-05 (Autentikasi & Kontrol Akses):** Login JWT untuk admin dan manager, proteksi endpoint data, serta pembatasan aksi tulis berdasarkan role.
 
 ---
 
@@ -86,6 +105,8 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
   * SKU: `SKU-KOP-01` ("Kopi Arabika 250g"), `stok_saat_ini = 5`, `reorder_point = 10`, `qty_min_order = 20`, `id_pemasok = 101`.
   * Pemasok ID `101`: "PT Kopi Nusantara", email: `supplier@example.com`.
   * Operations Manager: `manager@example.com`.
+* **Kejadian 0 (Login Admin):**
+  * Admin membuka `/login`, mengirim email/password, lalu menerima JWT dan diarahkan ke dashboard.
 * **Kejadian 1 (Pukul 08.00 WIB):**
   * Cron job terpicu. Sistem mendeteksi `SKU-KOP-01` (`stok_saat_ini 5 <= ROP 10`) dan tidak ada PO aktif.
 * **Kejadian 2 (Sistem Eksekusi):**
@@ -93,7 +114,7 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
   * File PDF diterbitkan dan diunggah ke Supabase Storage: `https://example.com/po-documents/PO-20261025-101-001.pdf`.
   * Token persetujuan dibuat: `token_sample123`. Record `po_log` tersimpan dengan status `DRAFT`.
 * **Kejadian 3 (Email ke Manager):**
-  * System SMTP mengirim email ke `manager@example.com` dengan tombol **Approve**: `https://example.com/po/approval?token=token_sample123&action=approve`.
+  * System SMTP mengirim email ke `manager@example.com` dengan tombol **Approve**: `https://example.com/api/po/approval?token=token_sample123&action=approve`.
 * **Kejadian 4 (Aksi Manager):**
   * Manager mengklik **Approve** pada pukul 08:15 WIB.
   * Backend Go menerima request, memverifikasi `token_sample123`, mengubah status `po_log` menjadi `SENT`, dan mengirimkan email berisi lampiran PDF ke `supplier@example.com`.
@@ -107,3 +128,5 @@ Dokumen ini merupakan Functional Requirement Document (FRD) untuk sistem **Reord
 * Fitur penerimaan barang (*goods receipt*) dan penyesuaian stok otomatis setelah PO disetujui.
 * Pengiriman notifikasi persetujuan via WhatsApp / SMS API.
 * Integrasi otomatisasi pembayaran atau pencatatan utang usaha (*Accounts Payable*).
+* SSO, MFA/2FA, login sosial, dan alur reset password via email.
+* Manajemen pengguna (tambah/ubah/hapus akun) dari dashboard; akun dibuat dari environment variable saat startup.
