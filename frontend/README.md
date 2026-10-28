@@ -1,78 +1,62 @@
-# React + TypeScript + Vite
+# ReorderFlow Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Antarmuka web ReorderFlow (React 19 + Vite + TypeScript + Tailwind CSS v3). Semua data diambil dari backend Go melalui `/api`.
 
-Currently, two official plugins are available:
+## Menjalankan
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Prasyarat: Node.js 20 atau lebih baru, dan backend ReorderFlow berjalan di `http://localhost:8080`.
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+cp .env.example .env   # opsional, default sudah http://localhost:8080
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Perintah lain:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm run build   # tsc -b && vite build
+npm run lint    # eslint
+npm run preview # menyajikan hasil build
 ```
+
+## Rute
+
+| Rute | Isi |
+| :--- | :--- |
+| `/login` | Form login email/password (publik) |
+| `/` | Ringkasan operasional: kartu KPI, banner reorder, tabel low stock |
+| `/stok` | Seluruh SKU dengan filter `?status=all\|low\|manual` |
+| `/po-log` | Riwayat PO dengan filter `?status=all\|DRAFT\|SENT\|REJECTED\|REQUIRES_MANUAL_REVIEW` |
+| `*` | Dialihkan ke `/` |
+
+Semua rute selain `/login` dilindungi `ProtectedRoute`. Tanpa token valid pengguna diarahkan ke `/login`, lalu dikembalikan ke halaman asal setelah masuk.
+
+Halaman konfirmasi persetujuan manajer bukan bagian SPA: backend merendernya langsung di `GET /api/po/approval?token=...&action=...`.
+
+## Autentikasi
+
+- `POST /api/auth/login` mengembalikan JWT dan profil user. Token disimpan di `localStorage` bersama profil, sesuai FRD-05 yang tidak memakai cookie httpOnly atau refresh token.
+- `services/api.ts` menyisipkan `Authorization: Bearer <token>` pada setiap request, menghapus sesi dan memancarkan `reorderflow:unauthorized` saat menerima `401`, serta menampilkan toast saat menerima `403`.
+- `AuthContext` memulihkan sesi lewat `GET /api/auth/me`, menyediakan `login()` dan `logout()`.
+- Peran `manager` tidak melihat aksi tulis: tombol "Buat PO Sekaligus" dan "Pindai Stok Sekarang" hanya dirender untuk `admin`.
+- Akun dibuat backend dari variabel `ADMIN_EMAIL`/`ADMIN_PASSWORD` dan `MANAGER_EMAIL`/`MANAGER_PASSWORD` di `backend/.env`.
+
+## Struktur
+
+```text
+src/
+├── components/   # shell, tabel, dialog, badge, route guard, state kosong/loading/error
+├── context/      # AuthProvider: token, user, login, logout
+├── hooks/        # useAuth, useResource, useDashboard, useStock, usePOLog, useScan
+├── pages/        # LoginPage, Dashboard, StockList, POLogList
+├── services/     # axios client, auth, dashboard, stok, PO
+├── types/        # tipe response backend dan auth
+└── utils/        # authStorage, formatter tanggal WIB, konstanta filter
+```
+
+## Catatan desain
+
+- Palet mengikuti `docs/DESIGN.md` dan `docs/ui`: krem `#FEF3E2`, shell `#E2CBB0`, tinta `#2A1A0E`, terracotta.
+- Terracotta `#D4621A` dipakai sebagai aksen (focus ring, titik status). Permukaan tombol dan teks memakai `#B85114` dan `#9C4410` supaya teks putih dan teks terracotta tetap lolos WCAG AA 4.5:1.
+- Tidak ada mode gelap: sesuai FRD-04 bagian 7.
