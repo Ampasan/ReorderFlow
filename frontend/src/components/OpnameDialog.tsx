@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import toast from 'react-hot-toast'
 import type { OpnameReason, StockItem } from '../types/stok'
 import { OPNAME_REASONS } from '../utils/constants'
 import { formatNumber } from '../utils/formatter'
@@ -17,6 +16,8 @@ interface OpnameDialogProps {
 export function OpnameDialog({ open, item, pending, onConfirm, onClose }: OpnameDialogProps) {
   const [newStock, setNewStock] = useState(() => (item ? String(item.stok_saat_ini) : ''))
   const [reason, setReason] = useState<OpnameReason>('DAMAGED')
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,14 +25,17 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
 
     const value = Number(newStock)
     if (newStock.trim() === '' || !Number.isInteger(value) || value < 0) {
-      toast.error('Stok hasil opname harus angka bulat minimal 0')
+      setError('Stok hasil opname harus angka bulat minimal 0.')
+      inputRef.current?.focus()
       return
     }
     if (value === item.stok_saat_ini) {
-      toast.error('Stok hasil opname sama dengan stok saat ini')
+      setError('Stok hasil opname sama dengan stok saat ini.')
+      inputRef.current?.focus()
       return
     }
 
+    setError(null)
     onConfirm(value, reason)
   }
 
@@ -47,7 +51,7 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
             type="button"
             onClick={onClose}
             disabled={pending}
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream disabled:opacity-50"
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream disabled:cursor-not-allowed disabled:opacity-50"
           >
             Batal
           </button>
@@ -55,7 +59,8 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
             type="submit"
             form="opname-form"
             disabled={pending}
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong disabled:opacity-50"
+            aria-busy={pending}
+            className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong disabled:cursor-not-allowed disabled:opacity-50"
           >
             {pending ? 'Menyimpan...' : 'Simpan Koreksi'}
           </button>
@@ -64,7 +69,6 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
     >
       {item ? (
         <form id="opname-form" className="space-y-5" onSubmit={handleSubmit} noValidate>
-          {/* SKU info */}
           <div className="rounded-lg border border-brand-dark/8 bg-brand-cream/40 px-4 py-3">
             <p className="font-mono text-[11px] font-semibold text-brand-muted">{item.sku}</p>
             <p className="mt-0.5 text-sm font-semibold text-brand-dark">{item.nama}</p>
@@ -72,9 +76,7 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <p className="text-xs font-semibold text-brand-muted">
-                Stok saat ini
-              </p>
+              <p className="text-xs font-semibold text-brand-muted">Stok saat ini</p>
               <div className="mt-2 rounded-lg border border-brand-dark/8 bg-brand-cream/40 px-3 py-2.5 text-sm font-medium text-brand-dark">
                 {formatNumber(item.stok_saat_ini)} unit
               </div>
@@ -89,16 +91,36 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
               </label>
               <input
                 id="opname-stock"
+                ref={inputRef}
                 name="stok_saat_ini"
                 type="number"
                 inputMode="numeric"
                 min={0}
                 step={1}
                 data-autofocus
+                disabled={pending}
                 value={newStock}
-                onChange={(event) => setNewStock(event.target.value)}
-                className="mt-2 block w-full rounded-lg border border-brand-dark/15 bg-white px-3 py-2.5 text-sm text-brand-dark focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? 'opname-stock-error' : undefined}
+                onChange={(event) => {
+                  setNewStock(event.target.value)
+                  setError(null)
+                }}
+                className={`mt-2 block w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted ${
+                  error
+                    ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200'
+                    : 'border-brand-dark/15 focus:border-brand-orange focus:ring-brand-orange/15'
+                }`}
               />
+              {error ? (
+                <p
+                  id="opname-stock-error"
+                  role="alert"
+                  className="mt-1.5 text-xs font-medium text-rose-700"
+                >
+                  {error}
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -113,8 +135,9 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
               id="opname-reason"
               name="alasan"
               value={reason}
+              disabled={pending}
               onChange={(event) => setReason(event.target.value as OpnameReason)}
-              className="mt-2 block w-full rounded-lg border border-brand-dark/15 bg-white px-3 py-2.5 text-sm text-brand-dark focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15"
+              className="mt-2 block w-full rounded-lg border border-brand-dark/15 bg-white px-3 py-2.5 text-sm text-brand-dark focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted"
             >
               {OPNAME_REASONS.map((option) => (
                 <option key={option.value} value={option.value}>

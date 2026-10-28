@@ -119,7 +119,7 @@ export function POLogList() {
             <button
               type="button"
               onClick={() => setSelected(null)}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
             >
               Tutup
             </button>
@@ -128,12 +128,12 @@ export function POLogList() {
                 href={selected.tautan_pdf}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-10 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
               >
                 Lihat PDF
               </a>
             ) : (
-              <span className="inline-flex h-10 items-center justify-center rounded-lg border border-dashed border-brand-dark/20 px-5 text-sm font-medium text-brand-muted">
+              <span className="inline-flex h-11 items-center justify-center rounded-lg border border-dashed border-brand-dark/20 px-5 text-sm font-medium text-brand-muted">
                 PDF belum tersedia
               </span>
             )}
