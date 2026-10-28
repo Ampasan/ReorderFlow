@@ -49,7 +49,7 @@ export function POLogList() {
   const items = data ?? []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Riwayat PO"
         subtitle="Semua Purchase Order beserta status persetujuan dan dokumen PDF-nya."
@@ -59,21 +59,23 @@ export function POLogList() {
 
       {error ? <ErrorState message={error} onRetry={refetch} /> : null}
 
-      <section className="rounded-2xl border border-brand-dark/10 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-1 border-b border-brand-dark/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-extrabold tracking-tight">Daftar Purchase Order</h2>
+      <section className="rounded-xl border border-brand-dark/10 bg-white">
+        <div className="flex items-center justify-between border-b border-brand-dark/8 px-5 py-4">
+          <h2 className="text-sm font-semibold text-brand-dark">Daftar Purchase Order</h2>
           {!loading && !error ? (
-            <p className="text-xs font-medium text-brand-muted">
-              {formatNumber(items.length)} PO ditampilkan
-            </p>
+            <span className="text-xs font-medium text-brand-muted">
+              {formatNumber(items.length)} PO
+            </span>
           ) : null}
         </div>
 
-        <div className="pt-4">
+        <div className="px-1 py-2">
           {loading ? (
-            <TableSkeleton label="Memuat riwayat PO" columns={5} />
+            <div className="px-3 py-2">
+              <TableSkeleton label="Memuat riwayat PO" columns={5} />
+            </div>
           ) : error ? (
-            <p className="py-6 text-sm text-brand-muted">
+            <p className="px-5 py-8 text-sm text-brand-muted">
               Tabel tidak dapat ditampilkan karena data gagal dimuat.
             </p>
           ) : items.length === 0 ? (
@@ -83,7 +85,7 @@ export function POLogList() {
               action={
                 <Link
                   to="/stok"
-                  className="inline-flex min-h-11 items-center rounded-xl border border-brand-dark/15 bg-white px-4 text-sm font-semibold text-brand-dark hover:bg-brand-cream"
+                  className="inline-flex h-10 items-center rounded-lg border border-brand-dark/15 bg-white px-4 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
                 >
                   Buka Data Stok
                 </Link>
@@ -117,7 +119,7 @@ export function POLogList() {
             <button
               type="button"
               onClick={() => setSelected(null)}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-dark/15 bg-white px-4 text-sm font-semibold text-brand-dark hover:bg-brand-cream"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
             >
               Tutup
             </button>
@@ -126,12 +128,12 @@ export function POLogList() {
                 href={selected.tautan_pdf}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-orange px-4 text-sm font-semibold text-white hover:bg-brand-orange-strong"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
               >
                 Lihat PDF
               </a>
             ) : (
-              <span className="inline-flex min-h-11 items-center justify-center rounded-xl border border-dashed border-brand-dark/20 px-4 text-sm font-medium text-brand-muted">
+              <span className="inline-flex h-10 items-center justify-center rounded-lg border border-dashed border-brand-dark/20 px-5 text-sm font-medium text-brand-muted">
                 PDF belum tersedia
               </span>
             )}

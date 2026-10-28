@@ -51,7 +51,7 @@ export function Modal({ open, title, description, onClose, children, footer }: M
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-dark/40 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-dark/50 p-4 backdrop-blur-sm sm:items-center"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}
@@ -62,16 +62,16 @@ export function Modal({ open, title, description, onClose, children, footer }: M
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby={description ? 'modal-description' : undefined}
-        className="w-full max-w-md rounded-2xl border border-brand-dark/10 bg-white p-5 shadow-xl sm:p-6"
+        className="w-full max-w-md rounded-xl border border-brand-dark/10 bg-white p-6 shadow-xl"
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id="modal-title" className="text-lg font-extrabold tracking-tight">
+          <h2 id="modal-title" className="text-base font-semibold text-brand-dark">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="-m-2 inline-flex h-11 w-11 items-center justify-center rounded-lg text-brand-muted hover:bg-brand-cream hover:text-brand-dark"
+            className="-m-1.5 flex h-8 w-8 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-cream hover:text-brand-dark"
           >
             <CloseIcon className="h-4 w-4" />
             <span className="sr-only">Tutup dialog</span>
@@ -82,7 +82,7 @@ export function Modal({ open, title, description, onClose, children, footer }: M
             {description}
           </p>
         ) : null}
-        {children ? <div className="mt-4">{children}</div> : null}
+        {children ? <div className="mt-5">{children}</div> : null}
         {footer ? (
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">{footer}</div>
         ) : null}

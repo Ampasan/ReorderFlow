@@ -68,7 +68,7 @@ export function StockList() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title="Data Stok"
         subtitle="Seluruh SKU beserta stok saat ini, Reorder Point, dan pemasoknya."
@@ -77,10 +77,10 @@ export function StockList() {
             <button
               type="button"
               onClick={() => setConfirmOpen(true)}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-orange px-4 text-sm font-semibold text-white hover:bg-brand-orange-strong"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-brand-orange px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
             >
-              <PlusIcon />
-              Pindai Stok Sekarang
+              <PlusIcon className="h-3.5 w-3.5" />
+              Pindai Stok
             </button>
           ) : null
         }
@@ -95,25 +95,30 @@ export function StockList() {
 
       {error ? <ErrorState message={error} onRetry={refetch} /> : null}
 
-      <section className="rounded-2xl border border-brand-dark/10 bg-white p-4 shadow-sm sm:p-6">
-        <div className="flex flex-col gap-1 border-b border-brand-dark/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-extrabold tracking-tight">Daftar SKU</h2>
+      <section className="rounded-xl border border-brand-dark/10 bg-white">
+        <div className="flex items-center justify-between border-b border-brand-dark/8 px-5 py-4">
+          <h2 className="text-sm font-semibold text-brand-dark">Daftar SKU</h2>
           {!loading && !error ? (
-            <p className="text-xs font-medium text-brand-muted">
-              {formatNumber(items.length)} produk ditampilkan
-            </p>
+            <span className="text-xs font-medium text-brand-muted">
+              {formatNumber(items.length)} produk
+            </span>
           ) : null}
         </div>
 
-        <div className="pt-4">
+        <div className="px-1 py-2">
           {loading ? (
-            <TableSkeleton label="Memuat data stok" columns={7} />
+            <div className="px-3 py-2">
+              <TableSkeleton label="Memuat data stok" columns={7} />
+            </div>
           ) : error ? (
-            <p className="py-6 text-sm text-brand-muted">
+            <p className="px-5 py-8 text-sm text-brand-muted">
               Tabel tidak dapat ditampilkan karena data gagal dimuat.
             </p>
           ) : items.length === 0 ? (
-            <EmptyState title={EMPTY_COPY[status].title} description={EMPTY_COPY[status].description} />
+            <EmptyState
+              title={EMPTY_COPY[status].title}
+              description={EMPTY_COPY[status].description}
+            />
           ) : (
             <StockTable items={items} onSelect={setSelected} onOpname={canScan ? setOpnameItem : undefined} />
           )}
@@ -145,10 +150,7 @@ export function StockList() {
                 { label: 'Reorder point', value: `${formatNumber(selected.reorder_point)} unit` },
                 { label: 'Min order', value: `${formatNumber(selected.qty_min_order)} unit` },
                 { label: 'Status', value: <StatusBadge status={selected.status} /> },
-                {
-                  label: 'Diperbarui',
-                  value: formatDateWIB(selected.updated_at),
-                },
+                { label: 'Diperbarui', value: formatDateWIB(selected.updated_at) },
               ]
             : []
         }

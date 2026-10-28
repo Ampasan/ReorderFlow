@@ -26,7 +26,7 @@
 
 @layer utilities {
   .skeleton-bar {
-    @apply animate-pulse rounded-md bg-brand-line/50;
+    @apply animate-pulse rounded-md bg-brand-line/40;
   }
 }
 
