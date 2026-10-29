@@ -7,9 +7,10 @@ const LABELS: Record<BadgeStatus, string> = {
   NORMAL: 'Normal',
   LOW_STOCK: 'Low Stock',
   REQUIRES_MANUAL_REVIEW: 'Review',
-  DRAFT: 'Draft',
-  SENT: 'Sent',
-  REJECTED: 'Rejected',
+  DRAFT: 'Draf',
+  PENDING_APPROVAL: 'Menunggu',
+  SENT: 'Terkirim',
+  REJECTED: 'Ditolak',
 }
 
 const STYLES: Record<BadgeStatus, string> = {
@@ -21,6 +22,8 @@ const STYLES: Record<BadgeStatus, string> = {
     'border-purple-200 bg-purple-50 text-purple-700',
   DRAFT:
     'border-brand-dark/15 bg-brand-cream text-brand-muted',
+  PENDING_APPROVAL:
+    'border-amber-200 bg-amber-50 text-amber-800',
   SENT:
     'border-brand-dark/30 bg-brand-dark text-white',
   REJECTED:

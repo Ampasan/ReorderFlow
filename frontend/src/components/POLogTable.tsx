@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { POLog } from '../types/po'
 import { formatDateWIB } from '../utils/formatter'
 import { StatusBadge } from './StatusBadge'
@@ -5,9 +6,10 @@ import { StatusBadge } from './StatusBadge'
 interface POLogTableProps {
   items: POLog[]
   onSelect: (po: POLog) => void
+  canEdit?: boolean
 }
 
-export function POLogTable({ items, onSelect }: POLogTableProps) {
+export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps) {
   return (
     <div className="-mx-4 overflow-x-auto sm:mx-0">
       <table className="w-full min-w-[680px] border-collapse text-left text-sm">
@@ -50,6 +52,14 @@ export function POLogTable({ items, onSelect }: POLogTableProps) {
               </td>
               <td className="whitespace-nowrap px-4 py-3.5 text-right">
                 <div className="flex items-center justify-end gap-2">
+                  {canEdit && (po.status === 'DRAFT' || po.status === 'REJECTED') ? (
+                    <Link
+                      to={`/po-log/${po.id}/draft`}
+                      className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange transition-colors hover:bg-brand-orange/15"
+                    >
+                      {po.status === 'REJECTED' ? 'Revisi' : 'Edit Draf'}
+                    </Link>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => onSelect(po)}

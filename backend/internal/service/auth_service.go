@@ -54,25 +54,12 @@ func (s *AuthService) EnsureUser(email, password, nama, role string) error {
 		return nil
 	}
 
-	existing, err := s.userRepo.GetByEmail(email)
-	if err == nil && existing != nil {
-		return nil
-	}
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
 	if len(password) < 8 {
 		return errors.New("password minimal 8 karakter")
 	}
 
 	if role != model.RoleAdmin && role != model.RoleManager {
 		return errors.New("role tidak valid")
-	}
-
-	hash, err := utils.HashPassword(password)
-	if err != nil {
-		return err
 	}
 
 	if nama == "" {
@@ -82,6 +69,22 @@ func (s *AuthService) EnsureUser(email, password, nama, role string) error {
 		default:
 			nama = "Admin"
 		}
+	}
+
+	hash, err := utils.HashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	existing, err := s.userRepo.GetByEmail(email)
+	if err == nil && existing != nil {
+		existing.PasswordHash = hash
+		existing.Nama = nama
+		existing.Role = role
+		return s.userRepo.Update(existing)
+	}
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
 	}
 
 	return s.userRepo.Create(&model.User{

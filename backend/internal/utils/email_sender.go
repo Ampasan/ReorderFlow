@@ -1,11 +1,21 @@
 package utils
 
 import (
+	"crypto/tls"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"mime"
+	"net"
 	"net/smtp"
+	"net/textproto"
 	"strings"
+	"time"
+)
+
+const (
+	smtpDialTimeout = 10 * time.Second
+	smtpSendTimeout = 15 * time.Second
 )
 
 type SMTPConfig struct {
@@ -21,6 +31,14 @@ type EmailSender struct {
 	auth smtp.Auth
 }
 
+type permanentSMTPError struct {
+	err error
+}
+
+func (e *permanentSMTPError) Error() string   { return e.err.Error() }
+func (e *permanentSMTPError) Unwrap() error   { return e.err }
+func (e *permanentSMTPError) Permanent() bool { return true }
+
 func NewEmailSender(cfg SMTPConfig) *EmailSender {
 	return &EmailSender{
 		cfg:  cfg,
@@ -29,17 +47,80 @@ func NewEmailSender(cfg SMTPConfig) *EmailSender {
 }
 
 func (s *EmailSender) Send(to, subject, htmlBody string) error {
+	if strings.TrimSpace(to) == "" {
+		return &permanentSMTPError{errors.New("alamat email tujuan kosong")}
+	}
 	msg := s.buildMessage(to, subject, htmlBody, "", nil)
-	return smtp.SendMail(s.addr(), s.auth, s.cfg.Email, []string{to}, msg)
+	return s.sendMail(to, msg)
 }
 
 func (s *EmailSender) SendWithAttachment(to, subject, htmlBody, filename string, attachment []byte) error {
+	if strings.TrimSpace(to) == "" {
+		return &permanentSMTPError{errors.New("alamat email tujuan kosong")}
+	}
 	msg := s.buildMessage(to, subject, htmlBody, filename, attachment)
-	return smtp.SendMail(s.addr(), s.auth, s.cfg.Email, []string{to}, msg)
+	return s.sendMail(to, msg)
 }
 
 func (s *EmailSender) addr() string {
 	return fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
+}
+
+func (s *EmailSender) sendMail(to string, msg []byte) error {
+	conn, err := net.DialTimeout("tcp", s.addr(), smtpDialTimeout)
+	if err != nil {
+		return fmt.Errorf("dial smtp: %w", err)
+	}
+	defer conn.Close()
+
+	if err := conn.SetDeadline(time.Now().Add(smtpSendTimeout)); err != nil {
+		return err
+	}
+
+	client, err := smtp.NewClient(conn, s.cfg.Host)
+	if err != nil {
+		return fmt.Errorf("smtp client: %w", err)
+	}
+	defer client.Close()
+
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		if err := client.StartTLS(&tls.Config{ServerName: s.cfg.Host}); err != nil {
+			return fmt.Errorf("starttls: %w", err)
+		}
+	}
+
+	if err := client.Auth(s.auth); err != nil {
+		return classifySMTPError(err)
+	}
+	if err := client.Mail(s.cfg.Email); err != nil {
+		return classifySMTPError(err)
+	}
+	if err := client.Rcpt(to); err != nil {
+		return classifySMTPError(err)
+	}
+
+	writer, err := client.Data()
+	if err != nil {
+		return classifySMTPError(err)
+	}
+	if _, err := writer.Write(msg); err != nil {
+		_ = writer.Close()
+		return fmt.Errorf("smtp write: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("smtp close data: %w", err)
+	}
+
+	_ = client.Quit()
+	return nil
+}
+
+func classifySMTPError(err error) error {
+	var protocolErr *textproto.Error
+	if errors.As(err, &protocolErr) && protocolErr.Code >= 500 {
+		return &permanentSMTPError{err}
+	}
+	return err
 }
 
 func (s *EmailSender) buildMessage(to, subject, htmlBody, filename string, attachment []byte) []byte {

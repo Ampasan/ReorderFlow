@@ -141,20 +141,13 @@ func (s *PDFService) createSupplierPO(ctx context.Context, supplierID int64, gro
 		return false
 	}
 
-	s.dispatchEmail(pemasok, nomor, token, pdfItems, totalQty, status)
+	if status == model.POStatusManualReview {
+		s.dispatchInvalidSupplierNotice(pemasok, nomor)
+	}
 	return true
 }
 
-func (s *PDFService) dispatchEmail(pemasok *model.Pemasok, nomor, token string, items []utils.PDFItem, totalQty int, status string) {
-	data := POEmailData{
-		NomorPO:      nomor,
-		PemasokNama:  pemasok.Nama,
-		PemasokEmail: pemasok.Email,
-		Token:        token,
-		Items:        items,
-		TotalQty:     totalQty,
-	}
-
+func (s *PDFService) dispatchInvalidSupplierNotice(pemasok *model.Pemasok, nomor string) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -165,15 +158,8 @@ func (s *PDFService) dispatchEmail(pemasok *model.Pemasok, nomor, token string, 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		if status == model.POStatusManualReview {
-			if err := s.email.SendInvalidSupplierNotice(ctx, nomor, pemasok.Nama); err != nil {
-				utils.Logger.Error("send invalid supplier notice failed", "nomor_po", nomor, "error", err)
-			}
-			return
-		}
-
-		if err := s.email.SendManagerApproval(ctx, data); err != nil {
-			utils.Logger.Error("send manager approval email failed", "nomor_po", nomor, "error", err)
+		if err := s.email.SendInvalidSupplierNotice(ctx, nomor, pemasok.Nama); err != nil {
+			utils.Logger.Error("send invalid supplier notice failed", "nomor_po", nomor, "error", err)
 		}
 	}()
 }

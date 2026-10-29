@@ -10,6 +10,8 @@ export default {
           line: "#CEB394",
           dark: "#2A1A0E",
           muted: "#6A5B4E",
+          // Field outline: clears 3:1 against white so the control boundary is visible.
+          field: "#A08972",
           // Terracotta accent — used as focus ring, active state, primary CTA.
           // Darker steps so white text clears 4.5:1 contrast.
           orange: "#B85114",

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"reorderflow-backend/internal/model"
 )
@@ -107,9 +108,69 @@ func (r *PORepository) StatusCounts() (map[string]int64, error) {
 	return counts, nil
 }
 
-func (r *PORepository) UpdateStatusIfDraft(id int64, newStatus string) (bool, error) {
+func (r *PORepository) ReplaceDraftDetails(id int64, details []model.PODetail, pdfURL string) (bool, error) {
+	updated := false
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var po model.POLog
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Select("id", "status").
+			First(&po, id).Error; err != nil {
+			return err
+		}
+		if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected {
+			return nil
+		}
+
+		if err := tx.Where("po_id = ?", id).Delete(&model.PODetail{}).Error; err != nil {
+			return err
+		}
+		for i := range details {
+			details[i].POID = id
+		}
+		if len(details) > 0 {
+			if err := tx.Create(&details).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := tx.Model(&model.POLog{}).
+			Where("id = ?", id).
+			Updates(map[string]interface{}{
+				"tautan_pdf": pdfURL,
+				"updated_at": time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		updated = true
+		return nil
+	})
+	if err != nil {
+		return false, err
+	}
+	return updated, nil
+}
+
+func (r *PORepository) MarkSubmitted(id int64, pdfURL, token string, submittedAt time.Time) (bool, error) {
 	res := r.db.Model(&model.POLog{}).
-		Where("id = ? AND status = ?", id, model.POStatusDraft).
+		Where("id = ? AND status IN ?", id, []string{model.POStatusDraft, model.POStatusRejected}).
+		Updates(map[string]interface{}{
+			"status":       model.POStatusPendingApproval,
+			"tautan_pdf":   pdfURL,
+			"token":        token,
+			"submitted_at": submittedAt,
+			"updated_at":   submittedAt,
+		})
+	if res.Error != nil {
+		return false, res.Error
+	}
+	return res.RowsAffected > 0, nil
+}
+
+func (r *PORepository) UpdateStatusIfPending(id int64, newStatus string) (bool, error) {
+	res := r.db.Model(&model.POLog{}).
+		Where("id = ? AND status = ?", id, model.POStatusPendingApproval).
 		Updates(map[string]interface{}{
 			"status":     newStatus,
 			"updated_at": time.Now(),
@@ -130,13 +191,14 @@ func (r *PORepository) UpdateStatus(id int64, newStatus string) error {
 }
 
 func (r *PORepository) GetActiveReferences(since time.Time) (map[string]struct{}, map[int64]struct{}, error) {
-	activeStatuses := []string{model.POStatusDraft, model.POStatusSent}
+	activeStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected, model.POStatusSent}
+	openStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected}
 	activeSKUs := make(map[string]struct{})
 	activeSuppliers := make(map[int64]struct{})
 
 	var supplierIDs []int64
 	if err := r.db.Model(&model.POLog{}).
-		Where("status IN ? AND created_at >= ?", activeStatuses, since).
+		Where("status IN ? AND (status IN ? OR created_at >= ?)", activeStatuses, openStatuses, since).
 		Pluck("id_pemasok", &supplierIDs).Error; err != nil {
 		return nil, nil, err
 	}
@@ -147,7 +209,7 @@ func (r *PORepository) GetActiveReferences(since time.Time) (map[string]struct{}
 	var skus []string
 	if err := r.db.Table("po_detail").
 		Joins("JOIN po_log ON po_log.id = po_detail.po_id").
-		Where("po_log.status IN ? AND po_log.created_at >= ?", activeStatuses, since).
+		Where("po_log.status IN ? AND (po_log.status IN ? OR po_log.created_at >= ?)", activeStatuses, openStatuses, since).
 		Pluck("po_detail.sku", &skus).Error; err != nil {
 		return nil, nil, err
 	}

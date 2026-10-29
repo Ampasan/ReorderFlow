@@ -20,11 +20,12 @@ var (
 const tokenTTL = 48 * time.Hour
 
 type ApprovalOutcome struct {
-	NomorPO string
-	Status  string
-	Message string
-	Used    bool
-	Expired bool
+	NomorPO      string
+	Status       string
+	Message      string
+	Used         bool
+	Expired      bool
+	NotSubmitted bool
 }
 
 type ApprovalService struct {
@@ -64,7 +65,30 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		return nil, err
 	}
 
-	if time.Since(po.CreatedAt) > tokenTTL {
+	if po.Status == model.POStatusDraft {
+		return &ApprovalOutcome{
+			NomorPO:      po.NomorPO,
+			Status:       po.Status,
+			Message:      "PO masih berstatus draf dan belum diajukan ke manajer.",
+			NotSubmitted: true,
+		}, nil
+	}
+
+	if po.Status != model.POStatusPendingApproval {
+		return &ApprovalOutcome{
+			NomorPO: po.NomorPO,
+			Status:  po.Status,
+			Message: "Tautan persetujuan ini sudah pernah digunakan sebelumnya.",
+			Used:    true,
+		}, nil
+	}
+
+	submittedAt := po.CreatedAt
+	if po.SubmittedAt != nil {
+		submittedAt = *po.SubmittedAt
+	}
+
+	if time.Since(submittedAt) > tokenTTL {
 		_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
 		return &ApprovalOutcome{
 			NomorPO: po.NomorPO,
@@ -74,17 +98,8 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		}, nil
 	}
 
-	if po.Status != model.POStatusDraft {
-		return &ApprovalOutcome{
-			NomorPO: po.NomorPO,
-			Status:  po.Status,
-			Message: "Tautan persetujuan ini sudah pernah digunakan sebelumnya.",
-			Used:    true,
-		}, nil
-	}
-
 	if action == "reject" {
-		updated, err := s.poRepo.UpdateStatusIfDraft(po.ID, model.POStatusRejected)
+		updated, err := s.poRepo.UpdateStatusIfPending(po.ID, model.POStatusRejected)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +113,7 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		}, nil
 	}
 
-	updated, err := s.poRepo.UpdateStatusIfDraft(po.ID, model.POStatusSent)
+	updated, err := s.poRepo.UpdateStatusIfPending(po.ID, model.POStatusSent)
 	if err != nil {
 		return nil, err
 	}
@@ -124,6 +139,7 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 	}
 
 	if err := s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes); err != nil {
+		utils.Logger.Error("send supplier PO failed", "nomor_po", po.NomorPO, "error", err)
 		_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
 		return &ApprovalOutcome{
 			NomorPO: po.NomorPO,

@@ -2,14 +2,19 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 )
 
 var (
-	SMTPStorageBackoff = []time.Duration{15 * time.Second, 30 * time.Second, 60 * time.Second}
+	SMTPStorageBackoff = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second}
 	DatabaseBackoff    = []time.Duration{10 * time.Second, 10 * time.Second, 10 * time.Second}
 	StorageBackoff     = []time.Duration{2 * time.Second, 5 * time.Second, 10 * time.Second}
 )
+
+type permanentError interface {
+	Permanent() bool
+}
 
 func Retry(ctx context.Context, retries int, delays []time.Duration, fn func() error) error {
 	var err error
@@ -19,6 +24,11 @@ func Retry(ctx context.Context, retries int, delays []time.Duration, fn func() e
 		}
 		if attempt == retries {
 			break
+		}
+
+		var permanent permanentError
+		if errors.As(err, &permanent) && permanent.Permanent() {
+			return err
 		}
 
 		delay := delays[len(delays)-1]

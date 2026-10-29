@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 import { Dashboard } from './pages/Dashboard'
 import { LoginPage } from './pages/LoginPage'
+import { PODraftEditor } from './pages/PODraftEditor'
 import { POLogList } from './pages/POLogList'
 import { StockList } from './pages/StockList'
 
@@ -17,6 +18,7 @@ export function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/stok" element={<StockList />} />
             <Route path="/po-log" element={<POLogList />} />
+            <Route path="/po-log/:id/draft" element={<PODraftEditor />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

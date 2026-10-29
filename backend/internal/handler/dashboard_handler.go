@@ -64,7 +64,8 @@ func (h *DashboardHandler) Summary(c *gin.Context) {
 		TotalSKU:        stokCounts.Total,
 		LowStockCount:   stokCounts.LowStock,
 		ManualReview:    stokCounts.ManualReview,
-		PendingPOCount:  poCounts[model.POStatusDraft],
+		DraftPOCount:    poCounts[model.POStatusDraft],
+		PendingPOCount:  poCounts[model.POStatusPendingApproval],
 		SentPOCount:     poCounts[model.POStatusSent],
 		RejectedPOCount: poCounts[model.POStatusRejected],
 	}

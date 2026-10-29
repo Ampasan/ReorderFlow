@@ -1,32 +1,31 @@
+TRUNCATE TABLE po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
+
 INSERT INTO pemasok (id, nama, email) VALUES
-    (101, 'PT Kopi Nusantara', 'supplier@example.com'),
-    (102, 'PT Teh Sejahtera', 'order@tehsejahtera.com'),
-    (103, 'PT Plastik Jaya', 'sales@plastikjaya.com'),
-    (104, 'PT Sembako Berkah', 'cs@sembakoberkah.com')
-ON CONFLICT (id) DO NOTHING;
+    (101, 'PT Sumber Beras Sejahtera', 'n.hajime.2915@gmail.com'),
+    (102, 'PT Minyak & Bumbu Nusantara', 'n.hajime.2915@gmail.com'),
+    (103, 'PT Makanan Instan Makmur', 'n.hajime.2915@gmail.com'),
+    (104, 'PT Kebutuhan Rumah Tangga', 'n.hajime.2915@gmail.com');
 
 INSERT INTO stok (sku, nama, stok_saat_ini, reorder_point, qty_min_order, id_pemasok) VALUES
-    ('SKU-KOP-01', 'Kopi Arabika 250g', 5, 10, 20, 101),
-    ('SKU-KOP-02', 'Kopi Robusta 500g', 8, 12, 15, 101),
-    ('SKU-KOP-03', 'Kopi Luwak 100g', 25, 10, 10, 101),
-    ('SKU-KOP-04', 'Kopi Decaf 250g', 30, 12, 12, 101),
-    ('SKU-TEH-01', 'Teh Hijau Premium 50g', 2, 5, 20, 102),
-    ('SKU-TEH-02', 'Teh Hitam Celup 25s', 15, 8, 10, 102),
-    ('SKU-TEH-03', 'Teh Melati 50g', -2, 10, 10, 102),
-    ('SKU-TEH-04', 'Teh Chamomile 30g', 12, 6, 8, 102),
-    ('SKU-PL-01', 'Botol PET 500ml', 3, 10, 100, 103),
-    ('SKU-PL-02', 'Tutup Botol 500ml', 4, 10, 100, 103),
-    ('SKU-PL-03', 'Sedotan Bambu 100s', 40, 20, 25, 103),
-    ('SKU-PL-04', 'Kantong Plastik 1kg', 60, 30, 50, 103),
-    ('SKU-SEM-01', 'Beras Premium 5kg', 6, 15, 20, 104),
-    ('SKU-SEM-02', 'Minyak Goreng 2L', 10, 12, 24, 104),
-    ('SKU-SEM-03', 'Gula Pasir 1kg', 0, 5, 30, 104),
-    ('SKU-SEM-04', 'Tepung Terigu 1kg', 18, 10, 20, 104),
-    ('SKU-SEM-05', 'Telur Ayam 1kg', 22, 10, 15, 104),
-    ('SKU-SEM-06', 'Kecap Manis 620ml', 14, 8, 12, 104),
-    ('SKU-SEM-07', 'Saus Sambal 335ml', 9, 8, 12, 104),
-    ('SKU-SEM-08', 'Sabun Mandi 100g', 25, 10, 24, 104)
-ON CONFLICT (sku) DO NOTHING;
+    ('SKU-BRS-01', 'Beras Premium 5kg', 6, 15, 20, 101),
+    ('SKU-BRS-02', 'Beras Medium 10kg', 12, 10, 15, 101),
+    ('SKU-BRS-03', 'Tepung Terigu Serbaguna 1kg', 18, 12, 20, 101),
+    ('SKU-BRS-04', 'Tepung Beras 500g', 9, 10, 12, 101),
+    ('SKU-BRS-05', 'Gula Pasir 1kg', 0, 8, 30, 101),
+    ('SKU-MYK-01', 'Minyak Goreng 2L', 10, 12, 24, 102),
+    ('SKU-MYK-02', 'Minyak Goreng 1L', 20, 15, 24, 102),
+    ('SKU-MYK-03', 'Kecap Manis 620ml', 14, 8, 12, 102),
+    ('SKU-MYK-04', 'Saus Sambal 335ml', 9, 8, 12, 102),
+    ('SKU-MYK-05', 'Garam Beryodium 500g', 30, 12, 24, 102),
+    ('SKU-MKN-01', 'Mie Instan Goreng (dus isi 40)', 4, 10, 5, 103),
+    ('SKU-MKN-02', 'Mie Instan Kuah (dus isi 40)', 7, 10, 5, 103),
+    ('SKU-MKN-03', 'Telur Ayam 1kg', 22, 10, 15, 103),
+    ('SKU-MKN-04', 'Susu Kental Manis 490g', 11, 8, 12, 103),
+    ('SKU-MKN-05', 'Kopi Sachet (renceng isi 10)', 5, 12, 20, 103),
+    ('SKU-RMT-01', 'Sabun Mandi 100g', 25, 10, 24, 104),
+    ('SKU-RMT-02', 'Deterjen Bubuk 800g', 8, 10, 12, 104),
+    ('SKU-RMT-03', 'Tisu Gulung (pack isi 10)', 6, 8, 10, 104),
+    ('SKU-RMT-04', 'Pasta Gigi 190g', 15, 8, 12, 104),
+    ('SKU-RMT-05', 'Sabun Cuci Piring 800ml', -1, 10, 12, 104);
 
-SELECT setval(pg_get_serial_sequence('pemasok', 'id'), (SELECT MAX(id) FROM pemasok))
-WHERE EXISTS (SELECT 1 FROM pemasok);
+SELECT setval(pg_get_serial_sequence('pemasok', 'id'), (SELECT MAX(id) FROM pemasok));

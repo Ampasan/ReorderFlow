@@ -20,13 +20,22 @@
   :focus-visible {
     outline: 2px solid #d4621a;
     outline-offset: 2px;
-    border-radius: 4px;
+  }
+
+  ::selection {
+    background-color: #b85114;
+    color: #fef3e2;
   }
 }
 
 @layer utilities {
   .skeleton-bar {
     @apply animate-pulse rounded-md bg-brand-line/40;
+  }
+
+  .paper-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23grain)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
   }
 }
 

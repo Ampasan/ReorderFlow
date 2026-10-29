@@ -7,7 +7,7 @@
     *   **AC-4.0.1** : Login sukses menyimpan JWT dan menampilkan dashboard sesuai role (`admin` / `manager`).
     *   **AC-4.0.2** : Setiap request data mengirim header `Authorization: Bearer <token>`; respons `401` menghapus sesi dan redirect ke `/login`.
 *   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka halaman Dashboard di browser, antarmuka mengirimkan request HTTP GET ke `/api/dashboard`, `/api/stok`, dan `/api/po` untuk memuat statistik ringkasan.
-    *   **AC-4.1.1** : Dashboard merender 4 Kartu KPI: Total SKU, Jumlah Low Stock, Pending PO (DRAFT), dan PO Terkirim (SENT).
+    *   **AC-4.1.1** : Dashboard merender 5 Kartu KPI: Total SKU, Jumlah Low Stock, Draf PO (DRAFT), Menunggu Persetujuan (PENDING_APPROVAL), dan PO Terkirim (SENT).
 *   **K-4.2 (Tabel Data Stok & Badge ROP)** : KETIKA pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU lengkap dengan status badge visual.
     *   **AC-4.2.1** : SKU dengan `stok_saat_ini <= reorder_point` menampilkan Badge Merah `LOW STOCK`. SKU dengan stok aman menampilkan Badge Hijau `NORMAL`.
 *   **K-4.3 (Tabel Riwayat PO & File Viewer)** : KETIKA pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel riwayat seluruh PO beserta tombol tautan "Lihat PDF".
@@ -21,7 +21,7 @@
 
 ##### 2. Aspek: Tampilan & Kondisi Layar
 *   **Kondisi Memuat (Loading)** :
-    *   Menampilkan 4 box Skeleton Loader pada Kartu KPI dan 5 baris `TableSkeleton` berdenyut pada area tabel.
+    *   Menampilkan 5 box Skeleton Loader pada Kartu KPI dan 5 baris `TableSkeleton` berdenyut pada area tabel.
 *   **Kondisi Ada Data (Success / Data Available)** :
     *   Layout responsif: Sidebar Navigasi di sisi kiri, Header Banner di atas, dan Konten Tabel di tengah.
     *   Color-coded Badges: Merah (`LOW STOCK`), Hijau (`NORMAL` / `SENT`), Kuning (`DRAFT`), Ungu (`REVIEW NEEDED`).

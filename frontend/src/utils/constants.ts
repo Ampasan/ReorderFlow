@@ -29,12 +29,19 @@ export const OPNAME_REASONS: FilterOption<OpnameReason>[] = [
 export const PO_FILTERS: FilterOption<POFilter>[] = [
   { value: 'all', label: 'Semua' },
   { value: 'DRAFT', label: 'Draf' },
+  { value: 'PENDING_APPROVAL', label: 'Menunggu' },
   { value: 'SENT', label: 'Terkirim' },
   { value: 'REJECTED', label: 'Ditolak' },
   { value: 'REQUIRES_MANUAL_REVIEW', label: 'Perlu Tinjauan' },
 ]
 
-const PO_STATUSES: POStatus[] = ['DRAFT', 'SENT', 'REJECTED', 'REQUIRES_MANUAL_REVIEW']
+const PO_STATUSES: POStatus[] = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'SENT',
+  'REJECTED',
+  'REQUIRES_MANUAL_REVIEW',
+]
 
 export function isStockFilter(value: string | null): value is StockFilter {
   return value === 'all' || value === 'low' || value === 'manual'

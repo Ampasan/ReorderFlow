@@ -69,11 +69,13 @@ func main() {
 	pdfService := service.NewPDFService(poRepo, pemasokRepo, storage, emailService)
 	detectionService := service.NewDetectionService(stokRepo, poRepo, redisRepo, pdfService)
 	approvalService := service.NewApprovalService(poRepo, redisRepo, emailService, storage)
+	draftService := service.NewDraftService(poRepo, stokRepo, storage, emailService)
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTExpiry)
 
 	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore)
 	dashboardHandler := handler.NewDashboardHandler(stokRepo, poRepo, cacheStore)
 	approvalHandler := handler.NewApprovalHandler(approvalService, cacheStore)
+	draftHandler := handler.NewDraftHandler(draftService, cacheStore)
 	authHandler := handler.NewAuthHandler(authService, userRepo)
 
 	if err := authService.EnsureUser(cfg.AdminEmail, cfg.AdminPassword, "Admin", model.RoleAdmin); err != nil {
@@ -107,6 +109,9 @@ func main() {
 			protected.GET("/dashboard", dashboardHandler.Summary)
 			protected.GET("/po", dashboardHandler.ListPO)
 			protected.GET("/po-log", dashboardHandler.ListPO)
+			protected.GET("/po-draft/:id", draftHandler.Get)
+			protected.PUT("/po-draft/:id", middleware.RequireRole(model.RoleAdmin), draftHandler.Update)
+			protected.POST("/po-draft/:id/submit", middleware.RequireRole(model.RoleAdmin), draftHandler.Submit)
 		}
 	}
 

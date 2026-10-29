@@ -18,7 +18,7 @@ Fitur ini menyediakan antarmuka web antarmuka pengguna (*user interface*) berbas
 ## 3. Alur Penggunaan Dashboard
 
 * **K-04.1:** **KETIKA** pengguna membuka URL dashboard di browser, antarmuka mengirimkan request HTTP GET ke backend Go untuk mengambil data stok dan log PO.
-* **K-04.2:** **KETIKA** data berhasil diterima, dashboard menampilkan ringkasan kartu KPI (Total SKU, Jumlah SKU *Low-Stock*, PO Pending `DRAFT`, PO Terkirim `SENT`).
+* **K-04.2:** **KETIKA** data berhasil diterima, dashboard menampilkan ringkasan kartu KPI (Total SKU, Jumlah SKU *Low-Stock*, Draf PO `DRAFT`, Menunggu Persetujuan `PENDING_APPROVAL`, PO Terkirim `SENT`).
 * **K-04.3:** **KETIKA** pengguna mengklik tab **Data Stok**, sistem menampilkan tabel seluruh SKU lengkap dengan status *badge* visual (`NORMAL` hijau, `LOW_STOCK` merah/kuning, `REQUIRES_MANUAL_REVIEW` ungu).
 * **K-04.4:** **KETIKA** pengguna mengklik tab **Riwayat PO**, sistem menampilkan tabel riwayat seluruh PO beserta tautan unduh/lihat dokumen PDF.
 * **K-04.5:** **KETIKA** pengguna mengklik tombol **Unduh PDF** pada baris PO, browser membuka file PDF dari Supabase Storage di tab baru.
@@ -54,7 +54,8 @@ Fitur ini menyediakan antarmuka web antarmuka pengguna (*user interface*) berbas
 ### 6.1 Data Utama UI (DTO Response)
 * `total_sku`: Integer
 * `low_stock_count`: Integer
-* `pending_po_count`: Integer
+* `draft_po_count`: Integer (status `DRAFT`)
+* `pending_po_count`: Integer (status `PENDING_APPROVAL`)
 * `stok_list`: Array of `Stok`
 * `po_log_list`: Array of `POLog`
 

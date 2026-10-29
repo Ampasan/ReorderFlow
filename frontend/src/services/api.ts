@@ -60,3 +60,8 @@ export async function patch<T>(url: string, body?: unknown): Promise<T> {
   const response = await client.patch<ApiResponse<T>>(url, body)
   return response.data.data
 }
+
+export async function put<T>(url: string, body?: unknown): Promise<T> {
+  const response = await client.put<ApiResponse<T>>(url, body)
+  return response.data.data
+}

@@ -1,6 +1,9 @@
 # Functional Requirement Document (FRD): Fitur 03 - Persetujuan Manajer & Email Workflow
 
 ## 1. Konteks
+
+> **Revisi alur draf:** PO hasil pemindaian kini berhenti di status `DRAFT` dan dapat diedit staf inventori. Email persetujuan baru dikirim ke manajer saat staf menekan tombol **Kirim ke Manajer**, yang mengubah status menjadi `PENDING_APPROVAL`. Persetujuan atau penolakan manajer hanya berlaku untuk status `PENDING_APPROVAL`. Selama `DRAFT`, tidak ada email yang dikirim ke manajer maupun pemasok. Trigger di bawah ini dibaca dengan penyesuaian tersebut.
+
 Fitur ini mengelola alur kerja persetujuan persetujuan pemesanan ulang (*Human-in-the-Loop*). Fitur ini membuat token persetujuan aman sekali pakai (*one-time idempotent token*), mengirimkan email ringkasan PO ke Operations Manager, memproses respon tindakan (Approve/Reject) dari tautan email, serta meneruskan dokumen PDF PO ke email Pemasok jika disetujui. Fitur ini menurunkan **Bagian 4 (Fitur 3: Persetujuan Manajer)** dan **Bagian 7 (Prioritas 3)** dari PRD ReorderFlow.
 
 ---
@@ -55,13 +58,14 @@ Persetujuan PO tidak memerlukan login dashboard: tautan email bersifat publik da
 
 ### 6.1 Data Utama (`po_log` & Token)
 * `token`: String (32 karakter, Unique)
-* `status`: Enum (`DRAFT`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`)
+* `status`: Enum (`DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`)
 
 ### 6.2 Alur Perubahan Status PO
 ```text
-DRAFT --(Manager Klik Approve)--> SENT (Email Terkirim ke Pemasok)
-DRAFT --(Manager Klik Reject) --> REJECTED (Alur Berhenti)
-DRAFT --(Token Re-clicked)   --> Response: Already Processed
+DRAFT --(Staf klik Kirim ke Manajer)--> PENDING_APPROVAL (Email ke Manajer)
+PENDING_APPROVAL --(Manager Klik Approve)--> SENT (Email PDF ke Pemasok)
+PENDING_APPROVAL --(Manager Klik Reject) --> REJECTED (Alur Berhenti)
+PENDING_APPROVAL --(Token Re-clicked)    --> Response: Already Processed
 ```
 
 ---

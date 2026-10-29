@@ -10,7 +10,7 @@ export function useScan(onFinished: () => void) {
     try {
       const result = await runScan()
       toast.success(
-        `Pemindaian selesai: ${result.draft_po_created} draf PO dibuat, ${result.skipped_active_po} dilewati karena sudah punya PO aktif, ${result.manual_review} perlu peninjauan manual.`,
+        `Pemindaian selesai: ${result.draft_po_created} draf PO dibuat, ${result.skipped_active_po} dilewati karena sudah punya PO aktif, ${result.manual_review} perlu peninjauan manual. Buka Riwayat PO untuk memeriksa draf sebelum dikirim ke manajer.`,
       )
       onFinished()
       return true

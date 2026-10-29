@@ -46,6 +46,8 @@ func (h *ApprovalHandler) Approval(c *gin.Context) {
 	switch {
 	case outcome.Expired:
 		h.render(c, http.StatusOK, "Tautan Kedaluwarsa", outcome.Message, outcome.NomorPO, outcome.Status, "red")
+	case outcome.NotSubmitted:
+		h.render(c, http.StatusOK, "Belum Diajukan", outcome.Message, outcome.NomorPO, outcome.Status, "amber")
 	case outcome.Used:
 		h.render(c, http.StatusOK, "Tautan Sudah Digunakan", outcome.Message, outcome.NomorPO, outcome.Status, "amber")
 	default:

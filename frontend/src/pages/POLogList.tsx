@@ -8,6 +8,7 @@ import { POLogTable } from '../components/POLogTable'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBadge } from '../components/StatusBadge'
 import { TableSkeleton } from '../components/TableSkeleton'
+import { useAuth } from '../hooks/useAuth'
 import { usePOLog } from '../hooks/usePOLog'
 import type { POFilter, POLog } from '../types/po'
 import { PO_FILTERS, isPOFilter } from '../utils/constants'
@@ -21,7 +22,12 @@ const EMPTY_COPY: Record<POFilter, { title: string; description: string }> = {
   },
   DRAFT: {
     title: 'Tidak ada PO berstatus draf',
-    description: 'Semua PO sudah diputuskan. Draf baru muncul setelah pemindaian berikutnya.',
+    description:
+      'Draf baru muncul setelah pemindaian menemukan produk di bawah ROP. Draf bisa diperiksa dan diedit sebelum dikirim ke manajer.',
+  },
+  PENDING_APPROVAL: {
+    title: 'Belum ada PO yang menunggu persetujuan',
+    description: 'PO berstatus ini sudah dikirim ke email manajer dan menunggu keputusan.',
   },
   SENT: {
     title: 'Belum ada PO terkirim',
@@ -29,7 +35,8 @@ const EMPTY_COPY: Record<POFilter, { title: string; description: string }> = {
   },
   REJECTED: {
     title: 'Belum ada PO ditolak',
-    description: 'PO yang ditolak manajer akan tercatat di sini.',
+    description:
+      'PO yang ditolak manajer muncul di sini. Buka detailnya untuk merevisi lalu mengirim ulang.',
   },
   REQUIRES_MANUAL_REVIEW: {
     title: 'Tidak ada PO yang perlu tinjauan',
@@ -45,8 +52,10 @@ export function POLogList() {
 
   const { data, loading, error, refetch } = usePOLog(status)
   const [selected, setSelected] = useState<POLog | null>(null)
+  const { user } = useAuth()
 
   const items = data ?? []
+  const canEdit = user?.role === 'admin'
 
   return (
     <div className="space-y-5">
@@ -92,7 +101,7 @@ export function POLogList() {
               }
             />
           ) : (
-            <POLogTable items={items} onSelect={setSelected} />
+            <POLogTable items={items} onSelect={setSelected} canEdit={canEdit} />
           )}
         </div>
       </section>
@@ -100,7 +109,7 @@ export function POLogList() {
       <DetailDialog
         open={selected !== null}
         title={selected?.nomor_po ?? 'Detail Purchase Order'}
-        description="Persetujuan dilakukan manajer lewat tautan sekali pakai di email. Status di halaman ini mengikuti hasilnya."
+        description="Draf bisa diperiksa dan diedit dulu sebelum dikirim ke manajer. PO yang ditolak manajer bisa direvisi lalu dikirim ulang. Persetujuan dilakukan lewat tautan sekali pakai di email."
         onClose={() => setSelected(null)}
         rows={
           selected
@@ -110,6 +119,7 @@ export function POLogList() {
                 { label: 'Email pemasok', value: selected.pemasok?.email ?? '-' },
                 { label: 'Status', value: <StatusBadge status={selected.status} /> },
                 { label: 'Dibuat', value: formatDateWIB(selected.created_at) },
+                { label: 'Dikirim ke manajer', value: formatDateWIB(selected.submitted_at) },
                 { label: 'Diperbarui', value: formatDateWIB(selected.updated_at) },
               ]
             : []
@@ -123,6 +133,17 @@ export function POLogList() {
             >
               Tutup
             </button>
+            {selected?.status === 'DRAFT' || selected?.status === 'REJECTED' ? (
+              canEdit ? (
+                <Link
+                  to={`/po-log/${selected.id}/draft`}
+                  onClick={() => setSelected(null)}
+                  className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+                >
+                  {selected.status === 'REJECTED' ? 'Revisi Draf' : 'Edit Draf'}
+                </Link>
+              ) : null
+            ) : null}
             {selected?.tautan_pdf ? (
               <a
                 href={selected.tautan_pdf}

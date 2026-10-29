@@ -1,7 +1,7 @@
 # DESIGN.md — ReorderFlow Design System & UI Specifications
 
 ## 1. Brand Overview & Persona
-**ReorderFlow** adalah platform sistem otomasi Reorder Point (ROP) & pengadaan barang mandiri yang dirancang khusus bagi pemilik usaha mikro, kecil, dan menengah (UMKM) seperti ritel sembako, kafe kopi, dan toko grosir.
+**ReorderFlow** adalah platform sistem otomasi Reorder Point (ROP) & pengadaan barang mandiri yang dirancang khusus bagi pemilik usaha mikro, kecil, dan menengah (UMKM) seperti toko grosir dan ritel sembako.
 
 ### Brand Personality & Core Principles:
 - **Warm & Trustworthy**: Menghilangkan kesan software enterprise yang kaku dengan pendekatan warna hangat berbasis *roasted coffee & kraft paper*.

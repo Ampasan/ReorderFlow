@@ -17,7 +17,7 @@ import type { StockItem } from '../types/stok'
 import { formatDateWIB, formatLongDate, formatNumber } from '../utils/formatter'
 
 const SCAN_DESCRIPTION =
-  'Sistem memindai stok dan membuat draf PO untuk produk yang berada di bawah ROP, dikelompokkan per pemasok. Produk yang sudah punya PO aktif akan dilewati.'
+  'Sistem memindai stok dan membuat draf PO untuk produk yang berada di bawah ROP, dikelompokkan per pemasok. Draf belum dikirim ke siapa pun, jadi Anda bisa memeriksa dan mengeditnya dulu di Riwayat PO sebelum mengirim ke manajer. Produk yang sudah punya PO aktif akan dilewati.'
 
 export function Dashboard() {
   const { data, loading, error, refetch } = useDashboard()
@@ -70,7 +70,7 @@ export function Dashboard() {
               className="inline-flex h-9 items-center justify-center gap-2 self-start rounded-lg bg-brand-orange px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong sm:self-auto"
             >
               <PlusIcon className="h-3.5 w-3.5" />
-              Buat PO Sekaligus
+              Buat Draf PO
             </button>
           ) : null}
         </section>
@@ -94,13 +94,13 @@ export function Dashboard() {
       {/* KPI cards */}
       {error ? null : (
         <section
-          className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5"
           aria-label="Ringkasan angka"
         >
           {loading || !summary ? (
             <>
               <p role="status" className="sr-only">Memuat ringkasan operasional</p>
-              {[0, 1, 2, 3].map((key) => (
+              {[0, 1, 2, 3, 4].map((key) => (
                 <div key={key} className="rounded-xl border border-brand-dark/10 bg-white px-5 py-5">
                   <div className="skeleton-bar h-3 w-24" />
                   <div className="skeleton-bar mt-5 h-7 w-20" />
@@ -121,9 +121,14 @@ export function Dashboard() {
                 tone="alert"
               />
               <KpiCard
-                label="Draf PO Menunggu"
+                label="Draf PO"
+                value={`${formatNumber(summary.draft_po_count)} PO`}
+                hint="Belum dikirim, masih bisa diedit"
+              />
+              <KpiCard
+                label="Menunggu Persetujuan"
                 value={`${formatNumber(summary.pending_po_count)} PO`}
-                hint="Menunggu persetujuan manajer"
+                hint="Sudah dikirim ke email manajer"
                 tone="warning"
               />
               <KpiCard

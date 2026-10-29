@@ -40,6 +40,7 @@ type DashboardSummary struct {
 	TotalSKU        int64 `json:"total_sku"`
 	LowStockCount   int64 `json:"low_stock_count"`
 	ManualReview    int64 `json:"manual_review"`
+	DraftPOCount    int64 `json:"draft_po_count"`
 	PendingPOCount  int64 `json:"pending_po_count"`
 	SentPOCount     int64 `json:"sent_po_count"`
 	RejectedPOCount int64 `json:"rejected_po_count"`
