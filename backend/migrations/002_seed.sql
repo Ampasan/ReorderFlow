@@ -1,3 +1,10 @@
+-- Seed demo grosir/sembako UMKM.
+-- Aman dijalankan berulang: data transaksi dan master dikosongkan lebih dulu,
+-- lalu diisi ulang dari awal. Akun users tidak disentuh karena dibuat dari
+-- ADMIN_EMAIL dan MANAGER_EMAIL saat server start.
+-- Termasuk tiga PO demo: dua DRAFT yang belum dikirim ke manajer, dan satu SENT
+-- yang sudah selesai. Tidak ada email yang dikirim oleh seed ini.
+
 TRUNCATE TABLE po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
 
 INSERT INTO pemasok (id, nama, email) VALUES
@@ -29,3 +36,24 @@ INSERT INTO stok (sku, nama, stok_saat_ini, reorder_point, qty_min_order, id_pem
     ('SKU-RMT-05', 'Sabun Cuci Piring 800ml', -1, 10, 12, 104);
 
 SELECT setval(pg_get_serial_sequence('pemasok', 'id'), (SELECT MAX(id) FROM pemasok));
+
+INSERT INTO po_log (id, nomor_po, id_pemasok, status, tautan_pdf, token, submitted_at, created_at, updated_at) VALUES
+    (1001, 'PO-20261029-101-001', 101, 'DRAFT', '', NULL, NULL,
+     CURRENT_TIMESTAMP - INTERVAL '3 hours', CURRENT_TIMESTAMP - INTERVAL '3 hours'),
+    (1002, 'PO-20261027-103-001', 103, 'SENT', '', NULL,
+     CURRENT_TIMESTAMP - INTERVAL '1 day', CURRENT_TIMESTAMP - INTERVAL '2 days',
+     CURRENT_TIMESTAMP - INTERVAL '1 day'),
+    (1003, 'PO-20261029-102-001', 102, 'DRAFT', '', NULL, NULL,
+     CURRENT_TIMESTAMP - INTERVAL '2 hours', CURRENT_TIMESTAMP - INTERVAL '2 hours');
+
+INSERT INTO po_detail (po_id, sku, jumlah_order) VALUES
+    (1001, 'SKU-BRS-01', 20),
+    (1001, 'SKU-BRS-04', 12),
+    (1001, 'SKU-BRS-05', 30),
+    (1002, 'SKU-MKN-01', 5),
+    (1002, 'SKU-MKN-02', 5),
+    (1002, 'SKU-MKN-05', 20),
+    (1003, 'SKU-MYK-01', 24),
+    (1003, 'SKU-MYK-04', 12);
+
+SELECT setval(pg_get_serial_sequence('po_log', 'id'), (SELECT MAX(id) FROM po_log));

@@ -51,14 +51,14 @@ Rule-based ROP automation specifically designed for UMKM operators — not enter
 - **Visual identity:** warm organic theme anchored in roasted-coffee and kraft-paper tones (`#FEF3E2` canvas, `#EAD8C0` sidebar, `#D4621A` terracotta primary, `#2A1A0E` brand dark). See DESIGN.md for full token set.
 - **Personality:** warm and trustworthy, ergonomic, low cognitive load, decisive (idempotent, no ambiguity on action outcomes).
 - **Typography:** Inter / Plus Jakarta Sans; JetBrains Mono for SKU codes, PO numbers, and currency figures.
-- **Logo asset:** `Logo_ReorderFlow.png` (existing asset, do not invent substitutes).
+- **Logo asset:** `logo-reorderflow.png` (existing asset, do not invent substitutes).
 
 ## Evidence on Hand
 
 - PRD at `docs/PRD.md` — confirmed users, purpose, scope, constraints, success metrics, and feature priority list.
 - DESIGN.md at `docs/DESIGN.md` — full color token set, typography scale, component rules for all major surfaces.
 - FRD at `docs/FRD.md`, IA at `docs/IA.md`, feature docs in `docs/features/`.
-- Implemented frontend pages: LoginPage, Dashboard, StockList, POLogList, PODraftEditor, ApprovalStatus.
+- Implemented frontend pages: LoginPage, Dashboard, StockList, POLogList, PODraftEditor (the approval page is rendered by the backend at `GET /api/po/approval`, not by React).
 - Implemented frontend components: AppShell, Sidebar, KpiCard, StockTable, POLogTable, StatusBadge, FilterTabs, Modal, ConfirmDialog, DetailDialog, OpnameDialog, EmptyState, ErrorState, TableSkeleton, PageHeader, ProtectedRoute.
 - Backend (Go/Gin): handler, service, repository, model, middleware, job, cache, utils directories implemented.
 - Synthetic dataset only; no real customer data on hand.

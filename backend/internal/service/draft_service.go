@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"gorm.io/gorm"
-
 	"reorderflow-backend/internal/model"
 	"reorderflow-backend/internal/repository"
 	"reorderflow-backend/internal/utils"
@@ -146,11 +144,21 @@ func (s *DraftService) renderPO(
 	po *model.POLog,
 	details []model.PODetail,
 ) (string, []utils.PDFItem, int, error) {
+	skus := make([]string, 0, len(details))
+	for _, detail := range details {
+		skus = append(skus, detail.SKU)
+	}
+
+	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
+	if err != nil {
+		utils.Logger.Error("stock lookup failed while rendering PO", "nomor_po", po.NomorPO, "error", err)
+	}
+
 	pdfItems := make([]utils.PDFItem, 0, len(details))
 	totalQty := 0
 	for _, detail := range details {
 		nama := detail.SKU
-		if stok, err := s.stokRepo.GetBySKU(detail.SKU); err == nil {
+		if stok, ok := stockBySKU[detail.SKU]; ok {
 			nama = stok.Nama
 		}
 		pdfItems = append(pdfItems, utils.PDFItem{
@@ -202,7 +210,7 @@ func (s *DraftService) buildDetails(supplierID int64, items []DraftItem) ([]mode
 	}
 
 	seen := make(map[string]struct{}, len(items))
-	details := make([]model.PODetail, 0, len(items))
+	skus := make([]string, 0, len(items))
 
 	for _, item := range items {
 		sku := strings.TrimSpace(item.SKU)
@@ -213,13 +221,20 @@ func (s *DraftService) buildDetails(supplierID int64, items []DraftItem) ([]mode
 			return nil, ErrDraftItemInvalid
 		}
 		seen[sku] = struct{}{}
+		skus = append(skus, sku)
+	}
 
-		stok, err := s.stokRepo.GetBySKU(sku)
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, ErrDraftItemInvalid
-			}
-			return nil, err
+	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
+	if err != nil {
+		return nil, err
+	}
+
+	details := make([]model.PODetail, 0, len(skus))
+	for _, item := range items {
+		sku := strings.TrimSpace(item.SKU)
+		stok, exists := stockBySKU[sku]
+		if !exists {
+			return nil, ErrDraftItemInvalid
 		}
 		if stok.IDPemasok != supplierID {
 			return nil, ErrDraftSupplierMismatch

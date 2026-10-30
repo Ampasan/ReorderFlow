@@ -1,7 +1,30 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { MenuIcon } from './icons'
 import { Sidebar } from './Sidebar'
+
+function PageFallback() {
+  return (
+    <div className="space-y-5" role="status">
+      <span className="sr-only">Memuat halaman</span>
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-2">
+          <div className="skeleton-bar h-6 w-52" />
+          <div className="skeleton-bar h-3 w-72" />
+        </div>
+        <div className="skeleton-bar h-9 w-32" />
+      </div>
+      <div className="rounded-xl border border-brand-dark/10 bg-white px-5 py-6">
+        <div className="skeleton-bar h-4 w-40" />
+        <div className="mt-4 space-y-3">
+          <div className="skeleton-bar h-12 w-full" />
+          <div className="skeleton-bar h-12 w-full" />
+          <div className="skeleton-bar h-12 w-full" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function AppShell() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -23,8 +46,8 @@ export function AppShell() {
           <span className="flex items-center gap-2">
             <span className="flex h-9 w-auto flex-shrink-0 items-center justify-center rounded-lg bg-white p-1">
               <img
-                src="/Logo_ReorderFlow.png"
-                alt=""
+                src="/logo-reorderflow.png"
+                alt="logo ReorderFlow"
                 aria-hidden="true"
                 className="h-7 w-auto"
               />
@@ -46,7 +69,9 @@ export function AppShell() {
         </header>
 
         <main id="main" className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-8">
-          <Outlet />
+          <Suspense fallback={<PageFallback />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

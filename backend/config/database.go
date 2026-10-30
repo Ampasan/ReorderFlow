@@ -19,7 +19,9 @@ func NewDatabase(cfg *Config) (*gorm.DB, error) {
 
 	for attempt := 0; attempt <= len(dbConnectBackoff); attempt++ {
 		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Warn),
+			Logger:                 logger.Default.LogMode(logger.Warn),
+			PrepareStmt:            true,
+			SkipDefaultTransaction: true,
 		})
 		if err == nil {
 			break
@@ -38,7 +40,7 @@ func NewDatabase(cfg *Config) (*gorm.DB, error) {
 	}
 
 	sqlDB.SetMaxOpenConns(25)
-	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxIdleConns(15)
 	sqlDB.SetConnMaxLifetime(30 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(5 * time.Minute)
 

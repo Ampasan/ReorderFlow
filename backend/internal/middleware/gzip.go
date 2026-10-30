@@ -2,10 +2,23 @@ package middleware
 
 import (
 	"compress/gzip"
+	"io"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 )
+
+var gzipPool = sync.Pool{
+	New: func() interface{} {
+		// BestSpeed keeps CPU cost low; API payloads here are small JSON lists.
+		writer, err := gzip.NewWriterLevel(io.Discard, gzip.BestSpeed)
+		if err != nil {
+			return gzip.NewWriter(io.Discard)
+		}
+		return writer
+	},
+}
 
 type gzipWriter struct {
 	gin.ResponseWriter
@@ -22,7 +35,8 @@ func (w *gzipWriter) WriteString(s string) (int, error) {
 
 func Gzip() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") {
+		if !strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") ||
+			c.Writer.Header().Get("Content-Encoding") != "" {
 			c.Next()
 			return
 		}
@@ -30,11 +44,14 @@ func Gzip() gin.HandlerFunc {
 		c.Header("Content-Encoding", "gzip")
 		c.Header("Vary", "Accept-Encoding")
 
-		gz := gzip.NewWriter(c.Writer)
+		gz := gzipPool.Get().(*gzip.Writer)
+		gz.Reset(c.Writer)
+		defer func() {
+			_ = gz.Close()
+			gzipPool.Put(gz)
+		}()
+
 		c.Writer = &gzipWriter{ResponseWriter: c.Writer, gz: gz}
-
 		c.Next()
-
-		_ = gz.Close()
 	}
 }

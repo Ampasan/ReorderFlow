@@ -7,7 +7,7 @@ import { ErrorState } from '../components/ErrorState'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBadge } from '../components/StatusBadge'
 import { useAuth } from '../hooks/useAuth'
-import { useResource } from '../hooks/useResource'
+import { invalidateResourceCache, useResource } from '../hooks/useResource'
 import { getPO, submitDraft, updateDraft } from '../services/poService'
 import { listStock } from '../services/stockService'
 import type { DraftItemInput, POLog, POStatus } from '../types/po'
@@ -130,6 +130,7 @@ function DraftForm({
     setActionError(null)
     try {
       await updateDraft(po.id, lines)
+      invalidateResourceCache('po')
       toast.success('Perubahan tersimpan. Periksa lagi sebelum dikirim ke manajer.')
     } catch (err) {
       const message = errorMessage(err)
@@ -151,6 +152,8 @@ function DraftForm({
     try {
       await updateDraft(po.id, lines)
       await submitDraft(po.id)
+      invalidateResourceCache('po')
+      invalidateResourceCache('dashboard')
       toast.success(
         isRejected
           ? 'PO dikirim ulang ke manajer untuk disetujui.'
@@ -450,13 +453,13 @@ export function PODraftEditor() {
 
   const fetchStock = useCallback(() => listStock('all'), [])
 
-  const { data: po, loading, error, refetch } = useResource(fetchPO)
+  const { data: po, loading, error, refetch } = useResource(`po-draft:${poId}`, fetchPO)
   const {
     data: stockData,
     loading: stockLoading,
     error: stockError,
     refetch: refetchStock,
-  } = useResource(fetchStock)
+  } = useResource('stock:all', fetchStock)
 
   const backLink = (
     <Link

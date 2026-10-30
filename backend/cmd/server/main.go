@@ -41,24 +41,29 @@ func main() {
 	}
 
 	if cfg.Env != "production" {
-		if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}, &model.User{}, &model.StockOpname{}); err != nil {
-			utils.Logger.Error("auto migrate failed", "error", err)
-			panic(err)
+		if !db.Migrator().HasTable(&model.Stok{}) {
+			if err := db.AutoMigrate(&model.Pemasok{}, &model.Stok{}, &model.POLog{}, &model.PODetail{}, &model.User{}, &model.StockOpname{}); err != nil {
+				utils.Logger.Error("auto migrate failed", "error", err)
+				panic(err)
+			}
 		}
 	}
 
-	warmDatabase(db, 3)
+	go warmDatabase(db, 3)
 
 	redisClient := config.NewRedisClient(cfg)
+	var redisRepo *repository.RedisRepository
 	if err := redisClient.Ping().Err(); err != nil {
-		utils.Logger.Warn("redis ping failed", "error", err)
+		utils.Logger.Warn("redis unavailable, running with in-memory cache only", "error", err)
+		redisRepo = repository.NewRedisRepository(nil)
+	} else {
+		redisRepo = repository.NewRedisRepository(redisClient)
 	}
 
 	stokRepo := repository.NewStokRepository(db)
 	poRepo := repository.NewPORepository(db)
 	pemasokRepo := repository.NewPemasokRepository(db)
 	userRepo := repository.NewUserRepository(db)
-	redisRepo := repository.NewRedisRepository(redisClient)
 	cacheStore := cache.New(redisRepo)
 
 	smtpCfg := config.NewSMTPConfig(cfg)

@@ -12,7 +12,7 @@ interface POLogTableProps {
 export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps) {
   return (
     <div className="-mx-4 overflow-x-auto sm:mx-0">
-      <table className="w-full min-w-[680px] border-collapse text-left text-sm">
+      <table className="w-full min-w-[760px] border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-brand-dark/8">
             <th scope="col" className="px-4 py-3 text-xs font-semibold text-brand-muted">
@@ -23,6 +23,9 @@ export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps
             </th>
             <th scope="col" className="px-4 py-3 text-xs font-semibold text-brand-muted">
               Status
+            </th>
+            <th scope="col" className="px-4 py-3 text-xs font-semibold text-brand-muted">
+              Barang
             </th>
             <th scope="col" className="px-4 py-3 text-xs font-semibold text-brand-muted">
               Dibuat
@@ -46,6 +49,9 @@ export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps
               </td>
               <td className="whitespace-nowrap px-4 py-3.5">
                 <StatusBadge status={po.status} />
+              </td>
+              <td className="whitespace-nowrap px-4 py-3.5 text-xs text-brand-muted">
+                {po.details?.length ?? 0} barang
               </td>
               <td className="whitespace-nowrap px-4 py-3.5 text-xs text-brand-muted">
                 {formatDateWIB(po.created_at)}

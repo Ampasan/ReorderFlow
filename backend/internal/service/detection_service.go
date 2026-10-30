@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
+	"sync/atomic"
 	"time"
 
 	"reorderflow-backend/internal/model"
@@ -23,6 +23,7 @@ type DetectionService struct {
 	poRepo   *repository.PORepository
 	redis    *repository.RedisRepository
 	pdf      *PDFService
+	scanLock atomic.Bool
 }
 
 func NewDetectionService(
@@ -40,15 +41,11 @@ func NewDetectionService(
 }
 
 func (s *DetectionService) RunScan(ctx context.Context) (*model.ScanResult, error) {
-	locked, err := s.redis.TryLock(scanLockKey, scanLockTTL)
-	if err != nil {
-		utils.Logger.Error("acquire scan lock failed", "error", err)
-		return nil, fmt.Errorf("failed to acquire scan lock: %w", err)
-	}
+	unlock, locked := s.acquireScanLock()
 	if !locked {
 		return nil, ErrScanInProgress
 	}
-	defer s.redis.Unlock(scanLockKey)
+	defer unlock()
 
 	utils.Logger.Info("Executing Low-Stock Scanner...")
 
@@ -124,4 +121,24 @@ func (s *DetectionService) RunScan(ctx context.Context) (*model.ScanResult, erro
 	result.DraftPOCreated = created
 
 	return result, nil
+}
+
+// Redis coordinates the lock across instances. When it is unreachable, a
+// process-local lock still stops two scans overlapping on this instance.
+func (s *DetectionService) acquireScanLock() (func(), bool) {
+	if s.redis.Enabled() {
+		locked, err := s.redis.TryLock(scanLockKey, scanLockTTL)
+		if err == nil {
+			if !locked {
+				return nil, false
+			}
+			return func() { s.redis.Unlock(scanLockKey) }, true
+		}
+		utils.Logger.Warn("redis scan lock unavailable, using process-local lock", "error", err)
+	}
+
+	if !s.scanLock.CompareAndSwap(false, true) {
+		return nil, false
+	}
+	return func() { s.scanLock.Store(false) }, true
 }

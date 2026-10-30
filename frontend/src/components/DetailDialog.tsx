@@ -12,10 +12,19 @@ interface DetailDialogProps {
   description?: string
   rows: DetailRow[]
   footer?: ReactNode
+  children?: ReactNode
   onClose: () => void
 }
 
-export function DetailDialog({ open, title, description, rows, footer, onClose }: DetailDialogProps) {
+export function DetailDialog({
+  open,
+  title,
+  description,
+  rows,
+  footer,
+  children,
+  onClose,
+}: DetailDialogProps) {
   return (
     <Modal
       open={open}
@@ -48,6 +57,7 @@ export function DetailDialog({ open, title, description, rows, footer, onClose }
           </div>
         ))}
       </dl>
+      {children ? <div className="mt-4">{children}</div> : null}
     </Modal>
   )
 }

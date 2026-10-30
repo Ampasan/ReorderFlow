@@ -57,6 +57,6 @@ src/
 
 ## Catatan desain
 
-- Palet mengikuti `docs/DESIGN.md` dan `docs/ui`: krem `#FEF3E2`, shell `#E2CBB0`, tinta `#2A1A0E`, terracotta.
+- Palet mengikuti `docs/DESIGN.md`: krem `#FEF3E2`, shell `#E2CBB0`, tinta `#2A1A0E`, terracotta.
 - Terracotta `#D4621A` dipakai sebagai aksen (focus ring, titik status). Permukaan tombol dan teks memakai `#B85114` dan `#9C4410` supaya teks putih dan teks terracotta tetap lolos WCAG AA 4.5:1.
 - Tidak ada mode gelap: sesuai FRD-04 bagian 7.

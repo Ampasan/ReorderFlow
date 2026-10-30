@@ -65,8 +65,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-auto flex-shrink-0 items-center justify-center rounded-xl bg-white p-1">
               <img
-                src="/Logo_ReorderFlow.png"
-                alt=""
+                src="/logo-reorderflow.png"
+                alt="logo ReorderFlow"
                 aria-hidden="true"
                 className="h-8 w-auto"
               />

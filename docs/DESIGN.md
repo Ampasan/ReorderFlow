@@ -53,7 +53,7 @@
 ### 1. Persistent App Shell (Web Dashboard Layout)
 - **Left Sidebar**: 
   - Lebar tetap `w-64` (256px), `fixed h-full`, background `#EAD8C0`, border kanan `border-r border-[#2A1A0E]/10`.
-  - Bagian atas: Logo brand `Logo_ReorderFlow.png` dalam kontainer putih rounded-xl dengan teks nama aplikasi `ReorderFlow` (aksen "Flow" `#D4621A`) + subjudul `Sistem Otomasi ROP`.
+  - Bagian atas: Logo brand `logo-reorderflow.png` dalam kontainer putih rounded-xl dengan teks nama aplikasi `ReorderFlow` (aksen "Flow" `#D4621A`) + subjudul `Sistem Otomasi ROP`.
   - Navigasi: Menu aktif menggunakan background solid terracotta `#D4621A` dengan teks putih dan ikon 16px. Menu inaktif menggunakan teks `#2A1A0E/75` dengan efek hover `#FEF3E2/70`.
   - Bagian bawah: Profile card toko (misal *"Toko Sembako Berkah"* atau *"Kopi Kenangan UMKM"*) berlatar `#FEF3E2` dengan avatar badge oranye dan indikator aktif dot hijau `bg-emerald-500`.
 - **Main Canvas**:

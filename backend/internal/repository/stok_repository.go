@@ -57,6 +57,22 @@ func (r *StokRepository) GetBySKU(sku string) (*model.Stok, error) {
 	return &s, nil
 }
 
+func (r *StokRepository) GetBySKUs(skus []string) (map[string]model.Stok, error) {
+	stockBySKU := make(map[string]model.Stok, len(skus))
+	if len(skus) == 0 {
+		return stockBySKU, nil
+	}
+
+	var rows []model.Stok
+	if err := r.db.Where("sku IN ?", skus).Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		stockBySKU[row.SKU] = row
+	}
+	return stockBySKU, nil
+}
+
 func (r *StokRepository) UpdateStock(sku string, stock int) error {
 	return r.db.Model(&model.Stok{}).Where("sku = ?", sku).Update("stok_saat_ini", stock).Error
 }
@@ -74,17 +90,17 @@ func (r *StokRepository) RecordOpname(sku string, newStock int, alasan string, a
 			Where("sku = ?", sku).
 			Updates(map[string]interface{}{
 				"stok_saat_ini": newStock,
-				"updated_at":     now,
+				"updated_at":    now,
 			}).Error; err != nil {
 			return err
 		}
 
 		audit := model.StockOpname{
 			SKU:         sku,
-			StokSebelum:  current.StokSaatIni,
-			StokSesudah:  newStock,
-			Alasan:       alasan,
-			ActorID:      actorID,
+			StokSebelum: current.StokSaatIni,
+			StokSesudah: newStock,
+			Alasan:      alasan,
+			ActorID:     actorID,
 		}
 		if err := tx.Create(&audit).Error; err != nil {
 			return err

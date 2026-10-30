@@ -61,7 +61,7 @@ func (r *PORepository) GetByNomorPO(nomor string) (*model.POLog, error) {
 }
 
 func (r *PORepository) List(filter string) ([]model.POLog, error) {
-	q := r.db.Joins("Pemasok")
+	q := r.db.Joins("Pemasok").Preload("Details")
 
 	if filter != "" && filter != "all" {
 		q = q.Where("po_log.status = ?", filter)

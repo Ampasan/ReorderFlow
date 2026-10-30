@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { correctStock } from '../services/stockService'
 import type { StockCorrectionRequest } from '../types/stok'
+import { invalidateResourceCache } from './useResource'
 
 export function useStockCorrection(onFinished: () => void) {
   const [pending, setPending] = useState(false)
@@ -11,6 +12,8 @@ export function useStockCorrection(onFinished: () => void) {
       setPending(true)
       try {
         await correctStock(sku, payload)
+        invalidateResourceCache('stock')
+        invalidateResourceCache('dashboard')
         toast.success(`Stok ${sku} berhasil dikoreksi`)
         onFinished()
         return true

@@ -6,5 +6,5 @@ import { useResource } from './useResource'
 export function usePOLog(status: POFilter) {
   const fetcher = useCallback(() => listPO(status), [status])
 
-  return useResource<POLog[]>(fetcher)
+  return useResource<POLog[]>(`po:${status}`, fetcher)
 }

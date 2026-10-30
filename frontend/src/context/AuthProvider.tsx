@@ -14,10 +14,12 @@ interface AuthState {
 }
 
 function readInitialState(): AuthState {
-  if (!getToken()) {
+  const token = getToken()
+  const user = getUser()
+  if (!token || !user) {
     return { user: null, status: 'anonymous' }
   }
-  return { user: getUser(), status: 'loading' }
+  return { user, status: 'authenticated' }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {

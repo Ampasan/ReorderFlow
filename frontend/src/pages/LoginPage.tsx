@@ -52,14 +52,12 @@ export function LoginPage() {
   return (
     <main className="flex min-h-screen">
 
-      {/* ── Panel kiri: brand + ilustrasi (60%) ── */}
       <div className="hidden flex-col border-r border-brand-dark/10 bg-[#EAD8C0] px-14 py-10 lg:flex lg:w-[60%]">
 
-        {/* Zona 1: Wordmark + teks */}
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-auto flex-shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-sm">
-              <img src="/Logo_ReorderFlow.png" alt="" className="h-8 w-auto" />
+              <img src="/logo-reorderflow.png" alt="" className="h-8 w-auto" />
             </span>
             <div>
               <p className="text-sm font-bold leading-none text-brand-dark">
@@ -80,34 +78,30 @@ export function LoginPage() {
           </div>
         </div>
 
-        {/* Zona 2: Ilustrasi — menyerap sisa ruang, terpusat */}
         <div className="flex flex-1 items-center justify-center py-4">
           <img
-            src="/illustration.png"
+            src="/illustration.webp"
             alt=""
             aria-hidden="true"
-            width={579}
-            height={431}
+            width={920}
+            height={678}
             className="h-auto w-full max-w-[460px] object-contain"
             draggable={false}
           />
         </div>
 
-        {/* Zona 3: Footer */}
         <p className="text-xs text-brand-muted">
           Untuk toko grosir dan ritel sembako UMKM Indonesia.
         </p>
       </div>
 
-      {/* ── Panel kanan: form (40%) ── */}
       <div className="flex flex-1 flex-col bg-white">
         <div className="flex flex-1 items-center justify-center px-8 py-12 sm:px-12">
           <div className="w-full max-w-[340px]">
 
-            {/* Mobile-only: wordmark */}
             <div className="mb-8 flex items-center gap-3 lg:hidden">
               <span className="flex h-10 w-auto flex-shrink-0 items-center justify-center rounded-xl border border-brand-dark/8 bg-white p-1 shadow-sm">
-                <img src="/Logo_ReorderFlow.png" alt="" className="h-8 w-auto" />
+                <img src="/logo-reorderflow.png" alt="" className="h-8 w-auto" />
               </span>
               <div>
                 <p className="text-sm font-bold leading-none text-brand-dark">
@@ -117,7 +111,6 @@ export function LoginPage() {
               </div>
             </div>
 
-            {/* Heading */}
             <div className="mb-7">
               <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-brand-dark">
                 Masuk ke akun Anda
@@ -127,7 +120,6 @@ export function LoginPage() {
               </p>
             </div>
 
-            {/* Form */}
             <form className="space-y-4" onSubmit={handleSubmit} noValidate>
               {error ? (
                 <div

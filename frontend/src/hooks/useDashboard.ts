@@ -16,5 +16,5 @@ export function useDashboard() {
     return { summary, lowStock }
   }, [])
 
-  return useResource(fetcher)
+  return useResource<DashboardData>('dashboard', fetcher)
 }

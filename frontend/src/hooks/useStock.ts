@@ -6,5 +6,5 @@ import { useResource } from './useResource'
 export function useStock(status: StockFilter) {
   const fetcher = useCallback(() => listStock(status), [status])
 
-  return useResource<StockItem[]>(fetcher)
+  return useResource<StockItem[]>(`stock:${status}`, fetcher)
 }

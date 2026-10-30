@@ -45,7 +45,7 @@ Pengiriman dibatasi 15 detik per percobaan dengan dua percobaan. Error 5xx dari 
 Jalankan dua file berikut berurutan di Supabase SQL Editor:
 
 1. `migrations/001_schema.sql`: semua tabel, index, dan constraint.
-2. `migrations/002_seed.sql`: reset data demo lalu isi ulang pemasok dan stok grosir/sembako.
+2. `migrations/002_seed.sql`: reset data demo lalu isi ulang pemasok, stok grosir/sembako, dua PO `DRAFT`, dan satu PO `SENT`.
 
 Keduanya aman dijalankan berulang. `002_seed.sql` selalu mengosongkan riwayat PO, stok opname, stok, dan pemasok lebih dulu, jadi bisa dipakai untuk mengembalikan demo ke kondisi awal. Akun `users` tidak direset karena dibuat dari `ADMIN_EMAIL` dan `MANAGER_EMAIL` saat server start.
 
