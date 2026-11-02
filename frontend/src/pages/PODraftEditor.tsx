@@ -20,6 +20,10 @@ const LOCKED_COPY: Record<Exclude<POStatus, EditableStatus>, string> = {
   PENDING_APPROVAL:
     'Draf sudah dikirim ke manajer. Pemasok baru menerima PO setelah manajer menyetujui tautan di email.',
   SENT: 'PO sudah disetujui manajer dan dokumennya sudah dikirim ke email pemasok.',
+  PARTIALLY_RECEIVED:
+    'Sebagian barang sudah diterima dan stoknya sudah ditambah. Sisa kiriman bisa dicatat dari Riwayat PO.',
+  RECEIVED:
+    'Seluruh barang sudah diterima dan stok sudah diperbarui. PO ini selesai dan tidak bisa diedit.',
 }
 
 function isEditableStatus(status: POStatus): status is EditableStatus {

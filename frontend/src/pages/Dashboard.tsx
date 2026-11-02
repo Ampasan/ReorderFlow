@@ -94,13 +94,13 @@ export function Dashboard() {
       {/* KPI cards */}
       {error ? null : (
         <section
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6"
           aria-label="Ringkasan angka"
         >
           {loading || !summary ? (
             <>
               <p role="status" className="sr-only">Memuat ringkasan operasional</p>
-              {[0, 1, 2, 3, 4].map((key) => (
+              {[0, 1, 2, 3, 4, 5].map((key) => (
                 <div key={key} className="rounded-xl border border-brand-dark/10 bg-white px-5 py-5">
                   <div className="skeleton-bar h-3 w-24" />
                   <div className="skeleton-bar mt-5 h-7 w-20" />
@@ -135,6 +135,14 @@ export function Dashboard() {
                 label="PO Terkirim"
                 value={`${formatNumber(summary.sent_po_count)} PO`}
                 hint="Sudah diteruskan ke pemasok"
+                tone="success"
+              />
+              <KpiCard
+                label="PO Diterima"
+                value={`${formatNumber(
+                  summary.received_po_count + summary.partially_received_po_count,
+                )} PO`}
+                hint="Sudah datang atau menunggu sisa kiriman"
                 tone="success"
               />
             </>

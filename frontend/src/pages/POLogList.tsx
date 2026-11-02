@@ -8,11 +8,14 @@ import { POLogTable } from '../components/POLogTable'
 import { PageHeader } from '../components/PageHeader'
 import { StatusBadge } from '../components/StatusBadge'
 import { TableSkeleton } from '../components/TableSkeleton'
+import { TerimaBarangDialog } from '../components/TerimaBarangDialog'
 import { useAuth } from '../hooks/useAuth'
+import { usePenerimaan } from '../hooks/usePenerimaan'
 import { usePOLog } from '../hooks/usePOLog'
 import { useResource } from '../hooks/useResource'
+import { getPenerimaan } from '../services/poService'
 import { listStock } from '../services/stockService'
-import type { POFilter, POLog } from '../types/po'
+import type { POFilter, POLog, PenerimaanItemInput } from '../types/po'
 import type { StockItem } from '../types/stok'
 import { PO_FILTERS, isPOFilter } from '../utils/constants'
 import { formatDateWIB, formatNumber } from '../utils/formatter'
@@ -36,6 +39,16 @@ const EMPTY_COPY: Record<POFilter, { title: string; description: string }> = {
     title: 'Belum ada PO terkirim',
     description: 'PO berubah menjadi terkirim setelah manajer menyetujui tautan di email.',
   },
+  PARTIALLY_RECEIVED: {
+    title: 'Belum ada PO yang diterima sebagian',
+    description:
+      'Status ini muncul setelah admin mencatat kedatangan sebagian barang dari PO yang sudah terkirim.',
+  },
+  RECEIVED: {
+    title: 'Belum ada PO yang diterima penuh',
+    description:
+      'PO berubah menjadi diterima setelah seluruh qty pesanan tercatat datang dan stok ikut diperbarui.',
+  },
   REJECTED: {
     title: 'Belum ada PO ditolak',
     description:
@@ -55,6 +68,7 @@ export function POLogList() {
 
   const { data, loading, error, refetch } = usePOLog(status)
   const [selected, setSelected] = useState<POLog | null>(null)
+  const [receiveTarget, setReceiveTarget] = useState<POLog | null>(null)
   const { user } = useAuth()
 
   const items = useMemo(() => data ?? [], [data])
@@ -66,6 +80,27 @@ export function POLogList() {
   const { data: stockData } = useResource('stock:all', fetchStock, {
     enabled: selected !== null,
   })
+
+  const fetchPenerimaan = useCallback(() => {
+    if (!receiveTarget) {
+      return Promise.reject(new Error('PO penerimaan belum dipilih.'))
+    }
+    return getPenerimaan(receiveTarget.id)
+  }, [receiveTarget])
+
+  const { data: penerimaanView, loading: penerimaanLoading } = useResource(
+    `penerimaan:${receiveTarget?.id ?? 0}`,
+    fetchPenerimaan,
+    { enabled: receiveTarget !== null },
+  )
+
+  const { receive, pending: receivePending } = usePenerimaan(refetch)
+
+  async function handleReceive(lines: PenerimaanItemInput[]) {
+    if (!receiveTarget) return
+    const success = await receive(receiveTarget.id, lines)
+    if (success) setReceiveTarget(null)
+  }
 
   const suppliers = useMemo(() => {
     const map = new Map<number, { id: number; nama: string; count: number }>()
@@ -173,7 +208,13 @@ export function POLogList() {
               }
             />
           ) : (
-            <POLogTable items={visibleItems} onSelect={setSelected} canEdit={canEdit} onRefresh={refetch} />
+            <POLogTable
+              items={visibleItems}
+              onSelect={setSelected}
+              canEdit={canEdit}
+              onRefresh={refetch}
+              onReceive={canEdit ? setReceiveTarget : undefined}
+            />
           )}
         </div>
       </section>
@@ -221,6 +262,19 @@ export function POLogList() {
                       : 'Edit Draf'}
                 </Link>
               ) : null
+            ) : null}
+            {canEdit &&
+            (selected?.status === 'SENT' || selected?.status === 'PARTIALLY_RECEIVED') ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelected(null)
+                  setReceiveTarget(selected)
+                }}
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+              >
+                Terima Barang
+              </button>
             ) : null}
             {selected?.tautan_pdf ? (
               <a
@@ -276,6 +330,17 @@ export function POLogList() {
           </section>
         ) : null}
       </DetailDialog>
+
+      <TerimaBarangDialog
+        key={receiveTarget?.id ?? 'closed'}
+        open={receiveTarget !== null}
+        po={receiveTarget}
+        view={penerimaanView}
+        loading={penerimaanLoading}
+        pending={receivePending}
+        onConfirm={handleReceive}
+        onClose={() => setReceiveTarget(null)}
+      />
     </div>
   )
 }

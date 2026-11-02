@@ -31,6 +31,8 @@ export const PO_FILTERS: FilterOption<POFilter>[] = [
   { value: 'DRAFT', label: 'Draf' },
   { value: 'PENDING_APPROVAL', label: 'Menunggu' },
   { value: 'SENT', label: 'Terkirim' },
+  { value: 'PARTIALLY_RECEIVED', label: 'Diterima Sebagian' },
+  { value: 'RECEIVED', label: 'Diterima' },
   { value: 'REJECTED', label: 'Ditolak' },
   { value: 'REQUIRES_MANUAL_REVIEW', label: 'Perlu Tinjauan' },
 ]
@@ -41,6 +43,8 @@ const PO_STATUSES: POStatus[] = [
   'SENT',
   'REJECTED',
   'REQUIRES_MANUAL_REVIEW',
+  'PARTIALLY_RECEIVED',
+  'RECEIVED',
 ]
 
 export function isStockFilter(value: string | null): value is StockFilter {

@@ -6,6 +6,8 @@ export type POStatus =
   | 'SENT'
   | 'REJECTED'
   | 'REQUIRES_MANUAL_REVIEW'
+  | 'PARTIALLY_RECEIVED'
+  | 'RECEIVED'
 
 export type POFilter = 'all' | POStatus
 
@@ -32,4 +34,37 @@ export interface POLog {
 export interface DraftItemInput {
   sku: string
   jumlah_order: number
+}
+
+export interface PenerimaanItem {
+  sku: string
+  nama: string
+  jumlah_order: number
+  sudah_diterima: number
+  sisa: number
+}
+
+export interface PenerimaanRiwayatItem {
+  sku: string
+  nama: string
+  qty_diterima: number
+}
+
+export interface PenerimaanRiwayat {
+  id: number
+  created_at: string
+  items: PenerimaanRiwayatItem[]
+}
+
+export interface PenerimaanView {
+  po_id: number
+  nomor_po: string
+  status: POStatus
+  items: PenerimaanItem[]
+  riwayat: PenerimaanRiwayat[]
+}
+
+export interface PenerimaanItemInput {
+  sku: string
+  qty_diterima: number
 }

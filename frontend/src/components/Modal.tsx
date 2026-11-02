@@ -10,6 +10,12 @@ interface ModalProps {
   onClose: () => void
   children?: ReactNode
   footer?: ReactNode
+  size?: 'md' | 'lg'
+}
+
+const SIZE_CLASS: Record<NonNullable<ModalProps['size']>, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-2xl',
 }
 
 const FOCUSABLE =
@@ -41,7 +47,7 @@ function unlockScroll() {
   document.body.style.paddingRight = bodyPaddingRight
 }
 
-export function Modal({ open, title, description, onClose, children, footer }: ModalProps) {
+export function Modal({ open, title, description, onClose, children, footer, size = 'md' }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const backdropDownRef = useRef(false)
   const onCloseRef = useRef(onClose)
@@ -143,7 +149,7 @@ export function Modal({ open, title, description, onClose, children, footer }: M
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
-        className="flex max-h-[calc(100dvh-1rem)] w-full max-w-md animate-modal-in flex-col overflow-hidden rounded-t-2xl border border-brand-dark/10 bg-white shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:rounded-2xl"
+        className={`flex max-h-[calc(100dvh-1rem)] w-full ${SIZE_CLASS[size]} animate-modal-in flex-col overflow-hidden rounded-t-2xl border border-brand-dark/10 bg-white shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:rounded-2xl`}
       >
         <div className="flex flex-shrink-0 items-start gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">

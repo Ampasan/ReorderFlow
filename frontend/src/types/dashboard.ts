@@ -6,4 +6,6 @@ export interface DashboardSummary {
   pending_po_count: number
   sent_po_count: number
   rejected_po_count: number
+  partially_received_po_count: number
+  received_po_count: number
 }

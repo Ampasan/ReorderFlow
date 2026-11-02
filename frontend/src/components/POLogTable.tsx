@@ -10,9 +10,16 @@ interface POLogTableProps {
   onSelect: (po: POLog) => void
   canEdit?: boolean
   onRefresh?: () => void
+  onReceive?: (po: POLog) => void
 }
 
-export function POLogTable({ items, onSelect, canEdit = false, onRefresh }: POLogTableProps) {
+export function POLogTable({
+  items,
+  onSelect,
+  canEdit = false,
+  onRefresh,
+  onReceive,
+}: POLogTableProps) {
   const [regenerating, setRegenerating] = useState<number | null>(null)
 
   async function handleRegenerate(po: POLog) {
@@ -73,6 +80,16 @@ export function POLogTable({ items, onSelect, canEdit = false, onRefresh }: POLo
               </td>
               <td className="whitespace-nowrap px-4 py-3.5 text-right">
                 <div className="flex items-center justify-end gap-2">
+                  {onReceive &&
+                  (po.status === 'SENT' || po.status === 'PARTIALLY_RECEIVED') ? (
+                    <button
+                      type="button"
+                      onClick={() => onReceive(po)}
+                      className="h-8 rounded-lg bg-brand-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+                    >
+                      Terima Barang
+                    </button>
+                  ) : null}
                   {canEdit &&
                   (po.status === 'DRAFT' ||
                     po.status === 'REJECTED' ||

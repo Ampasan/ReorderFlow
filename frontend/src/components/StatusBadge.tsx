@@ -10,6 +10,8 @@ const LABELS: Record<BadgeStatus, string> = {
   DRAFT: 'Draf',
   PENDING_APPROVAL: 'Menunggu',
   SENT: 'Terkirim',
+  PARTIALLY_RECEIVED: 'Diterima Sebagian',
+  RECEIVED: 'Diterima',
   REJECTED: 'Ditolak',
 }
 
@@ -26,6 +28,10 @@ const STYLES: Record<BadgeStatus, string> = {
     'border-amber-200 bg-amber-50 text-amber-800',
   SENT:
     'border-brand-dark/30 bg-brand-dark text-white',
+  PARTIALLY_RECEIVED:
+    'border-brand-orange/30 bg-brand-orange/10 text-brand-orange-strong',
+  RECEIVED:
+    'border-emerald-200 bg-emerald-50 text-emerald-700',
   REJECTED:
     'border-rose-200 bg-rose-50 text-rose-700',
 }
