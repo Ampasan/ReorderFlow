@@ -5,9 +5,10 @@
 ##### Phase 1: Backend Service & Utility Setup (Golang)
 *  [ ] **T-3.1** : Implementasikan generator token acak `token_generator.go` menggunakan pustaka `crypto/rand`.
 *  [ ] **T-3.2** : Buat compiler template email HTML untuk ringkasan PO ke Manager dan lampiran PDF ke Pemasok di `internal/utils/email_sender.go`.
-*  [ ] **T-3.3** : Implementasikan `ApprovalService` di `internal/service/approval_service.go` untuk menangani perubahan status state transition (`DRAFT` -> `SENT` / `REJECTED`) dan validasi *idempotency*.
+*  [ ] **T-3.3** : Implementasikan `DraftService` di `internal/service/draft_service.go` untuk update baris draf dan submit ke manajer. Submit membuat token baru, mengisi `submitted_at`, merender PDF final, dan mengubah status ke `PENDING_APPROVAL`.
+*  [ ] **T-3.3b** : Implementasikan `ApprovalService` di `internal/service/approval_service.go` untuk transisi `PENDING_APPROVAL` -> `SENT` / `REJECTED`, TTL 48 jam, Redis lock `token:<token>` TTL 1 menit, dan conditional update sebagai idempotensi.
 *  [ ] **T-3.4** : Implementasikan `ApprovalHandler` di `internal/handler/approval_handler.go` untuk mengeksekusi request HTTP GET `/api/po/approval` dan merender halaman HTML respon.
-*  [ ] **T-3.5** : Daftarkan route `/api/po/approval` di `cmd/server/main.go`.
+*  [ ] **T-3.5** : Daftarkan route `/api/po/approval` sebagai publik, serta `GET /api/po-draft/{id}`, `PUT /api/po-draft/{id}`, dan `POST /api/po-draft/{id}/submit` sebagai route admin di `cmd/server/main.go`.
 
 --------------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ React 19 + Vite (TypeScript, Tailwind CSS, React Router v7, Axios, Lucide React,
 
 ## Users
 
-**Staf Inventori / Admin Pengadaan** — warehouse or procurement staff at an Indonesian UMKM (10–50 employees, 50–500 SKUs). Works at a desk or warehouse counter; needs to scan stock conditions and trigger purchase orders fast without risking typos on SKU codes or quantities.
+**Staf Inventori / Procurement Admin** — warehouse or procurement staff at an Indonesian UMKM (10–50 employees, 50–500 SKUs). Works at a desk or warehouse counter; needs to scan stock conditions and trigger purchase orders fast without risking typos on SKU codes or quantities.
 
 **Pemilik Usaha / Manajer Operasional** — business owner or operations manager. Reviews, controls spending, and gives formal approval on PO documents before they go to suppliers. Approves via a one-time secure email link — no login required for that action.
 

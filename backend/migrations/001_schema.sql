@@ -1,5 +1,3 @@
--- Skema ReorderFlow. Aman dijalankan berulang pada database yang sudah ada.
-
 CREATE TABLE IF NOT EXISTS pemasok (
     id SERIAL PRIMARY KEY,
     nama VARCHAR(150) NOT NULL,

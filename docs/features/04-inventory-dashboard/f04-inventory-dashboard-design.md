@@ -10,6 +10,8 @@ export interface Pemasok {
   email: string;
 }
 
+export type StockStatus = 'NORMAL' | 'LOW_STOCK' | 'REQUIRES_MANUAL_REVIEW';
+
 export interface Stok {
   sku: string;
   nama: string;
@@ -19,9 +21,22 @@ export interface Stok {
   id_pemasok: number;
   pemasok?: Pemasok;
   updated_at?: string;
+  status: StockStatus;
 }
 
-export type POStatus = 'DRAFT' | 'SENT' | 'REJECTED' | 'REQUIRES_MANUAL_REVIEW';
+export type POStatus =
+  | 'DRAFT'
+  | 'PENDING_APPROVAL'
+  | 'SENT'
+  | 'REJECTED'
+  | 'REQUIRES_MANUAL_REVIEW';
+
+export interface PODetail {
+  id: number;
+  po_id: number;
+  sku: string;
+  jumlah_order: number;
+}
 
 export interface POLog {
   id: number;
@@ -30,7 +45,20 @@ export interface POLog {
   pemasok?: Pemasok;
   status: POStatus;
   tautan_pdf: string;
+  submitted_at?: string;
   created_at: string;
+  updated_at?: string;
+  details?: PODetail[];
+}
+
+export interface DashboardSummary {
+  total_sku: number;
+  low_stock_count: number;
+  manual_review: number;
+  draft_po_count: number;
+  pending_po_count: number;
+  sent_po_count: number;
+  rejected_po_count: number;
 }
 
 export type UserRole = 'admin' | 'manager';
@@ -47,19 +75,24 @@ export interface LoginResponse {
   token: string;
   user: User;
 }
+
+export interface DraftItem {
+  sku: string;
+  jumlah_order: number;
+}
 ```
 
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin Backend)
-Semua endpoint data memerlukan header `Authorization: Bearer <token>`. Endpoint `/api/auth/login` bersifat publik.
+Semua endpoint data memerlukan header `Authorization: Bearer <token>` dan mengembalikan envelope `{ success, message, data, error }`. Endpoint publik: `POST /api/auth/login`, `GET /api/po/approval`, `GET /health`.
 
 ###### A. POST /api/auth/login
-*   **Request Body** :
+*   **Request Body**:
 ```json
 { "email": "admin@example.com", "password": "your-password" }
 ```
-*   **Response 200 OK** :
+*   **Response 200 OK**:
 ```json
 {
   "success": true,
@@ -76,61 +109,55 @@ Semua endpoint data memerlukan header `Authorization: Bearer <token>`. Endpoint 
   }
 }
 ```
-*   **Response 401 Unauthorized** :
+*   **Response 401 Unauthorized**:
 ```json
 { "success": false, "message": "Email atau password salah", "data": null, "error": "email atau password salah" }
 ```
 
 ###### B. GET /api/auth/me
-*   **Headers** : `Authorization: Bearer <token>`
-*   **Response 200 OK** : envelope `success` dengan `data` berisi objek `User`.
+*   **Headers**: `Authorization: Bearer <token>`
+*   **Response 200 OK**: envelope `success` dengan `data` berisi objek `User`.
 
-###### C. GET /api/stok
-*   **Headers** : `Authorization: Bearer <token>`
-*   **Response 200 OK** :
+###### C. GET /api/stok?status=all|low|manual
+*   **Headers**: `Authorization: Bearer <token>`
+*   **Response 200 OK**:
 ```json
 {
   "success": true,
   "message": "Berhasil mengambil data stok",
   "data": [
     {
-      "sku": "SKU-KOPI-01",
+      "sku": "SKU-KOP-01",
       "nama": "Biji Kopi Arabika 1kg",
       "stok_saat_ini": 5,
       "reorder_point": 10,
       "qty_min_order": 20,
       "id_pemasok": 1,
+      "status": "LOW_STOCK",
       "pemasok": { "id": 1, "nama": "PT Kopi Mandiri", "email": "order@kopimandiri.com" }
     }
   ],
   "error": null
 }
 ```
-###### D. GET /api/po
-*   **Headers** : `Authorization: Bearer <token>`
-*   **Response 200 OK** :
-```json
-{
-  "success": true,
-  "message": "Berhasil mengambil riwayat PO",
-  "data": [
-    {
-      "id": 1,
-      "nomor_po": "PO-20261025-01-001",
-      "id_pemasok": 1,
-      "pemasok": { "id": 1, "nama": "PT Kopi Mandiri", "email": "order@kopimandiri.com" },
-      "status": "SENT",
-      "tautan_pdf": "https://example.com/storage/object/public/po-documents/PO-20261025-01-001.pdf",
-      "created_at": "2026-10-25T08:15:00Z"
-    }
-  ],
-  "error": null
-}
-```
 
-###### E. GET /api/dashboard
-*   **Headers** : `Authorization: Bearer <token>`
-*   **Response 200 OK** :
+###### D. POST /api/stok/scan
+*   **Headers**: `Authorization: Bearer <token>`, role `admin`.
+*   **Response 200 OK**: `data` berisi `scanned_items`, `low_stock_count`, `draft_po_created`, `skipped_active_po`, `manual_review`.
+*   **Response 409**: pemindaian lain sedang berlangsung.
+*   **Response 403**: role manager.
+
+###### E. PATCH /api/stok/{sku}
+*   **Headers**: `Authorization: Bearer <token>`, role `admin`.
+*   **Request Body**:
+```json
+{ "stok_saat_ini": 6, "alasan": "MISCOUNT" }
+```
+*   **Response 200 OK**: `data` berisi `sku` dan `stok_saat_ini` terbaru.
+
+###### F. GET /api/dashboard
+*   **Headers**: `Authorization: Bearer <token>`
+*   **Response 200 OK**:
 ```json
 {
   "success": true,
@@ -139,48 +166,96 @@ Semua endpoint data memerlukan header `Authorization: Bearer <token>`. Endpoint 
     "total_sku": 20,
     "low_stock_count": 6,
     "manual_review": 1,
-    "pending_po_count": 2,
+    "draft_po_count": 2,
+    "pending_po_count": 1,
     "sent_po_count": 1,
     "rejected_po_count": 0
   }
 }
 ```
 
+###### G. GET /api/po?status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW
+*   **Headers**: `Authorization: Bearer <token>`
+*   **Response 200 OK**: array `POLog` dengan `pemasok` dan `details`.
+
+###### H. GET /api/po-draft/{id}
+*   **Headers**: `Authorization: Bearer <token>`
+*   **Response 200 OK**: objek `POLog` lengkap dengan `details`.
+
+###### I. PUT /api/po-draft/{id}
+*   **Headers**: `Authorization: Bearer <token>`, role `admin`.
+*   **Request Body**:
+```json
+{ "items": [{ "sku": "SKU-KOP-01", "jumlah_order": 20 }] }
+```
+*   **Response 200 OK**: objek `POLog` terbaru.
+
+###### J. POST /api/po-draft/{id}/submit
+*   **Headers**: `Authorization: Bearer <token>`, role `admin`.
+*   **Response 200 OK**: status PO menjadi `PENDING_APPROVAL`, email ke manajer diantrekan.
+
 --------------------------------------------------------------------------------
 
 ##### 3. Frontend Component Structure (React + Vite + TypeScript)
 ```text
 src/
-├── components/
-│   ├── Sidebar.tsx               # Navigasi utama (Dashboard, Data Stok, Riwayat PO)
-│   ├── Navbar.tsx                # Header + indikator sistem + logout
-│   ├── ProtectedRoute.tsx        # Route guard, redirect ke /login jika 401
-│   ├── KPICard.tsx               # Kartu statistik ringkasan
-│   ├── StatusBadge.tsx           # Badge warna (LOW STOCK, NORMAL, DRAFT, SENT, REJECTED)
-│   ├── StockTable.tsx            # Tabel daftar inventori SKU
-│   ├── POLogTable.tsx            # Tabel riwayat Purchase Order + Tautan PDF
-│   └── TableSkeleton.tsx         # Skeleton loader saat fetching data
+├── App.tsx                       # Router + lazy pages + AuthProvider
 ├── context/
-│   └── AuthContext.tsx           # State token, user, login, logout
+│   ├── AuthProvider.tsx          # State token, user, login, logout, status
+│   └── authContext.ts            # Context definition
+├── components/
+│   ├── AppShell.tsx              # Sidebar + mobile top bar + skip link
+│   ├── Sidebar.tsx               # Navigasi utama + profil + logout
+│   ├── ProtectedRoute.tsx        # Route guard, redirect ke /login
+│   ├── PageHeader.tsx            # Judul halaman + aksi
+│   ├── KpiCard.tsx               # Kartu statistik ringkasan
+│   ├── StatusBadge.tsx           # Badge status stok dan PO
+│   ├── FilterTabs.tsx            # Tab filter berbasis URL
+│   ├── StockTable.tsx            # Tabel inventori (mode penuh dan compact)
+│   ├── POLogTable.tsx            # Tabel PO + aksi Detail / edit / PDF
+│   ├── TableSkeleton.tsx         # Skeleton loader
+│   ├── EmptyState.tsx            # Empty state
+│   ├── ErrorState.tsx            # Error state + tombol Coba Lagi
+│   ├── Modal.tsx                 # Dialog dasar
+│   ├── ConfirmDialog.tsx         # Konfirmasi scan dan submit
+│   ├── DetailDialog.tsx          # Detail SKU / PO
+│   ├── OpnameDialog.tsx          # Koreksi stok opname
+│   └── icons.tsx                 # Ikon SVG
 ├── hooks/
-│   ├── useAuth.ts                # Konsumsi AuthContext
-│   ├── useStock.ts               # Custom React hook untuk fetch stok
-│   └── usePOLog.ts               # Custom React hook untuk fetch log PO
+│   ├── useAuth.ts
+│   ├── useResource.ts            # Fetch + cache + invalidate
+│   ├── useDashboard.ts
+│   ├── useStock.ts
+│   ├── useStockCorrection.ts
+│   ├── useScan.ts
+│   └── usePOLog.ts
 ├── services/
-│   ├── api.ts                    # Axios instance + request/response interceptor
-│   └── auth.ts                   # login(), me(), logout()
+│   ├── api.ts                    # fetch wrapper, Bearer token, 401/403 handling
+│   ├── authService.ts            # login(), me()
+│   ├── dashboardService.ts       # getSummary()
+│   ├── stockService.ts           # listStock(), runScan(), correctStock()
+│   └── poService.ts              # listPO(), getPO(), updateDraft(), submitDraft()
 ├── types/
-│   ├── auth.ts                   # User, UserRole, LoginResponse
+│   ├── auth.ts
+│   ├── api.ts
+│   ├── dashboard.ts
 │   ├── stok.ts
 │   └── po.ts
+├── utils/
+│   ├── authStorage.ts            # kunci localStorage reorderflow.token / reorderflow.user
+│   ├── constants.ts              # API base URL, filter, role label
+│   └── formatter.ts              # formatDateWIB, formatNumber
 └── pages/
-    ├── LoginPage.tsx             # Form login email/password
-    ├── Dashboard.tsx             # Halaman utama ringkasan KPI
-    ├── StockList.tsx             # Halaman manajemen tabel stok
-    └── POLogList.tsx             # Halaman tabel riwayat PO
+    ├── LoginPage.tsx             # Split screen, form email/password
+    ├── Dashboard.tsx             # Banner, KPI, cuplikan low stock
+    ├── StockList.tsx             # Tabel stok, tab, scan, opname
+    ├── POLogList.tsx             # Tabel PO, 6 tab, filter pemasok, detail
+    └── PODraftEditor.tsx         # Editor draf, simpan, submit ke manajer
 ```
 
-**Axios interceptor**:
-- Request: sisipkan `Authorization: Bearer <token>` dari storage.
-- Response `401`: hapus token, reset `AuthContext`, redirect `/login`.
-- Response `403`: tampilkan toast "Anda tidak memiliki akses untuk aksi ini".
+**Catatan implementasi**:
+* HTTP client memakai `fetch` bawaan, bukan Axios.
+* Token disimpan di `localStorage` dengan kunci `reorderflow.token` dan `reorderflow.user`.
+* Respons `401` menghapus sesi dan memicu event `reorderflow:unauthorized`.
+* Respons `403` menampilkan toast "Anda tidak memiliki akses untuk aksi ini".
+* Base URL diambil dari `VITE_API_BASE_URL` tanpa akhiran `/api`, contoh `http://localhost:8080`.

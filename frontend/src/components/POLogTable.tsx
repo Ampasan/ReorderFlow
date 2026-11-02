@@ -58,12 +58,19 @@ export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps
               </td>
               <td className="whitespace-nowrap px-4 py-3.5 text-right">
                 <div className="flex items-center justify-end gap-2">
-                  {canEdit && (po.status === 'DRAFT' || po.status === 'REJECTED') ? (
+                  {canEdit &&
+                  (po.status === 'DRAFT' ||
+                    po.status === 'REJECTED' ||
+                    po.status === 'REQUIRES_MANUAL_REVIEW') ? (
                     <Link
                       to={`/po-log/${po.id}/draft`}
-                      className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange transition-colors hover:bg-brand-orange/15"
+                      className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange-strong transition-colors hover:bg-brand-orange/15"
                     >
-                      {po.status === 'REJECTED' ? 'Revisi' : 'Edit Draf'}
+                      {po.status === 'REJECTED'
+                        ? 'Revisi'
+                        : po.status === 'REQUIRES_MANUAL_REVIEW'
+                          ? 'Proses Ulang'
+                          : 'Edit Draf'}
                     </Link>
                   ) : null}
                   <button

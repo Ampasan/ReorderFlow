@@ -49,11 +49,13 @@ export function AppShell() {
                 src="/logo-reorderflow.png"
                 alt="logo ReorderFlow"
                 aria-hidden="true"
+                width={128}
+                height={100}
                 className="h-7 w-auto"
               />
             </span>
             <span className="text-sm font-bold tracking-tight text-brand-dark">
-              Reorder<span className="text-brand-orange">Flow</span>
+              Reorder<span className="text-brand-orange-strong">Flow</span>
             </span>
           </span>
           <button

@@ -13,8 +13,6 @@ import (
 
 const ttl = 60 * time.Second
 
-// After a failed Redis call, skip L2 for a while instead of paying the
-// timeout on every request.
 const redisRetryAfter = 30 * time.Second
 
 const (
@@ -59,7 +57,6 @@ func New(redisRepo *repository.RedisRepository) *Cache {
 func (c *Cache) Get(key string, dst interface{}) bool {
 	now := time.Now()
 
-	// L1 in-memory cache first: sub-millisecond and never touches the network.
 	c.mu.RLock()
 	entry, found := c.items[key]
 	c.mu.RUnlock()
@@ -88,7 +85,6 @@ func (c *Cache) Get(key string, dst interface{}) bool {
 		return false
 	}
 
-	// Populate L1 for subsequent requests.
 	c.mu.Lock()
 	c.items[key] = memoryEntry{raw: byteData, expiresAt: now.Add(ttl)}
 	c.mu.Unlock()

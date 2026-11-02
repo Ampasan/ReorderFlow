@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 
+	"reorderflow-backend/internal/cache"
 	"reorderflow-backend/internal/model"
 	"reorderflow-backend/internal/repository"
 	"reorderflow-backend/internal/utils"
@@ -29,23 +31,32 @@ type ApprovalOutcome struct {
 }
 
 type ApprovalService struct {
-	poRepo  *repository.PORepository
-	redis   *repository.RedisRepository
-	email   *EmailService
-	storage *utils.SupabaseStorage
+	poRepo     *repository.PORepository
+	stokRepo   *repository.StokRepository
+	redis      *repository.RedisRepository
+	email      *EmailService
+	storage    *utils.SupabaseStorage
+	emailQueue *EmailQueue
+	cache      *cache.Cache
 }
 
 func NewApprovalService(
 	poRepo *repository.PORepository,
+	stokRepo *repository.StokRepository,
 	redisRepo *repository.RedisRepository,
 	email *EmailService,
 	storage *utils.SupabaseStorage,
+	emailQueue *EmailQueue,
+	cacheStore *cache.Cache,
 ) *ApprovalService {
 	return &ApprovalService{
-		poRepo:  poRepo,
-		redis:   redisRepo,
-		email:   email,
-		storage: storage,
+		poRepo:     poRepo,
+		stokRepo:   stokRepo,
+		redis:      redisRepo,
+		email:      email,
+		storage:    storage,
+		emailQueue: emailQueue,
+		cache:      cacheStore,
 	}
 }
 
@@ -121,16 +132,6 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		return s.alreadyUsedOutcome(po.ID)
 	}
 
-	pdfBytes, err := s.storage.Download(po.TautanPDF)
-	if err != nil {
-		_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
-		return &ApprovalOutcome{
-			NomorPO: po.NomorPO,
-			Status:  model.POStatusManualReview,
-			Message: "Persetujuan diproses, tetapi dokumen PDF gagal diunduh. PO ditandai untuk peninjauan manual.",
-		}, nil
-	}
-
 	emailData := POEmailData{
 		NomorPO:      po.NomorPO,
 		PemasokNama:  supplierName(po),
@@ -138,20 +139,32 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		TotalQty:     poTotalQty(po.Details),
 	}
 
-	if err := s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes); err != nil {
-		utils.Logger.Error("send supplier PO failed", "nomor_po", po.NomorPO, "error", err)
-		_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
-		return &ApprovalOutcome{
-			NomorPO: po.NomorPO,
-			Status:  model.POStatusManualReview,
-			Message: "Persetujuan diproses, tetapi email ke Pemasok gagal dikirim. PO ditandai untuk peninjauan manual.",
-		}, nil
-	}
+	s.emailQueue.Enqueue(EmailTask{
+		Name: "supplier PO " + po.NomorPO,
+		Send: func(ctx context.Context) error {
+			defer s.cache.Invalidate()
+			pdfBytes, err := s.renderSupplierPDF(po)
+			if err != nil {
+				return err
+			}
+			if pdfURL, uploadErr := s.uploadSupplierPDF(ctx, pdfBytes, po.NomorPO); uploadErr != nil {
+				utils.Logger.Warn("upload supplier PDF failed", "nomor_po", po.NomorPO, "error", uploadErr)
+			} else if err := s.poRepo.UpdatePDFURL(po.ID, pdfURL); err != nil {
+				utils.Logger.Warn("update supplier PDF URL failed", "nomor_po", po.NomorPO, "error", err)
+			}
+			return s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes)
+		},
+		OnFailure: func(err error) {
+			utils.Logger.Error("send supplier PO failed", "nomor_po", po.NomorPO, "error", err)
+			_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			s.cache.Invalidate()
+		},
+	})
 
 	return &ApprovalOutcome{
 		NomorPO: po.NomorPO,
 		Status:  model.POStatusSent,
-		Message: "Persetujuan PO Berhasil Diproses. Dokumen PDF telah dikirim ke email Pemasok.",
+		Message: "Persetujuan PO berhasil diproses. Email ke pemasok sedang dikirim.",
 	}, nil
 }
 
@@ -179,6 +192,58 @@ func (s *ApprovalService) alreadyUsedOutcome(poID int64) (*ApprovalOutcome, erro
 		Message: "Tautan persetujuan ini sudah pernah digunakan sebelumnya.",
 		Used:    true,
 	}, nil
+}
+
+func (s *ApprovalService) renderSupplierPDF(po *model.POLog) ([]byte, error) {
+	skus := make([]string, 0, len(po.Details))
+	for _, detail := range po.Details {
+		skus = append(skus, detail.SKU)
+	}
+
+	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
+	if err != nil {
+		utils.Logger.Warn("stock lookup failed while rendering supplier PO", "nomor_po", po.NomorPO, "error", err)
+	}
+
+	items := make([]utils.PDFItem, 0, len(po.Details))
+	for _, detail := range po.Details {
+		nama := detail.SKU
+		if stok, ok := stockBySKU[detail.SKU]; ok {
+			nama = stok.Nama
+		}
+		items = append(items, utils.PDFItem{
+			SKU:    detail.SKU,
+			Nama:   nama,
+			Jumlah: detail.JumlahOrder,
+		})
+	}
+
+	return utils.GeneratePO(utils.PODocument{
+		NomorPO:      po.NomorPO,
+		Tanggal:      time.Now().Format("02/01/2006"),
+		PemasokNama:  supplierName(po),
+		PemasokEmail: supplierEmail(po),
+		Items:        items,
+		TotalQty:     poTotalQty(po.Details),
+		Final:        true,
+	})
+}
+
+func (s *ApprovalService) uploadSupplierPDF(ctx context.Context, pdfBytes []byte, nomorPO string) (string, error) {
+	filename := fmt.Sprintf("PO_%s_final_%d.pdf", nomorPO, time.Now().Unix())
+	var publicURL string
+	err := Retry(ctx, 3, StorageBackoff, func() error {
+		url, uploadErr := s.storage.Upload(filename, pdfBytes, "application/pdf")
+		if uploadErr != nil {
+			return uploadErr
+		}
+		publicURL = url
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return publicURL, nil
 }
 
 func supplierName(po *model.POLog) string {

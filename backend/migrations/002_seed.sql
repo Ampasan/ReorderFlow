@@ -1,10 +1,3 @@
--- Seed demo grosir/sembako UMKM.
--- Aman dijalankan berulang: data transaksi dan master dikosongkan lebih dulu,
--- lalu diisi ulang dari awal. Akun users tidak disentuh karena dibuat dari
--- ADMIN_EMAIL dan MANAGER_EMAIL saat server start.
--- Termasuk tiga PO demo: dua DRAFT yang belum dikirim ke manajer, dan satu SENT
--- yang sudah selesai. Tidak ada email yang dikirim oleh seed ini.
-
 TRUNCATE TABLE po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
 
 INSERT INTO pemasok (id, nama, email) VALUES

@@ -15,19 +15,19 @@
 
 ##### Phase 2: Routing & Otorisasi
 *  [ ] **T-5.8** : Daftarkan `POST /api/auth/login` sebagai publik.
-*  [ ] **T-5.9** : Proteksi `/api/auth/me`, `/api/stok`, `/api/dashboard`, `/api/po`, `/api/po-log` dengan middleware JWT.
-*  [ ] **T-5.10** : Batasi `POST /api/stok/scan` hanya untuk role `admin`.
+*  [ ] **T-5.9** : Proteksi `/api/auth/me`, `/api/stok`, `/api/dashboard`, `/api/po`, `/api/po-log`, dan `/api/po-draft/{id}` dengan middleware JWT.
+*  [ ] **T-5.10** : Batasi `POST /api/stok/scan`, `PATCH /api/stok/{sku}`, `PUT /api/po-draft/{id}`, dan `POST /api/po-draft/{id}/submit` hanya untuk role `admin`.
 *  [ ] **T-5.11** : Pastikan `/health` dan `/api/po/approval` tetap publik.
 *  [ ] **T-5.12** : Jalankan `EnsureUser` untuk admin dan manager saat startup; log error tanpa membocorkan password.
 
 --------------------------------------------------------------------------------
 
 ##### Phase 3: Frontend Auth
-*  [ ] **T-5.13** : Buat `src/types/auth.ts`, `src/services/auth.ts`, dan `src/context/AuthContext.tsx`.
-*  [ ] **T-5.14** : Konfigurasi Axios `baseURL` dari `VITE_API_BASE_URL` dan interceptor Bearer token.
+*  [ ] **T-5.13** : Buat `src/types/auth.ts`, `src/services/authService.ts`, `src/context/AuthProvider.tsx`, dan `src/context/authContext.ts`.
+*  [ ] **T-5.14** : Konfigurasi `fetch` wrapper di `src/services/api.ts` dengan `baseURL` dari `VITE_API_BASE_URL`, header Bearer token, timeout, dan penanganan `401`/`403`.
 *  [ ] **T-5.15** : Buat `LoginPage.tsx` dengan loading state dan error banner.
 *  [ ] **T-5.16** : Buat `ProtectedRoute.tsx`; redirect ke `/login` jika token kosong atau respons `401`.
-*  [ ] **T-5.17** : Sembunyikan aksi khusus admin (scan) dari UI untuk role `manager`.
+*  [ ] **T-5.17** : Sembunyikan aksi khusus admin (scan, opname, edit draf, submit) dari UI untuk role `manager`; editor draf tampil read-only.
 
 --------------------------------------------------------------------------------
 

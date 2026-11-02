@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"reorderflow-backend/internal/cache"
 	"reorderflow-backend/internal/model"
 	"reorderflow-backend/internal/repository"
 	"reorderflow-backend/internal/utils"
@@ -19,7 +20,6 @@ var (
 	ErrDraftSupplierMismatch = errors.New("barang bukan milik pemasok PO ini")
 	ErrSupplierEmailInvalid  = errors.New("email pemasok tidak valid")
 	ErrDraftPDFFailed        = errors.New("dokumen PDF draf gagal disiapkan")
-	ErrManagerEmailFailed    = errors.New("email persetujuan ke manajer gagal dikirim")
 )
 
 type DraftItem struct {
@@ -32,10 +32,12 @@ type UpdateDraftRequest struct {
 }
 
 type DraftService struct {
-	poRepo   *repository.PORepository
-	stokRepo *repository.StokRepository
-	storage  *utils.SupabaseStorage
-	email    *EmailService
+	poRepo     *repository.PORepository
+	stokRepo   *repository.StokRepository
+	storage    *utils.SupabaseStorage
+	email      *EmailService
+	emailQueue *EmailQueue
+	cache      *cache.Cache
 }
 
 func NewDraftService(
@@ -43,12 +45,16 @@ func NewDraftService(
 	stokRepo *repository.StokRepository,
 	storage *utils.SupabaseStorage,
 	email *EmailService,
+	emailQueue *EmailQueue,
+	cacheStore *cache.Cache,
 ) *DraftService {
 	return &DraftService{
-		poRepo:   poRepo,
-		stokRepo: stokRepo,
-		storage:  storage,
-		email:    email,
+		poRepo:     poRepo,
+		stokRepo:   stokRepo,
+		storage:    storage,
+		email:      email,
+		emailQueue: emailQueue,
+		cache:      cacheStore,
 	}
 }
 
@@ -61,7 +67,7 @@ func (s *DraftService) Update(ctx context.Context, id int64, items []DraftItem) 
 	if err != nil {
 		return nil, err
 	}
-	if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected {
+	if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected && po.Status != model.POStatusManualReview {
 		return nil, ErrPONotDraft
 	}
 
@@ -91,7 +97,7 @@ func (s *DraftService) Submit(ctx context.Context, id int64) (*model.POLog, erro
 	if err != nil {
 		return nil, err
 	}
-	if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected {
+	if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected && po.Status != model.POStatusManualReview {
 		return nil, ErrPONotDraft
 	}
 	if len(po.Details) == 0 {
@@ -120,21 +126,26 @@ func (s *DraftService) Submit(ctx context.Context, id int64) (*model.POLog, erro
 		return nil, ErrPONotDraft
 	}
 
-	emailCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-
-	if err := s.email.SendManagerApproval(emailCtx, POEmailData{
+	emailData := POEmailData{
 		NomorPO:      po.NomorPO,
 		PemasokNama:  po.Pemasok.Nama,
 		PemasokEmail: po.Pemasok.Email,
 		Token:        token,
 		Items:        pdfItems,
 		TotalQty:     totalQty,
-	}); err != nil {
-		utils.Logger.Error("send manager approval failed", "nomor_po", po.NomorPO, "error", err)
-		_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
-		return nil, ErrManagerEmailFailed
 	}
+
+	s.emailQueue.Enqueue(EmailTask{
+		Name: "manager approval " + po.NomorPO,
+		Send: func(ctx context.Context) error {
+			return s.email.SendManagerApproval(ctx, emailData)
+		},
+		OnFailure: func(err error) {
+			utils.Logger.Error("send manager approval failed", "nomor_po", po.NomorPO, "error", err)
+			_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			s.cache.Invalidate()
+		},
+	})
 
 	return s.poRepo.GetByID(po.ID)
 }

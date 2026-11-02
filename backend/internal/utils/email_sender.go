@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	smtpDialTimeout = 10 * time.Second
-	smtpSendTimeout = 15 * time.Second
+	smtpDialTimeout      = 10 * time.Second
+	smtpHandshakeTimeout = 15 * time.Second
+	smtpDataTimeout      = 60 * time.Second
 )
 
 type SMTPConfig struct {
@@ -73,7 +74,7 @@ func (s *EmailSender) sendMail(to string, msg []byte) error {
 	}
 	defer conn.Close()
 
-	if err := conn.SetDeadline(time.Now().Add(smtpSendTimeout)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(smtpHandshakeTimeout)); err != nil {
 		return err
 	}
 
@@ -92,6 +93,11 @@ func (s *EmailSender) sendMail(to string, msg []byte) error {
 	if err := client.Auth(s.auth); err != nil {
 		return classifySMTPError(err)
 	}
+
+	if err := conn.SetDeadline(time.Now().Add(smtpDataTimeout)); err != nil {
+		return err
+	}
+
 	if err := client.Mail(s.cfg.Email); err != nil {
 		return classifySMTPError(err)
 	}

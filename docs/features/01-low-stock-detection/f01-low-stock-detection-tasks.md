@@ -7,8 +7,8 @@
 *  [ ] **T-1.2** : Buat file domain model `internal/model/stok.go` dan `internal/model/pemasok.go`.
 *  [ ] **T-1.3** : Implementasikan `StokRepository` di `internal/repository/stok_repository.go` untuk query GORM `GetLowStockItems()`.
 *  [ ] **T-1.4** : Implementasikan `DetectionService` di `internal/service/detection_service.go` lengkap dengan filter ROP (`stok <= reorder_point`) dan Redis Lock (`lock:scan:active`).
-*  [ ] **T-1.5** : Buat fungsi `HasActivePO()` di `internal/repository/po_repository.go` untuk mengecek status `DRAFT`/`SENT` 7 hari terakhir.
-*  [ ] **T-1.6** : Inisialisasi cron job `low_stock_job.go` menggunakan `robfig/cron/v3` di `internal/job/`.
+*  [ ] **T-1.5** : Buat fungsi `GetActiveReferences()` di `internal/repository/po_repository.go` untuk mengecek PO aktif per SKU dan per pemasok. Status `DRAFT`/`PENDING_APPROVAL`/`REJECTED` selalu aktif, `SENT` dalam 7 hari terakhir.
+*  [ ] **T-1.6** : Inisialisasi cron job `low_stock_job.go` menggunakan `robfig/cron` dengan timezone `Asia/Jakarta` di `internal/job/`.
 *  [ ] **T-1.7** : Buat HTTP Handler `POST /api/stok/scan` pada `internal/handler/stock_handler.go` dan daftarkan route.
 
 --------------------------------------------------------------------------------

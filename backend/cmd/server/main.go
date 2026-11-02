@@ -71,10 +71,11 @@ func main() {
 	storage := utils.NewSupabaseStorage(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, cfg.SupabaseBucket)
 
 	emailService := service.NewEmailService(emailSender, smtpCfg, cfg.AppURL)
+	emailQueue := service.NewEmailQueue()
 	pdfService := service.NewPDFService(poRepo, pemasokRepo, storage, emailService)
 	detectionService := service.NewDetectionService(stokRepo, poRepo, redisRepo, pdfService)
-	approvalService := service.NewApprovalService(poRepo, redisRepo, emailService, storage)
-	draftService := service.NewDraftService(poRepo, stokRepo, storage, emailService)
+	approvalService := service.NewApprovalService(poRepo, stokRepo, redisRepo, emailService, storage, emailQueue, cacheStore)
+	draftService := service.NewDraftService(poRepo, stokRepo, storage, emailService, emailQueue, cacheStore)
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTExpiry)
 
 	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore)
@@ -120,6 +121,8 @@ func main() {
 		}
 	}
 
+	handler.RegisterFrontend(router, cfg.FrontendDist)
+
 	srv := &http.Server{
 		Addr:              ":" + cfg.Port,
 		Handler:           router,
@@ -144,10 +147,16 @@ func main() {
 
 	scheduler.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		utils.Logger.Error("server shutdown failed", "error", err)
+	}
+
+	queueCtx, cancelQueue := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancelQueue()
+	if err := emailQueue.Stop(queueCtx); err != nil {
+		utils.Logger.Warn("email queue shutdown incomplete", "error", err)
 	}
 
 	utils.Logger.Info("server stopped")

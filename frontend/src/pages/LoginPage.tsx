@@ -57,11 +57,11 @@ export function LoginPage() {
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-auto flex-shrink-0 items-center justify-center rounded-xl bg-white p-1 shadow-sm">
-              <img src="/logo-reorderflow.png" alt="" className="h-8 w-auto" />
+              <img src="/logo-reorderflow.png" alt="" width={128} height={100} className="h-8 w-auto" />
             </span>
             <div>
               <p className="text-sm font-bold leading-none text-brand-dark">
-                Reorder<span className="text-brand-orange">Flow</span>
+                Reorder<span className="text-brand-orange-strong">Flow</span>
               </p>
               <p className="mt-0.5 text-[11px] text-brand-muted">Sistem Otomasi ROP</p>
             </div>
@@ -83,8 +83,9 @@ export function LoginPage() {
             src="/illustration.webp"
             alt=""
             aria-hidden="true"
-            width={920}
-            height={678}
+            width={460}
+            height={339}
+            fetchPriority="high"
             className="h-auto w-full max-w-[460px] object-contain"
             draggable={false}
           />
@@ -101,11 +102,11 @@ export function LoginPage() {
 
             <div className="mb-8 flex items-center gap-3 lg:hidden">
               <span className="flex h-10 w-auto flex-shrink-0 items-center justify-center rounded-xl border border-brand-dark/8 bg-white p-1 shadow-sm">
-                <img src="/logo-reorderflow.png" alt="" className="h-8 w-auto" />
+                <img src="/logo-reorderflow.png" alt="" width={128} height={100} className="h-8 w-auto" />
               </span>
               <div>
                 <p className="text-sm font-bold leading-none text-brand-dark">
-                  Reorder<span className="text-brand-orange">Flow</span>
+                  Reorder<span className="text-brand-orange-strong">Flow</span>
                 </p>
                 <p className="mt-0.5 text-[11px] text-brand-muted">Sistem Otomasi ROP</p>
               </div>

@@ -20,6 +20,7 @@ type PODocument struct {
 	PemasokEmail string
 	Items        []PDFItem
 	TotalQty     int
+	Final        bool
 }
 
 func GeneratePO(doc PODocument) ([]byte, error) {
@@ -34,7 +35,11 @@ func GeneratePO(doc PODocument) ([]byte, error) {
 	pdf.SetFont("Helvetica", "", 10)
 	pdf.SetTextColor(90, 90, 90)
 	pdf.CellFormat(0, 6, "ReorderFlow - Sistem Otomasi ROP", "", 1, "L", false, 0, "")
-	pdf.CellFormat(0, 6, "Dokumen Draft (Menunggu Persetujuan)", "", 1, "L", false, 0, "")
+	subtitle := "Dokumen Draft (Menunggu Persetujuan)"
+	if doc.Final {
+		subtitle = "Dokumen Final (Disetujui Manajer)"
+	}
+	pdf.CellFormat(0, 6, subtitle, "", 1, "L", false, 0, "")
 	pdf.Ln(4)
 
 	pdf.SetFont("Helvetica", "B", 11)

@@ -13,6 +13,8 @@ type Config struct {
 	Env    string
 	AppURL string
 
+	FrontendDist string
+
 	JWTSecret string
 	JWTExpiry time.Duration
 
@@ -50,6 +52,8 @@ func Load() *Config {
 		Port:   getEnv("PORT", "8080"),
 		Env:    getEnv("ENV", "development"),
 		AppURL: getEnv("APP_URL", "http://localhost:8080"),
+
+		FrontendDist: getEnv("FRONTEND_DIST", ""),
 
 		JWTSecret: getEnv("JWT_SECRET", "dev-secret-change-me"),
 		JWTExpiry: time.Duration(getEnvInt("JWT_TTL_HOURS", 24)) * time.Hour,

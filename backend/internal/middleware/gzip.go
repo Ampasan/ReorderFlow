@@ -3,6 +3,7 @@ package middleware
 import (
 	"compress/gzip"
 	"io"
+	"path"
 	"strings"
 	"sync"
 
@@ -25,6 +26,15 @@ type gzipWriter struct {
 	gz *gzip.Writer
 }
 
+func alreadyCompressed(requestPath string) bool {
+	switch strings.ToLower(path.Ext(requestPath)) {
+	case ".woff2", ".woff", ".ttf", ".otf", ".webp", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".gz", ".zip", ".pdf", ".mp4":
+		return true
+	default:
+		return false
+	}
+}
+
 func (w *gzipWriter) Write(b []byte) (int, error) {
 	return w.gz.Write(b)
 }
@@ -36,7 +46,8 @@ func (w *gzipWriter) WriteString(s string) (int, error) {
 func Gzip() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") ||
-			c.Writer.Header().Get("Content-Encoding") != "" {
+			c.Writer.Header().Get("Content-Encoding") != "" ||
+			alreadyCompressed(c.Request.URL.Path) {
 			c.Next()
 			return
 		}

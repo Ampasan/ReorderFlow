@@ -181,7 +181,7 @@ export function POLogList() {
       <DetailDialog
         open={selected !== null}
         title={selected?.nomor_po ?? 'Detail Purchase Order'}
-        description="Draf bisa diperiksa dan diedit dulu sebelum dikirim ke manajer. PO yang ditolak manajer bisa direvisi lalu dikirim ulang. Persetujuan dilakukan lewat tautan sekali pakai di email."
+        description="Draf bisa diperiksa dan diedit dulu sebelum dikirim ke manajer. PO yang ditolak manajer bisa direvisi, dan PO yang perlu tinjauan bisa diproses ulang. Persetujuan dilakukan lewat tautan sekali pakai di email."
         onClose={() => setSelected(null)}
         rows={
           selected
@@ -205,14 +205,20 @@ export function POLogList() {
             >
               Tutup
             </button>
-            {selected?.status === 'DRAFT' || selected?.status === 'REJECTED' ? (
+            {selected?.status === 'DRAFT' ||
+            selected?.status === 'REJECTED' ||
+            selected?.status === 'REQUIRES_MANUAL_REVIEW' ? (
               canEdit ? (
                 <Link
                   to={`/po-log/${selected.id}/draft`}
                   onClick={() => setSelected(null)}
                   className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong"
                 >
-                  {selected.status === 'REJECTED' ? 'Revisi Draf' : 'Edit Draf'}
+                  {selected.status === 'REJECTED'
+                    ? 'Revisi Draf'
+                    : selected.status === 'REQUIRES_MANUAL_REVIEW'
+                      ? 'Proses Ulang'
+                      : 'Edit Draf'}
                 </Link>
               ) : null
             ) : null}

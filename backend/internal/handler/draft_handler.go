@@ -71,7 +71,7 @@ func (h *DraftHandler) Submit(c *gin.Context) {
 	}
 
 	h.cache.Invalidate()
-	Success(c, http.StatusOK, "Draf PO dikirim ke manajer", po)
+	Success(c, http.StatusOK, "Draf PO diterima, email ke manajer sedang dikirim", po)
 }
 
 func parseDraftID(c *gin.Context) (int64, bool) {
@@ -99,8 +99,6 @@ func (h *DraftHandler) respondError(c *gin.Context, err error) {
 		Error(c, http.StatusBadRequest, "Email pemasok tidak valid, perbaiki data pemasok terlebih dahulu", err.Error())
 	case errors.Is(err, service.ErrDraftPDFFailed):
 		Error(c, http.StatusBadGateway, "Dokumen PDF gagal disiapkan, coba lagi", err.Error())
-	case errors.Is(err, service.ErrManagerEmailFailed):
-		Error(c, http.StatusBadGateway, "Draf tersimpan tetapi email ke manajer gagal dikirim. PO ditandai untuk peninjauan manual.", err.Error())
 	default:
 		Error(c, http.StatusInternalServerError, "Gagal memproses draf PO", err.Error())
 	}

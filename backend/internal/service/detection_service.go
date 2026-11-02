@@ -123,8 +123,6 @@ func (s *DetectionService) RunScan(ctx context.Context) (*model.ScanResult, erro
 	return result, nil
 }
 
-// Redis coordinates the lock across instances. When it is unreachable, a
-// process-local lock still stops two scans overlapping on this instance.
 func (s *DetectionService) acquireScanLock() (func(), bool) {
 	if s.redis.Enabled() {
 		locked, err := s.redis.TryLock(scanLockKey, scanLockTTL)

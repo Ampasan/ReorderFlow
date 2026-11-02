@@ -14,18 +14,16 @@ import type { DraftItemInput, POLog, POStatus } from '../types/po'
 import type { StockItem } from '../types/stok'
 import { formatDateWIB, formatNumber } from '../utils/formatter'
 
-type EditableStatus = 'DRAFT' | 'REJECTED'
+type EditableStatus = 'DRAFT' | 'REJECTED' | 'REQUIRES_MANUAL_REVIEW'
 
 const LOCKED_COPY: Record<Exclude<POStatus, EditableStatus>, string> = {
   PENDING_APPROVAL:
     'Draf sudah dikirim ke manajer. Pemasok baru menerima PO setelah manajer menyetujui tautan di email.',
   SENT: 'PO sudah disetujui manajer dan dokumennya sudah dikirim ke email pemasok.',
-  REQUIRES_MANUAL_REVIEW:
-    'PO ini ditandai untuk peninjauan manual. Periksa data pemasok dan pengiriman email sebelum memproses ulang.',
 }
 
 function isEditableStatus(status: POStatus): status is EditableStatus {
-  return status === 'DRAFT' || status === 'REJECTED'
+  return status === 'DRAFT' || status === 'REJECTED' || status === 'REQUIRES_MANUAL_REVIEW'
 }
 
 function errorMessage(error: unknown): string {
@@ -90,8 +88,25 @@ function DraftForm({
   const busy = saving || submitting
   const isEditable = isEditableStatus(po.status)
   const isRejected = po.status === 'REJECTED'
+  const isManualReview = po.status === 'REQUIRES_MANUAL_REVIEW'
   const lockedMessage = isEditableStatus(po.status) ? '' : LOCKED_COPY[po.status]
   const canAct = isEditable && lines.length > 0 && !busy
+
+  const bannerTone = isRejected
+    ? { box: 'border-rose-200 bg-rose-50', title: 'text-rose-900', body: 'text-rose-800' }
+    : isManualReview
+      ? { box: 'border-purple-200 bg-purple-50', title: 'text-purple-900', body: 'text-purple-800' }
+      : { box: 'border-amber-200 bg-amber-50', title: 'text-amber-900', body: 'text-amber-800' }
+  const bannerTitle = isRejected
+    ? 'PO ini dikembalikan manajer untuk direvisi.'
+    : isManualReview
+      ? 'PO ini perlu diproses ulang karena pengiriman sebelumnya gagal.'
+      : 'Draf ini belum dikirim ke manajer maupun pemasok.'
+  const bannerBody = isRejected
+    ? 'Periksa jumlah order, simpan perubahan, lalu kirim ulang ke manajer. Pemasok belum menerima dokumen ini dan tautan persetujuan lama sudah tidak berlaku.'
+    : isManualReview
+      ? 'Periksa jumlah order, lalu kirim ulang ke manajer. Sistem akan membuat tautan persetujuan baru dan mengirim ulang email.'
+      : 'Periksa jumlah order, lalu kirim ke manajer. Pemasok baru menerima PO setelah manajer menyetujui tautan di email.'
 
   function handleQuantityChange(sku: string, value: string) {
     const parsed = Math.floor(Number(value))
@@ -155,7 +170,7 @@ function DraftForm({
       invalidateResourceCache('po')
       invalidateResourceCache('dashboard')
       toast.success(
-        isRejected
+        isRejected || isManualReview
           ? 'PO dikirim ulang ke manajer untuk disetujui.'
           : 'Draf dikirim ke manajer untuk disetujui.',
       )
@@ -175,36 +190,18 @@ function DraftForm({
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <PageHeader
-        title={isRejected ? 'Revisi PO Ditolak' : 'Periksa Draf PO'}
+        title={isRejected ? 'Revisi PO Ditolak' : isManualReview ? 'Proses Ulang PO' : 'Periksa Draf PO'}
         subtitle={`${po.nomor_po} untuk ${po.pemasok?.nama ?? '-'}`}
         actions={backLink}
       />
 
       {isEditable ? (
         <section
-          className={`flex flex-col gap-3 rounded-xl border px-5 py-4 sm:flex-row sm:items-start sm:justify-between ${
-            isRejected ? 'border-rose-200 bg-rose-50' : 'border-amber-200 bg-amber-50'
-          }`}
+          className={`flex flex-col gap-3 rounded-xl border px-5 py-4 sm:flex-row sm:items-start sm:justify-between ${bannerTone.box}`}
         >
           <div className="min-w-0">
-            <p
-              className={`text-sm font-semibold ${
-                isRejected ? 'text-rose-900' : 'text-amber-900'
-              }`}
-            >
-              {isRejected
-                ? 'PO ini dikembalikan manajer untuk direvisi.'
-                : 'Draf ini belum dikirim ke manajer maupun pemasok.'}
-            </p>
-            <p
-              className={`mt-1 text-sm leading-relaxed ${
-                isRejected ? 'text-rose-800' : 'text-amber-800'
-              }`}
-            >
-              {isRejected
-                ? 'Periksa jumlah order, simpan perubahan, lalu kirim ulang ke manajer. Pemasok belum menerima dokumen ini dan tautan persetujuan lama sudah tidak berlaku.'
-                : 'Periksa jumlah order, lalu kirim ke manajer. Pemasok baru menerima PO setelah manajer menyetujui tautan di email.'}
-            </p>
+            <p className={`text-sm font-semibold ${bannerTone.title}`}>{bannerTitle}</p>
+            <p className={`mt-1 text-sm leading-relaxed ${bannerTone.body}`}>{bannerBody}</p>
           </div>
           <StatusBadge status={po.status} />
         </section>
@@ -388,7 +385,7 @@ function DraftForm({
         >
           <p className="text-xs leading-relaxed text-brand-muted">
             Perubahan ikut tersimpan saat Anda menekan{' '}
-            {isRejected ? 'Kirim Ulang ke Manajer' : 'Kirim ke Manajer'}. Setelah terkirim, PO tidak
+            {isRejected || isManualReview ? 'Kirim Ulang ke Manajer' : 'Kirim ke Manajer'}. Setelah terkirim, PO tidak
             bisa diedit sampai manajer memutuskan.
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -399,7 +396,7 @@ function DraftForm({
               aria-busy={saving}
               className="inline-flex h-11 items-center justify-center rounded-lg border border-brand-dark/15 bg-white px-5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cream disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? 'Menyimpan...' : isRejected ? 'Simpan Perubahan' : 'Simpan Draf'}
+              {saving ? 'Menyimpan...' : isRejected || isManualReview ? 'Simpan Perubahan' : 'Simpan Draf'}
             </button>
             <button
               type="button"
@@ -407,7 +404,7 @@ function DraftForm({
               disabled={!canAct}
               className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isRejected ? 'Kirim Ulang ke Manajer' : 'Kirim ke Manajer'}
+              {isRejected || isManualReview ? 'Kirim Ulang ke Manajer' : 'Kirim ke Manajer'}
             </button>
           </div>
         </section>
@@ -424,13 +421,17 @@ function DraftForm({
 
       <ConfirmDialog
         open={confirmOpen}
-        title={isRejected ? 'Kirim ulang PO ini ke manajer?' : 'Kirim draf ini ke manajer?'}
+        title={
+          isRejected || isManualReview
+            ? 'Kirim ulang PO ini ke manajer?'
+            : 'Kirim draf ini ke manajer?'
+        }
         description={
-          isRejected
+          isRejected || isManualReview
             ? 'Email persetujuan baru akan dikirim ke manajer dengan tautan baru. Tautan lama tidak berlaku, dan pemasok baru menerima PO setelah manajer menyetujui.'
             : 'Email persetujuan akan dikirim ke manajer. Setelah terkirim, draf tidak bisa diedit lagi dan pemasok baru menerima PO setelah manajer menyetujui.'
         }
-        confirmLabel={isRejected ? 'Ya, kirim ulang' : 'Ya, kirim ke manajer'}
+        confirmLabel={isRejected || isManualReview ? 'Ya, kirim ulang' : 'Ya, kirim ke manajer'}
         pending={submitting}
         onConfirm={handleSubmit}
         onClose={() => setConfirmOpen(false)}
@@ -468,7 +469,9 @@ export function PODraftEditor() {
           ? '/po-log?status=DRAFT'
           : po?.status === 'REJECTED'
             ? '/po-log?status=REJECTED'
-            : '/po-log'
+            : po?.status === 'REQUIRES_MANUAL_REVIEW'
+              ? '/po-log?status=REQUIRES_MANUAL_REVIEW'
+              : '/po-log'
       }
       className="inline-flex h-9 items-center justify-center rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
     >

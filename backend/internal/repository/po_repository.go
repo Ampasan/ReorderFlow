@@ -118,7 +118,7 @@ func (r *PORepository) ReplaceDraftDetails(id int64, details []model.PODetail, p
 			First(&po, id).Error; err != nil {
 			return err
 		}
-		if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected {
+		if po.Status != model.POStatusDraft && po.Status != model.POStatusRejected && po.Status != model.POStatusManualReview {
 			return nil
 		}
 
@@ -154,7 +154,7 @@ func (r *PORepository) ReplaceDraftDetails(id int64, details []model.PODetail, p
 
 func (r *PORepository) MarkSubmitted(id int64, pdfURL, token string, submittedAt time.Time) (bool, error) {
 	res := r.db.Model(&model.POLog{}).
-		Where("id = ? AND status IN ?", id, []string{model.POStatusDraft, model.POStatusRejected}).
+		Where("id = ? AND status IN ?", id, []string{model.POStatusDraft, model.POStatusRejected, model.POStatusManualReview}).
 		Updates(map[string]interface{}{
 			"status":       model.POStatusPendingApproval,
 			"tautan_pdf":   pdfURL,
@@ -186,6 +186,15 @@ func (r *PORepository) UpdateStatus(id int64, newStatus string) error {
 		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"status":     newStatus,
+			"updated_at": time.Now(),
+		}).Error
+}
+
+func (r *PORepository) UpdatePDFURL(id int64, pdfURL string) error {
+	return r.db.Model(&model.POLog{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"tautan_pdf": pdfURL,
 			"updated_at": time.Now(),
 		}).Error
 }

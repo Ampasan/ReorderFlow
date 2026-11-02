@@ -6,10 +6,10 @@
 *   **K-5.1 (Login Email/Password)** : KETIKA pengguna mengirim `email` dan `password` ke `POST /api/auth/login`, sistem memverifikasi kredensial terhadap hash bcrypt di tabel `users`.
     *   **AC-5.1.1** : Kredensial valid menghasilkan HTTP `200` dengan `data.token` (JWT) dan `data.user` (`id`, `email`, `nama`, `role`, `created_at`).
     *   **AC-5.1.2** : Kredensial salah menghasilkan HTTP `401` dengan pesan "Email atau password salah".
-*   **K-5.2 (Proteksi Endpoint Data)** : KETIKA pengguna mengakses `/api/auth/me`, `/api/stok`, `/api/dashboard`, `/api/po`, atau `/api/po-log` tanpa header `Authorization: Bearer <token>`, sistem menolak request.
+*   **K-5.2 (Proteksi Endpoint Data)** : KETIKA pengguna mengakses `/api/auth/me`, `/api/stok`, `/api/dashboard`, `/api/po`, `/api/po-log`, `/api/po-draft/{id}`, atau `/api/stok/{sku}` tanpa header `Authorization: Bearer <token>`, sistem menolak request.
     *   **AC-5.2.1** : Tanpa token, token tidak valid, atau token kedaluwarsa menghasilkan HTTP `401`.
-*   **K-5.3 (Kontrol Role)** : KETIKA role `manager` memanggil `POST /api/stok/scan`, sistem menolak eksekusi.
-    *   **AC-5.3.1** : Request dari manager menghasilkan HTTP `403` dan pemindaian tidak dijalankan.
+*   **K-5.3 (Kontrol Role)** : KETIKA role `manager` memanggil `POST /api/stok/scan`, `PATCH /api/stok/{sku}`, `PUT /api/po-draft/{id}`, atau `POST /api/po-draft/{id}/submit`, sistem menolak eksekusi.
+    *   **AC-5.3.1** : Request dari manager menghasilkan HTTP `403` dan aksi tidak dijalankan.
 *   **K-5.4 (Profil User)** : KETIKA `GET /api/auth/me` dipanggil dengan token valid, sistem mengembalikan profil user tanpa `password_hash`.
 *   **K-5.5 (Endpoint Publik)** : SELAMA proses persetujuan PO, `/api/po/approval` tetap dapat diakses tanpa login dan hanya divalidasi lewat token sekali pakai.
 *   **Pengecualian & Batasan (JIKA / SELAMA)** :
@@ -29,7 +29,7 @@
     *   Akses ke route terproteksi tanpa token valid diarahkan ke `/login`.
     *   Respons `401` dari API menghapus token dan mengembalikan pengguna ke `/login`.
 *   **Role UI** :
-    *   Role `manager` tidak melihat tombol "Pindai Stok Sekarang" dan item aksi tulis lainnya.
+    *   Role `manager` tidak melihat tombol "Pindai Stok", Opname, Edit Draf, atau Kirim ke Manajer. Editor draf tampil read-only.
 
 --------------------------------------------------------------------------------
 
@@ -67,9 +67,12 @@
 *   **Publik** :
     *   `POST /api/auth/login`, `GET /health`, `GET /api/po/approval`.
 *   **Semua Role Terautentikasi (`admin`, `manager`)** :
-    *   `GET /api/auth/me`, `GET /api/stok`, `GET /api/dashboard`, `GET /api/po`, `GET /api/po-log`.
+    *   `GET /api/auth/me`, `GET /api/stok`, `GET /api/dashboard`, `GET /api/po`, `GET /api/po-log`, `GET /api/po-draft/{id}`.
 *   **Khusus `admin`** :
     *   `POST /api/stok/scan`.
+    *   `PATCH /api/stok/{sku}`.
+    *   `PUT /api/po-draft/{id}`.
+    *   `POST /api/po-draft/{id}/submit`.
 *   **System Cron** :
     *   Menjalankan pemindaian internal tanpa JWT.
 

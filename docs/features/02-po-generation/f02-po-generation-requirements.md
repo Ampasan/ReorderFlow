@@ -15,6 +15,7 @@
     *   **JIKA** proses pengunggahan ke Supabase Storage gagal/timeout, sistem melakukan retry exponential backoff maksimal 3 kali sebelum membatalkan transaksi dan mencatat log error.
     *   **JIKA** detail email pemasok kosong, sistem tetap menghasilkan PDF PO tetapi menandai status `po_log` sebagai `REQUIRES_MANUAL_REVIEW`.
     *   **SELAMA** file PDF PO sedang diunggah, sistem memastikan nama file di-hash/diberi timestamp unik (`PO_[NOMOR_PO]_[TIMESTAMP].pdf`) untuk mencegah penimpaan file (*file overwriting*).
+    *   **SELAMA** status PO `DRAFT`, `REJECTED`, atau `REQUIRES_MANUAL_REVIEW`, admin dapat mengubah baris barang lewat `PUT /api/po-draft/{id}` dan PDF draf diregenerasi.
 
 --------------------------------------------------------------------------------
 
@@ -33,9 +34,10 @@
     *   `id` (Serial, Primary Key)
     *   `nomor_po` (String, Unique, Format: `PO-YYYYMMDD-[ID_PEMASOK]-[SEQ]`)
     *   `id_pemasok` (Foreign Key ke `pemasok`)
-    *   `status` (Enum: `'DRAFT'`, `'SENT'`, `'REJECTED'`, `'REQUIRES_MANUAL_REVIEW'`)
+    *   `status` (Enum: `'DRAFT'`, `'PENDING_APPROVAL'`, `'SENT'`, `'REJECTED'`, `'REQUIRES_MANUAL_REVIEW'`)
     *   `tautan_pdf` (String URL, Supabase Storage Public URL)
     *   `token` (String, Idempotency Token)
+    *   `submitted_at` (Timestamp, diisi saat draf dikirim ke manajer)
     *   `created_at` (Timestamp)
 *   **Format Dokumen PDF** :
     *   Ukuran kertas: A4 Portrait.

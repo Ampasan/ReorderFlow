@@ -58,8 +58,6 @@ function readCached<T>(key: string | null, enabled: boolean): ResourceState<T> {
   return { data: null, loading: enabled, error: null }
 }
 
-// Concurrent mounts of the same resource share one request instead of firing
-// a duplicate call (StrictMode and two components using the same key).
 function fetchOnce<T>(key: string | null, fetcher: () => Promise<T>): Promise<T> {
   if (!key) return fetcher()
 
@@ -92,8 +90,6 @@ export function useResource<T>(
   const [version, setVersion] = useState(0)
   const forceRefetch = useRef(false)
 
-  // Swap in the cache entry for a new key during render. Waiting for the
-  // effect would flash the previous filter's rows first.
   const signature = `${enabled}:${key ?? ''}`
   if (signature !== activeKey) {
     setActiveKey(signature)

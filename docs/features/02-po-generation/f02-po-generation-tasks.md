@@ -13,7 +13,8 @@
 *  [ ] **T-2.4** : Implementasikan utilitas layout PDF di `internal/utils/pdf_generator.go` menggunakan `github.com/jung-kurt/gofpdf`.
 *  [ ] **T-2.5** : Buat helper pengunggah file di `internal/utils/supabase_storage.go` untuk mengunggah byte PDF ke Supabase Storage.
 *  [ ] **T-2.6** : Implementasikan `PDFService` di `internal/service/pdf_service.go` yang menangani pengelompokan SKU per pemasok, pembuatan nomor PO, rendering PDF, dan penyimpanan ke `po_log`.
-*  [ ] **T-2.7** : Tambahkan penanganan retry exponential backoff (3x) jika pengunggahan PDF gagal.
+*  [ ] **T-2.7** : Tambahkan penanganan retry exponential backoff (2s, 5s, 10s) jika pengunggahan PDF gagal.
+*  [ ] **T-2.7b** : Implementasikan regenerasi PDF saat baris draf diubah (`PUT /api/po-draft/{id}`) dan saat draf dikirim ke manajer (`POST /api/po-draft/{id}/submit`).
 
 --------------------------------------------------------------------------------
 

@@ -5,7 +5,7 @@ Staf inventori dan pengadaan UMKM saat ini memantau persediaan stok secara manua
 
 ### 2. Pengguna
 Target pengguna sistem **ReorderFlow** terdiri dari dua peran utama pada UMKM ritel, distributor kecil, dan manufaktur berskala kecil (asumsi profil: 10–50 karyawan dan 50–500 SKU):
-* **Staf Inventori / Admin Pengadaan:** Bertanggung jawab memantau ketersediaan stok serta menyiapkan pesanan barang ke pemasok dengan cepat tanpa risiko salah ketik SKU atau kuantitas.
+* **Staf Inventori / Procurement Admin:** Bertanggung jawab memantau ketersediaan stok serta menyiapkan pesanan barang ke pemasok dengan cepat tanpa risiko salah ketik SKU atau kuantitas.
 * **Pemilik Usaha / Operations Manager:** Bertanggung jawab meninjau, mengontrol pengeluaran, dan memberikan persetujuan resmi dokumen PO sebelum dikirim ke pemasok.
 
 ### 3. Tujuan
@@ -17,10 +17,12 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
 ### 4. Lingkup
 * **Yang Dibuat (In-Scope):**
   1. Deteksi otomatis persediaan barang yang mencapai kondisi `stok_saat_ini ≤ reorder_point`.
-  2. Pembuatan draf dokumen PO berbentuk PDF secara otomatis terkelompok per pemasok.
-  3. Alur persetujuan manajer via email (*Human-in-the-Loop*) sebelum dokumen PO dikirimkan ke email pemasok.
-  4. Antarmuka monitoring status inventori dan pencatatan riwayat status PO.
-  5. Autentikasi login staf admin dan operations manager dengan email/password serta token JWT untuk melindungi dashboard dan endpoint data.
+  2. Pembuatan draf dokumen PO berbentuk PDF secara otomatis terkelompok per pemasok, berstatus `DRAFT`, dan belum dikirim ke siapa pun.
+  3. Editor draf PO untuk admin: ubah kuantitas, hapus barang, tambah barang dari pemasok yang sama, lalu kirim draf ke manajer sebagai `PENDING_APPROVAL`.
+  4. Alur persetujuan manajer via email (*Human-in-the-Loop*) sebelum dokumen PO dikirimkan ke email pemasok. Token berlaku 48 jam dan hanya dapat dipakai sekali.
+  5. Antarmuka monitoring status inventori, filter status dan pemasok pada riwayat PO, serta detail barang per PO.
+  6. Koreksi stok opname oleh admin dengan alasan dan jejak audit.
+  7. Autentikasi login staf admin dan operations manager dengan email/password serta token JWT untuk melindungi dashboard dan endpoint data.
 * **Yang Tidak Dibuat (Out-of-Scope):**
   1. Prediksi stok atau estimasi persediaan berbasis kecerdasan buatan (*AI / Machine Learning*).
   2. Integrasi langsung ke API marketplace, e-commerce, atau aplikasi POS pihak ketiga.
@@ -39,11 +41,12 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
 * **Tingkat Kepentingan:** Sangat krusial bagi kelangsungan operasional UMKM untuk mencegah keterlambatan pengadaan barang yang berdampak langsung pada penurunan pendapatan dan hilangnya kepercayaan pelanggan.
 
 ### 7. Daftar Fitur
-1. **[Prioritas 1] Deteksi Low-Stock Otomatis:** Pemindaian jadwal harian pada database untuk mendeteksi `stok ≤ ROP` dan mengabaikan SKU yang sudah memiliki PO aktif.
-2. **[Prioritas 2] Generator Draf PO PDF Per Pemasok:** Mengelompokkan barang *low-stock* per pemasok, menerbitkan nomor PO unik, dan memicu penuangan dokumen ke file PDF di Supabase Storage.
-3. **[Prioritas 3] Persetujuan & Pengiriman Otomatis:** Pengiriman email draf ke manajer berisi tautan *Approve/Reject*, serta penerusan PDF PO ke email pemasok secara otomatis setelah disetujui.
-4. **[Prioritas 4] Monitoring Status Inventori & Log PO:** Dashboard antarmuka untuk memantau ringkasan kondisi stok dan riwayat status pengiriman PO.
-5. **[Prioritas 5] Autentikasi & Kontrol Akses:** Login email/password untuk admin dan manager, proteksi endpoint data dengan JWT, serta pembatasan aksi pemindaian stok hanya untuk role admin.
+1. **[Prioritas 1] Deteksi Low-Stock Otomatis:** Pemindaian jadwal harian pada database untuk mendeteksi `stok ≤ ROP` dan mengabaikan SKU yang sudah memiliki PO aktif (`DRAFT`, `PENDING_APPROVAL`, `REJECTED`, atau `SENT` dalam 7 hari terakhir), termasuk pemblokiran level pemasok.
+2. **[Prioritas 2] Generator Draf PO PDF Per Pemasok:** Mengelompokkan barang *low-stock* per pemasok, menerbitkan nomor PO unik, dan membuat PDF draf di Supabase Storage dengan status `DRAFT`.
+3. **[Prioritas 3] Editor Draf & Persetujuan:** Admin dapat mengubah baris draf sebelum mengirimkannya ke manajer. Pengiriman mengubah status menjadi `PENDING_APPROVAL`, membuat token 48 jam, dan mengirim email Approve/Reject. Setelah disetujui, PDF final diteruskan ke email pemasok.
+4. **[Prioritas 4] Monitoring Status Inventori & Log PO:** Dashboard untuk memantau ringkasan kondisi stok, filter status dan pemasok pada riwayat PO, serta detail barang per PO.
+5. **[Prioritas 5] Autentikasi & Kontrol Akses:** Login email/password untuk admin dan manager, proteksi endpoint data dengan JWT, serta pembatasan aksi tulis (scan, opname, edit draf, submit) hanya untuk role admin.
+6. **[Prioritas 6] Koreksi Stok Opname:** Admin dapat mengoreksi stok dengan alasan `DAMAGED`, `MISCOUNT`, atau `RETURN`, disertai jejak audit nilai sebelum dan sesudah.
 
 ### 8. Keputusan Terbuka
 * **Validasi Dampak Lapangan:** Pengukuran tingkat penghematan waktu dan penurunan biaya operasional secara riil pada operasional UMKM nyata (saat ini masih berupa data simulasi).

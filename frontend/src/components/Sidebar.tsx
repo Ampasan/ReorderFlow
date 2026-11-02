@@ -68,12 +68,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 src="/logo-reorderflow.png"
                 alt="logo ReorderFlow"
                 aria-hidden="true"
+                width={128}
+                height={100}
                 className="h-8 w-auto"
               />
             </span>
             <div>
               <p className="text-sm font-bold leading-none text-brand-dark">
-                Reorder<span className="text-brand-orange">Flow</span>
+                Reorder<span className="text-brand-orange-strong">Flow</span>
               </p>
               <p className="mt-0.5 text-[10px] text-brand-muted">Sistem Otomasi ROP</p>
             </div>

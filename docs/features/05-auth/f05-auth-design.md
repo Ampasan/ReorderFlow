@@ -68,12 +68,16 @@ Bootstrap akun dilakukan saat startup dari environment variable (`ADMIN_EMAIL`/`
 ###### C. Proteksi Endpoint Data
 *   Semua endpoint berikut memakai middleware JWT:
 ```text
-GET  /api/auth/me
-GET  /api/stok
-GET  /api/dashboard
-GET  /api/po
-GET  /api/po-log
-POST /api/stok/scan   (role admin)
+GET   /api/auth/me
+GET   /api/stok
+GET   /api/dashboard
+GET   /api/po
+GET   /api/po-log
+GET   /api/po-draft/{id}
+POST  /api/stok/scan                  (role admin)
+PATCH /api/stok/{sku}                 (role admin)
+PUT   /api/po-draft/{id}              (role admin)
+POST  /api/po-draft/{id}/submit       (role admin)
 ```
 *   Endpoint publik: `/health`, `/api/auth/login`, `/api/po/approval`.
 
@@ -109,26 +113,39 @@ Dependency tambahan: `github.com/golang-jwt/jwt/v5` dan `golang.org/x/crypto/bcr
 ```text
 src/
 ├── context/
-│   └── AuthContext.tsx           # token, user, login(), logout(), loading
+│   ├── AuthProvider.tsx          # token, user, login(), logout(), status
+│   └── authContext.ts            # Context definition
 ├── components/
 │   └── ProtectedRoute.tsx        # Redirect ke /login jika tidak ada token
 ├── services/
-│   ├── api.ts                    # Axios instance + interceptor
-│   └── auth.ts                   # login(), me(), logout()
+│   ├── api.ts                    # fetch wrapper, timeout, 401/403 handling
+│   └── authService.ts            # login(), me()
 ├── types/
 │   └── auth.ts                   # User, UserRole, LoginResponse
 └── pages/
-    └── LoginPage.tsx             # Form login
+    └── LoginPage.tsx             # Form login split screen
 ```
 
-**Axios interceptor** :
-*   Request: baca token dari storage dan set `Authorization: Bearer <token>`.
-*   Response `401`: hapus token, reset auth state, redirect `/login`.
-*   Response `403`: tampilkan toast akses ditolak.
+**HTTP client** :
+*   Request: baca token dari `localStorage` (`reorderflow.token`) dan set `Authorization: Bearer <token>`.
+*   Response `401`: hapus sesi, dispatch event `reorderflow:unauthorized`, reset auth state, redirect `/login`.
+*   Response `403`: tampilkan toast "Anda tidak memiliki akses untuk aksi ini".
+*   Timeout request: 20 detik.
 
 **Environment frontend** :
 ```text
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8080
+```
+Base URL tidak memakai akhiran `/api`. Path endpoint sudah diawali `/api/...`.
+
+**Route frontend** :
+```text
+/login                  -> LoginPage
+/                       -> Dashboard
+/stok                   -> StockList
+/po-log                 -> POLogList
+/po-log/:id/draft       -> PODraftEditor
+*                       -> redirect ke /
 ```
 
 --------------------------------------------------------------------------------

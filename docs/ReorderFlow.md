@@ -68,21 +68,21 @@ Seluruh logika berbasis aturan (*rule-based* tanpa AI) untuk keandalan maksimal 
 
 ### Fitur 1: Deteksi Low-Stock Otomatis
 - **Input**: Tabel `stok` (SKU, nama, stok_saat_ini, reorder_point, qty_min_order, id_pemasok) dan tabel `pemasok`.
-- **Proses**: Job terjadwal harian di backend Go (Gin) membaca data Supabase, memvalidasi data, memilih SKU dengan `stok_saat_ini <= reorder_point`, dan melewati SKU yang sudah punya PO aktif (mencegah PO ganda).
+- **Proses**: Job terjadwal harian di backend Go (Gin) membaca data Supabase, memvalidasi data, memilih SKU dengan `stok_saat_ini <= reorder_point`, dan melewati SKU yang sudah punya PO aktif. Status `DRAFT`, `PENDING_APPROVAL`, dan `REJECTED` selalu dianggap aktif. Status `SENT` dianggap aktif dalam 7 hari terakhir. Pemblokiran juga berlaku pada level pemasok.
 - **Output**: Daftar SKU *low-stock* dan baris PO berstatus `DRAFT` di tabel `po_log`.
 - **Penanganan Gagal**: Jika stok negatif, kosong, atau ROP tidak diisi, SKU diberi status `REQUIRES_MANUAL_REVIEW`.
 
 ### Fitur 2: Draf PO PDF Per Pemasok
 - **Input**: SKU *low-stock* yang lolos validasi + data pemasok.
 - **Proses**: Mengelompokkan SKU per pemasok, membuat nomor PO unik, me-render PDF di backend Go (`gofpdf`), dan mengunggahnya ke Supabase Storage.
-- **Output**: File PDF PO dan tautannya di tabel `po_log`.
-- **Penanganan Gagal**: Jika email pemasok kosong/tidak valid, alur berhenti untuk pemasok tersebut dan mengirim peringatan. Gagal pembuat PDF akan di-retry otomatis maks. 3 kali.
+- **Output**: File PDF draf dan tautannya di tabel `po_log` dengan status `DRAFT`. Draf belum dikirim ke manajer maupun pemasok, dan baris barangnya masih dapat diedit admin di `/po-log/:id/draft`.
+- **Penanganan Gagal**: Jika email pemasok kosong/tidak valid, PO tetap dibuat dengan status `REQUIRES_MANUAL_REVIEW` dan notifikasi dikirim ke manajer. Gagal unggah PDF di-retry maksimal 3 kali. Gagal render PDF dicatat dan PO tidak dibuat.
 
-### Fitur 3: Persetujuan & Pengiriman ke Pemasok (Human-in-the-Loop)
-- **Input**: PO PDF berstatus `DRAFT`.
-- **Proses**: Mengirim email ke manajer berisi ringkasan PO, lampiran PDF, dan link *Approve/Reject* satu kali pakai (32-char crypto token). Setelah *Approve*, PO PDF dikirim otomatis ke email pemasok dan status berubah menjadi `SENT`.
-- **Output**: Email ke pemasok, status dan timestamp tercatat di `po_log`.
-- **Penanganan Gagal**: Link kedaluwarsa/diklik ganda ditolak (idempotency). *Reject* mengubah status menjadi `REJECTED`. Retry pengiriman email maks. 3 kali.
+### Fitur 3: Editor Draf, Persetujuan & Pengiriman ke Pemasok (Human-in-the-Loop)
+- **Input**: PO PDF berstatus `DRAFT`, `REJECTED`, atau `REQUIRES_MANUAL_REVIEW`.
+- **Proses**: Admin mengubah kuantitas, menghapus barang, atau menambah barang dari pemasok yang sama. Saat admin menekan **Kirim ke Manajer**, sistem memvalidasi minimal satu barang dan email pemasok, membuat token 32 karakter baru, merender PDF final, mengubah status menjadi `PENDING_APPROVAL`, lalu mengirim email ke manajer berisi ringkasan dan link *Approve/Reject*. Setelah *Approve*, PDF final dikirim ke email pemasok dan status berubah menjadi `SENT`.
+- **Output**: Email ke pemasok, status, `submitted_at`, dan timestamp tercatat di `po_log`.
+- **Penanganan Gagal**: Token berlaku 48 jam. Link kedaluwarsa, diklik ganda, atau diklik saat status bukan `PENDING_APPROVAL` ditolak lewat halaman idempotensi. *Reject* mengubah status menjadi `REJECTED`. Email diproses lewat antrean in-memory 2 worker dengan satu retry SMTP dan backoff 2 detik. Jika pengiriman tetap gagal, status menjadi `REQUIRES_MANUAL_REVIEW`.
 
 ---
 
@@ -120,9 +120,9 @@ Seluruh logika berbasis aturan (*rule-based* tanpa AI) untuk keandalan maksimal 
 - **Frontend**: React (Vite) + Tailwind CSS, di-deploy ke **Vercel**.
 - **Backend**: Go (Gin Framework), di-deploy ke **Railway**.
 - **Database & Storage**: PostgreSQL Supabase & Supabase Storage Bucket (`po-documents`).
-- **Cache & Locking**: Redis (Upstash / Redis Cloud) untuk *distributed lock* (`lock:scan:active`, TTL 300s).
-- **Email Dispatcher**: SMTP Provider dengan *exponential backoff retry* (3x).
-- **Data Uji**: Dataset sintetis 20 SKU dan 3–4 pemasok (SIMULASI).
+- **Cache & Locking**: Cache in-memory + Redis (Upstash / Redis Cloud) dengan TTL 60 detik. Redis juga dipakai untuk *distributed lock* pemindaian (`lock:scan:active`, TTL 300s) dan lock token persetujuan (TTL 1 menit).
+- **Email Queue**: Antrean in-memory dengan 2 worker dan buffer 64 task. Pengiriman memakai SMTP Provider dengan satu retry dan backoff 2 detik; unggahan storage memakai backoff 2, 5, dan 10 detik.
+- **Data Uji**: Dataset sintetis 20 SKU dan 3 sampai 4 pemasok (SIMULASI).
 
 ---
 
@@ -136,8 +136,9 @@ Seluruh logika berbasis aturan (*rule-based* tanpa AI) untuk keandalan maksimal 
   - Pembuat PDF PO (`gofpdf`) & Supabase Storage Uploader.
   - *Checkpoint 30 Okt*: Jalur kritis berjalan dengan data uji.
 - **Minggu 2 (2–6 Nov 2026)**:
-  - Alur persetujuan email manager (token 32-char & handler idempotensi).
-  - Penanganan error, retry logic, & structured logging.
+  - Editor draf PO dan alur submit ke manajer (`PENDING_APPROVAL`).
+  - Alur persetujuan email manager (token 32-char, TTL 48 jam, & handler idempotensi).
+  - Penanganan error, retry logic, email queue, & structured logging.
   - *4–5 Nov*: UAT sintetis, dokumentasi, landing page.
   - *Jumat 6 Nov*: Demo langsung dengan 20 SKU sintetis.
 
@@ -146,5 +147,5 @@ Seluruh logika berbasis aturan (*rule-based* tanpa AI) untuk keandalan maksimal 
 ## 10. Status Keputusan & Blocker
 
 - **Sudah Terdukung**: Bukti masalah *stockout* dan pencatatan manual UMKM, perbandingan harga kompetitor resmi, batas kuota infrastruktur.
-- **Scope MVP**: Terkunci pada 1 alur utama (*Supabase -> Deteksi ROP -> Draf PO PDF -> Email Manager -> Approve -> Kirim Email Pemasok -> Log Status*).
+- **Scope MVP**: Terkunci pada 1 alur utama (*Supabase -> Deteksi ROP -> Draf PO PDF (DRAFT) -> Admin Review/Edit -> Kirim ke Manajer (PENDING_APPROVAL) -> Approve -> Kirim Email Pemasok -> Log Status*).
 - **Integritas Riset**: Data 20 SKU dan pengukuran waktu bertanda **SIMULASI** untuk validasi internal.

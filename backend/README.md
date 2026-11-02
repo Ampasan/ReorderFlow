@@ -34,6 +34,10 @@ Cek kesehatan server:
 curl http://localhost:8080/health
 ```
 
+## Menyajikan Frontend Produksi
+
+Isi `FRONTEND_DIST` di `.env` dengan path hasil `npm run build` (misalnya `../frontend/dist`). Backend lalu menyajikan SPA dari origin yang sama lewat fallback SPA, dengan `Cache-Control` immutable untuk `assets` dan `fonts` serta `no-cache` untuk `index.html`. Jika variabel kosong atau folder tidak ada, perilaku tetap seperti sebelumnya (API saja).
+
 ## Email / SMTP
 
 Gmail menolak password akun biasa untuk SMTP. Aktifkan 2-Step Verification pada akun pengirim, buat App Password 16 karakter, lalu isi `SMTP_PASSWORD` dengan App Password tersebut. Jika autentikasi gagal, log server menampilkan `535 5.7.8 Username and Password not accepted` dan PO otomatis masuk `REQUIRES_MANUAL_REVIEW`.

@@ -37,3 +37,25 @@ func TestGeneratePO(t *testing.T) {
 		t.Fatalf("expected PDF header, got %q", string(data[:4]))
 	}
 }
+
+func TestGenerateFinalPO(t *testing.T) {
+	doc := PODocument{
+		NomorPO:      "PO-20261027-101-001",
+		Tanggal:      "27/10/2026",
+		PemasokNama:  "PT Kopi Nusantara",
+		PemasokEmail: "supplier@example.com",
+		Items: []PDFItem{
+			{SKU: "SKU-KOP-01", Nama: "Kopi Arabika 250g", Jumlah: 20},
+		},
+		TotalQty: 20,
+		Final:    true,
+	}
+
+	data, err := GeneratePO(doc)
+	if err != nil {
+		t.Fatalf("GeneratePO returned error: %v", err)
+	}
+	if len(data) == 0 || string(data[:4]) != "%PDF" {
+		t.Fatal("expected a valid PDF")
+	}
+}
