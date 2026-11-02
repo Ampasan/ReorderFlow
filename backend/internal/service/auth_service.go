@@ -65,9 +65,9 @@ func (s *AuthService) EnsureUser(email, password, nama, role string) error {
 	if nama == "" {
 		switch role {
 		case model.RoleManager:
-			nama = "Operations Manager"
+			nama = "Rina Anggraini"
 		default:
-			nama = "Admin"
+			nama = "Andi Pratama"
 		}
 	}
 

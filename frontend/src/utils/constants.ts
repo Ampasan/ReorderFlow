@@ -5,7 +5,7 @@ import type { UserRole } from '../types/auth'
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  admin: 'Admin Inventori',
+  admin: 'Staf Inventori',
   manager: 'Operations Manager',
 }
 

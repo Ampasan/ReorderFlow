@@ -80,12 +80,12 @@ func GeneratePO(doc PODocument) ([]byte, error) {
 	pdf.Ln(16)
 
 	pdf.SetFont("Helvetica", "B", 10)
-	pdf.CellFormat(90, 6, "Staf Pengadaan", "T", 0, "C", false, 0, "")
+	pdf.CellFormat(90, 6, "Staf Inventori", "T", 0, "C", false, 0, "")
 	pdf.CellFormat(90, 6, "Manajer Operasional", "T", 1, "C", false, 0, "")
 	pdf.Ln(3)
 	pdf.SetFont("Helvetica", "", 9)
-	pdf.CellFormat(90, 6, "( ........................ )", "", 0, "C", false, 0, "")
-	pdf.CellFormat(90, 6, "( ........................ )", "", 1, "C", false, 0, "")
+	pdf.CellFormat(90, 6, "( Andi Pratama )", "", 0, "C", false, 0, "")
+	pdf.CellFormat(90, 6, "( Rina Anggraini )", "", 1, "C", false, 0, "")
 
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {

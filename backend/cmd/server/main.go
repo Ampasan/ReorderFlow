@@ -84,10 +84,10 @@ func main() {
 	draftHandler := handler.NewDraftHandler(draftService, cacheStore)
 	authHandler := handler.NewAuthHandler(authService, userRepo)
 
-	if err := authService.EnsureUser(cfg.AdminEmail, cfg.AdminPassword, "Admin", model.RoleAdmin); err != nil {
+	if err := authService.EnsureUser(cfg.AdminEmail, cfg.AdminPassword, "Andi Pratama", model.RoleAdmin); err != nil {
 		utils.Logger.Error("ensure admin failed", "error", err)
 	}
-	if err := authService.EnsureUser(cfg.ManagerEmail, cfg.ManagerPassword, "Operations Manager", model.RoleManager); err != nil {
+	if err := authService.EnsureUser(cfg.ManagerEmail, cfg.ManagerPassword, "Rina Anggraini", model.RoleManager); err != nil {
 		utils.Logger.Error("ensure manager failed", "error", err)
 	}
 
