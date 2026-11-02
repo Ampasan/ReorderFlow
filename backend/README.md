@@ -48,7 +48,7 @@ Pengiriman dibatasi 15 detik per percobaan dengan dua percobaan. Error 5xx dari 
 
 Jalankan dua file berikut berurutan di Supabase SQL Editor:
 
-1. `migrations/001_schema.sql`: semua tabel, index, dan constraint.
+1. `migrations/001_schema.sql`: semua tabel, index, dan constraint. Versi terbaru juga menambah tabel `po_penerimaan` dan `po_penerimaan_detail` serta dua nilai status PO (`PARTIALLY_RECEIVED`, `RECEIVED`) pada `po_log_status_check`. Aman dijalankan ulang karena constraint lama di-drop lebih dulu.
 2. `migrations/002_seed.sql`: reset data demo lalu isi ulang pemasok, stok grosir/sembako, dua PO `DRAFT`, dan satu PO `SENT`.
 
 Keduanya aman dijalankan berulang. `002_seed.sql` selalu mengosongkan riwayat PO, stok opname, stok, dan pemasok lebih dulu, jadi bisa dipakai untuk mengembalikan demo ke kondisi awal. Akun `users` tidak direset karena dibuat dari `ADMIN_EMAIL` dan `MANAGER_EMAIL` saat server start.
@@ -69,16 +69,18 @@ Jika `ENV=production`, `AutoMigrate` tidak berjalan, jadi migrasi SQL wajib diek
 | GET | `/api/stok` | Daftar stok. Query `status=all|low|manual`. |
 | POST | `/api/stok/scan` | Memicu pemindaian low-stock dan pembuatan draf PO. Draf belum dikirim ke manajer. |
 | GET | `/api/dashboard` | Ringkasan KPI dashboard. |
-| GET | `/api/po` | Riwayat PO. Query `status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW`. |
+| GET | `/api/po` | Riwayat PO. Query `status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW|PARTIALLY_RECEIVED|RECEIVED`. |
 | GET | `/api/po-log` | Alias dari `/api/po`. |
 | GET | `/api/po-draft/:id` | Detail draf PO beserta barang dan pemasok. |
 | PUT | `/api/po-draft/:id` | Simpan perubahan barang draf. Body `{"items":[{"sku":"...","jumlah_order":10}]}`. |
 | POST | `/api/po-draft/:id/submit` | Kirim draf ke manajer: PDF dibuat ulang dan email persetujuan dikirim. |
+| GET | `/api/po-penerimaan/:id` | Konteks penerimaan: qty order, sudah diterima, sisa per SKU, dan riwayat penerimaan. |
+| POST | `/api/po-penerimaan/:id` | Catat penerimaan barang. Body `{"items":[{"sku":"...","qty_diterima":12}]}`. Hanya untuk PO `SENT`/`PARTIALLY_RECEIVED`. |
 | GET | `/api/po/approval?token=...&action=approve|reject` | Halaman konfirmasi persetujuan dari email (publik). |
 
-Endpoint selain `/health`, `/api/auth/login`, dan `/api/po/approval` wajib memakai header `Authorization: Bearer <token>`. `POST /api/stok/scan`, `PUT /api/po-draft/:id`, dan `POST /api/po-draft/:id/submit` hanya untuk role `admin`; role `manager` bersifat read-only.
+Endpoint selain `/health`, `/api/auth/login`, dan `/api/po/approval` wajib memakai header `Authorization: Bearer <token>`. `POST /api/stok/scan`, `PUT /api/po-draft/:id`, `POST /api/po-draft/:id/submit`, dan `POST /api/po-penerimaan/:id` hanya untuk role `admin`; role `manager` bersifat read-only.
 
-Alur draf PO: pemindaian membuat `DRAFT` tanpa mengirim email, admin dapat mengubah barang, lalu submit mengubah status ke `PENDING_APPROVAL` dan mengirim email ke manajer. Persetujuan manajer mengubah status ke `SENT` dan mengirim PDF ke pemasok.
+Alur draf PO: pemindaian membuat `DRAFT` tanpa mengirim email, admin dapat mengubah barang, lalu submit mengubah status ke `PENDING_APPROVAL` dan mengirim email ke manajer. Persetujuan manajer mengubah status ke `SENT` dan mengirim PDF ke pemasok. Setelah barang datang, admin mencatat penerimaan per SKU: stok bertambah sesuai qty aktual dan status berubah ke `PARTIALLY_RECEIVED` atau `RECEIVED`.
 
 Semua endpoint data memakai envelope JSON:
 

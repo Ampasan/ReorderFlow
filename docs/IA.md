@@ -17,7 +17,7 @@ Aplikasi ReorderFlow memakai struktur navigasi datar dengan sidebar persisten. N
 │   └── 0.3 Redirect ke halaman asal atau Dashboard setelah JWT tersimpan
 │
 ├── 1.0 Dashboard Utama (/) [Protected]
-│   ├── 1.1 Ringkasan KPI (Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim)
+│   ├── 1.1 Ringkasan KPI (Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim, PO Diterima)
 │   ├── 1.2 Banner Peringatan Stok Rendah + tombol "Buat Draf PO" [Admin only]
 │   ├── 1.3 Banner Data Abnormal (REQUIRES_MANUAL_REVIEW) + tautan "Periksa Data"
 │   └── 1.4 Tabel Cuplikan Stok di Bawah ROP (maksimal 5 baris)
@@ -31,13 +31,14 @@ Aplikasi ReorderFlow memakai struktur navigasi datar dengan sidebar persisten. N
 │   └── 2.6 Dialog Koreksi Stok Opname (alasan DAMAGED / MISCOUNT / RETURN) [Admin only]
 │
 ├── 3.0 Riwayat Purchase Order (/po-log) [Protected]
-│   ├── 3.1 Tab Status: Semua | Draf | Menunggu | Terkirim | Ditolak | Perlu Tinjauan
+│   ├── 3.1 Tab Status: Semua | Draf | Menunggu | Terkirim | Diterima Sebagian | Diterima | Ditolak | Perlu Tinjauan
 │   ├── 3.2 Filter Pemasok (client-side dari daftar PO yang dimuat)
 │   ├── 3.3 Tabel PO (Nomor PO, Pemasok, Status, Barang, Dibuat)
 │   ├── 3.4 Dialog Detail PO + daftar barang
 │   ├── 3.5 Aksi "Lihat PDF" (membuka URL Supabase Storage di tab baru)
 │   ├── 3.6 Aksi "Edit Draf" / "Revisi" / "Proses Ulang" [Admin only]
-│   └── 3.7 Halaman Editor Draf (/po-log/:id/draft) [Protected]
+│   ├── 3.7 Halaman Editor Draf (/po-log/:id/draft) [Protected]
+│   └── 3.8 Aksi "Terima Barang" + dialog penerimaan per SKU [Admin only]
 │
 └── 4.0 Halaman Konfirmasi Persetujuan Manager (/api/po/approval?token={token}&action={action}) [Public/External Landing, HTML dari backend]
     ├── 4.1 State Success (Approve/Reject terproses)
@@ -179,6 +180,43 @@ Alur berjalan di latar belakang tanpa intervensi manual pengguna. Hasil pemindai
 
 ---
 
+### Flow 4: Penerimaan Barang (Admin Inventori Flow)
+
+```text
+[Admin Buka Riwayat PO (/po-log)]
+        │
+        ├── Tab "Terkirim" atau "Diterima Sebagian"
+        │
+        ▼
+[Klik "Terima Barang" di tabel atau detail PO]
+        │
+        ▼
+[GET /api/po-penerimaan/{id}]
+        │
+        ▼
+[Dialog menampilkan per SKU: jumlah order, sudah diterima, sisa, input qty]
+        │
+        ▼
+[Admin Isi Qty Aktual] (0 berarti barang belum datang)
+        │
+        ├── JIKA qty bukan bilangan bulat / melebihi sisa / semua 0 ──► [Pesan validasi di dialog]
+        │
+        ▼
+[POST /api/po-penerimaan/{id}]
+        │
+        ├── HTTP 400 JIKA qty melebihi sisa atau tidak ada qty lebih dari 0
+        ├── HTTP 409 JIKA status PO bukan SENT / PARTIALLY_RECEIVED
+        ├── HTTP 403 JIKA role bukan admin
+        │
+        ▼
+[Stok bertambah, status PO diperbarui, cache dashboard/stok/PO dibersihkan]
+        │
+        ▼
+[Dialog Tertutup] ──► [Badge PO: Diterima Sebagian / Diterima]
+```
+
+---
+
 ## 3. Peta Entitas & Hirarki Data (Entity Mapping)
 
 ```text
@@ -208,6 +246,15 @@ Alur berjalan di latar belakang tanpa intervensi manual pengguna. Hasil pemindai
 +------------------------+
 
 +------------------------+          1 : N          +------------------------+
+|     PO_PENERIMAAN      | ----------------------- |  PO_PENERIMAAN_DETAIL  |
++------------------------+                         +------------------------+
+| id (PK)                |                         | id (PK)                |
+| po_id (FK po_log)      |                         | penerimaan_id (FK)     |
+| actor_id (FK users)    |                         | sku (FK stok)          |
+| created_at             |                         | qty_diterima           |
++------------------------+                         +------------------------+
+
++------------------------+          1 : N          +------------------------+
 |         USERS          | ----------------------- |      STOK_OPNAME       |
 +------------------------+                         +------------------------+
 | id (PK)                |                         | id (PK)                |
@@ -220,7 +267,7 @@ Alur berjalan di latar belakang tanpa intervensi manual pengguna. Hasil pemindai
                                                    +------------------------+
 ```
 
-Nilai status PO: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`.
+Nilai status PO: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`, `PARTIALLY_RECEIVED`, `RECEIVED`.
 Nilai status SKU turunan: `NORMAL`, `LOW_STOCK`, `REQUIRES_MANUAL_REVIEW`.
 
 ---
@@ -230,10 +277,11 @@ Nilai status SKU turunan: `NORMAL`, `LOW_STOCK`, `REQUIRES_MANUAL_REVIEW`.
 | Halaman | Condition: Loading | Condition: Empty State | Condition: Data Available | Condition: Error State |
 | :--- | :--- | :--- | :--- | :--- |
 | **Login (/login)** | Tombol submit disabled + spinner saat request login. | - | Form email/password, redirect ke halaman asal atau dashboard setelah sukses. | Pesan merah "Email atau password salah" / pesan koneksi. |
-| **Dashboard (/)** | Skeleton 5 kartu KPI + skeleton tabel. | KPI bernilai 0, tabel "Semua stok di atas ROP". | Kartu KPI terisi, banner low stock dan banner data abnormal jika ada. | `ErrorState`: "Gagal memuat data dari server" + tombol "Coba Lagi". |
+| **Dashboard (/)** | Skeleton 6 kartu KPI + skeleton tabel. | KPI bernilai 0, tabel "Semua stok di atas ROP". | Kartu KPI terisi, banner low stock dan banner data abnormal jika ada. | `ErrorState`: "Gagal memuat data dari server" + tombol "Coba Lagi". |
 | **Data Stok (/stok)** | Skeleton baris tabel. | Copy berbeda per tab: "Belum ada data inventori", "Tidak ada produk di bawah ROP", "Tidak ada produk yang perlu peninjauan". | Tabel SKU dengan badge status, aksi Opname (admin) dan Detail. | `ErrorState` dengan tombol "Coba Lagi". |
-| **Riwayat PO (/po-log)** | Skeleton baris tabel. | Copy per status: "Belum ada riwayat Purchase Order", "Tidak ada PO berstatus draf", dan seterusnya. | Tabel PO, filter pemasok, aksi Detail dan Lihat PDF, tautan edit untuk admin. | `ErrorState` dengan tombol "Coba Lagi". |
-| **Editor Draf (/po-log/:id/draft)** | Skeleton halaman + "Memuat daftar stok pemasok...". | "Draf ini belum punya barang" + form tambah barang. | Baris barang editable, total qty, tombol Simpan Draf dan Kirim ke Manajer. Status `PENDING_APPROVAL`/`SENT` menampilkan tampilan terkunci. | `ErrorState` dari loader, atau kotak `role="alert"` untuk error aksi. Manager melihat panel read-only. |
+| **Riwayat PO (/po-log)** | Skeleton baris tabel. | Copy per status: "Belum ada riwayat Purchase Order", "Tidak ada PO berstatus draf", dan seterusnya. | Tabel PO, filter pemasok, aksi Detail dan Lihat PDF, tautan edit dan tombol "Terima Barang" untuk admin. | `ErrorState` dengan tombol "Coba Lagi". |
+| **Dialog Terima Barang (Riwayat PO)** | "Memuat data penerimaan..." di dalam dialog. | Dialog hanya dibuka untuk PO `SENT` atau `PARTIALLY_RECEIVED`, jadi selalu ada baris barang. | Tabel qty per SKU, riwayat penerimaan sebelumnya, dan tombol Simpan Penerimaan. | Pesan "Data penerimaan gagal dimuat" atau validasi per baris saat qty melebihi sisa. |
+| **Editor Draf (/po-log/:id/draft)** | Skeleton halaman + "Memuat daftar stok pemasok...". | "Draf ini belum punya barang" + form tambah barang. | Baris barang editable, total qty, tombol Simpan Draf dan Kirim ke Manajer. Status `PENDING_APPROVAL`, `SENT`, `PARTIALLY_RECEIVED`, dan `RECEIVED` menampilkan tampilan terkunci. | `ErrorState` dari loader, atau kotak `role="alert"` untuk error aksi. Manager melihat panel read-only. |
 | **Approval Landing (/api/po/approval)** | Halaman HTML backend menampilkan hasil proses. | - | Card hijau (sukses), amber (sudah dipakai / belum diajukan), merah (kedaluwarsa / token invalid). | Card merah "Token persetujuan tidak ditemukan atau sudah kedaluwarsa." |
 
 Catatan: tidak ada dark mode, pagination, pencarian, atau filter tanggal di kedua tabel.
@@ -258,7 +306,7 @@ Catatan: tidak ada dark mode, pagination, pencarian, atau filter tanggal di kedu
         │           │     ├── <PageHeader />
         │           │     ├── banner low stock + <ConfirmDialog /> scan
         │           │     ├── banner data abnormal
-        │           │     ├── <KpiCard /> x5
+        │           │     ├── <KpiCard /> x6
         │           │     ├── <StockTable compact />
         │           │     └── <DetailDialog />
         │           │
@@ -273,22 +321,24 @@ Catatan: tidak ada dark mode, pagination, pencarian, atau filter tanggal di kedu
         │           │
         │           ├── <POLogList>
         │           │     ├── <PageHeader />
-        │           │     ├── <FilterTabs /> (6 status)
+        │           │     ├── <FilterTabs /> (8 status)
         │           │     ├── filter pemasok <select>
         │           │     ├── <POLogTable>
         │           │     │     ├── <StatusBadge />
+        │           │     │     ├── tombol "Terima Barang" [Admin only, SENT / PARTIALLY_RECEIVED]
         │           │     │     ├── tautan Edit Draf / Revisi / Proses Ulang [Admin only]
         │           │     │     ├── tombol Detail
         │           │     │     └── tautan Lihat PDF
-        │           │     └── <DetailDialog />
+        │           │     ├── <DetailDialog />
+        │           │     └── <TerimaBarangDialog /> (Modal size lg) [Admin only]
         │           │
         │           └── <PODraftEditor>
         │                 ├── <PageHeader /> + tombol kembali
         │                 ├── baris barang editable (qty, hapus, tambah)
         │                 ├── <ConfirmDialog /> kirim ke manajer
-        │                 └── tampilan terkunci untuk PENDING_APPROVAL / SENT
+        │                 └── tampilan terkunci untuk PENDING_APPROVAL, SENT, PARTIALLY_RECEIVED, RECEIVED
         │
         └── (Approval tidak punya route React; link email diarahkan ke HTML backend /api/po/approval)
 ```
 
-Komponen pendukung: `Modal`, `ConfirmDialog`, `DetailDialog`, `OpnameDialog`, `StatusBadge`, `FilterTabs`, `PageHeader`, `KpiCard`, `StockTable`, `POLogTable`, `TableSkeleton`, `EmptyState`, `ErrorState`.
+Komponen pendukung: `Modal`, `ConfirmDialog`, `DetailDialog`, `OpnameDialog`, `TerimaBarangDialog`, `StatusBadge`, `FilterTabs`, `PageHeader`, `KpiCard`, `StockTable`, `POLogTable`, `TableSkeleton`, `EmptyState`, `ErrorState`.

@@ -23,6 +23,7 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
   5. Antarmuka monitoring status inventori, filter status dan pemasok pada riwayat PO, serta detail barang per PO.
   6. Koreksi stok opname oleh admin dengan alasan dan jejak audit.
   7. Autentikasi login staf admin dan operations manager dengan email/password serta token JWT untuk melindungi dashboard dan endpoint data.
+  8. Penerimaan barang per SKU dengan qty aktual, penambahan stok otomatis, dan status PO `PARTIALLY_RECEIVED` atau `RECEIVED`.
 * **Yang Tidak Dibuat (Out-of-Scope):**
   1. Prediksi stok atau estimasi persediaan berbasis kecerdasan buatan (*AI / Machine Learning*).
   2. Integrasi langsung ke API marketplace, e-commerce, atau aplikasi POS pihak ketiga.
@@ -47,6 +48,7 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
 4. **[Prioritas 4] Monitoring Status Inventori & Log PO:** Dashboard untuk memantau ringkasan kondisi stok, filter status dan pemasok pada riwayat PO, serta detail barang per PO.
 5. **[Prioritas 5] Autentikasi & Kontrol Akses:** Login email/password untuk admin dan manager, proteksi endpoint data dengan JWT, serta pembatasan aksi tulis (scan, opname, edit draf, submit) hanya untuk role admin.
 6. **[Prioritas 6] Koreksi Stok Opname:** Admin dapat mengoreksi stok dengan alasan `DAMAGED`, `MISCOUNT`, atau `RETURN`, disertai jejak audit nilai sebelum dan sesudah.
+7. **[Prioritas 7] Penerimaan Barang (Goods Receipt):** Admin mencatat qty aktual yang datang per SKU, boleh bertahap sampai seluruh pesanan diterima. Stok bertambah sesuai qty aktual, status PO menjadi `PARTIALLY_RECEIVED` atau `RECEIVED`, dan PO yang baru diterima sebagian tetap dianggap aktif agar pemindaian tidak membuat PO duplikat.
 
 ### 8. Keputusan Terbuka
 * **Validasi Dampak Lapangan:** Pengukuran tingkat penghematan waktu dan penurunan biaya operasional secara riil pada operasional UMKM nyata (saat ini masih berupa data simulasi).

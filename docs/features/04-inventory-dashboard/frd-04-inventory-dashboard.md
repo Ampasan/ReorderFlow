@@ -213,7 +213,7 @@ Fitur ini dipecah menjadi 4 fungsi UI utama:
 * Satu koreksi per request, tanpa bulk update.
 
 #### 7. Bukan Bagian Ini
-* Penyesuaian stok otomatis setelah PO diterima.
+* Penyesuaian stok otomatis setelah PO diterima. Alur tersebut dicakup fitur terpisah pada `docs/features/06-goods-receipt/`.
 
 ---
 

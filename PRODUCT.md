@@ -38,6 +38,7 @@ Rule-based ROP automation specifically designed for UMKM operators — not enter
 - Draft PO PDF generation grouped per supplier, unique PO number per document, stored in Supabase Storage.
 - Manager approval/rejection via public (no-auth) idempotent token link in email.
 - Auto-send approved PO PDF to supplier email.
+- Per-SKU goods receipt: admin records the actual received qty (partial deliveries allowed), stock increments by that qty, and the PO moves to `PARTIALLY_RECEIVED` or `RECEIVED`. Over-receipt is blocked; a partially received PO still counts as active so scanning does not create a duplicate draft.
 - JWT-protected dashboard and API endpoints; public-only endpoint is the approval/rejection page.
 - Role-based action restriction: "Pindai Stok Sekarang" (manual scan trigger) visible to admin role only; manager sees read-only dashboard.
 - Out of scope for MVP: AI/ML stock prediction, third-party marketplace/POS API integration, invoice payment management, multi-branch warehouse management.
@@ -59,7 +60,7 @@ Rule-based ROP automation specifically designed for UMKM operators — not enter
 - DESIGN.md at `docs/DESIGN.md` — full color token set, typography scale, component rules for all major surfaces.
 - FRD at `docs/FRD.md`, IA at `docs/IA.md`, feature docs in `docs/features/`.
 - Implemented frontend pages: LoginPage, Dashboard, StockList, POLogList, PODraftEditor (the approval page is rendered by the backend at `GET /api/po/approval`, not by React).
-- Implemented frontend components: AppShell, Sidebar, KpiCard, StockTable, POLogTable, StatusBadge, FilterTabs, Modal, ConfirmDialog, DetailDialog, OpnameDialog, EmptyState, ErrorState, TableSkeleton, PageHeader, ProtectedRoute.
+- Implemented frontend components: AppShell, Sidebar, KpiCard, StockTable, POLogTable, StatusBadge, FilterTabs, Modal, ConfirmDialog, DetailDialog, OpnameDialog, TerimaBarangDialog, EmptyState, ErrorState, TableSkeleton, PageHeader, ProtectedRoute.
 - Backend (Go/Gin): handler, service, repository, model, middleware, job, cache, utils directories implemented.
 - Synthetic dataset only; no real customer data on hand.
 

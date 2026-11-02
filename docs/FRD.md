@@ -11,7 +11,7 @@ Alur saat ini memakai tahap peninjauan draf: hasil pemindaian berhenti di `DRAFT
 
 | Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Staf Inventori / Procurement Admin** | Ya (`admin`) | Data Stok, Data Pemasok, Riwayat PO_Log, Draf PO | Draf Reorder Manual (trigger scan) | Data Stok (Koreksi Opnam), Baris Barang Draf PO | Tidak Boleh |
+| **Staf Inventori / Procurement Admin** | Ya (`admin`) | Data Stok, Data Pemasok, Riwayat PO_Log, Draf PO | Draf Reorder Manual (trigger scan) | Data Stok (Koreksi Opnam), Baris Barang Draf PO, Penerimaan Barang | Tidak Boleh |
 | **Operations Manager** | Ya (`manager`) | Dashboard, Data Stok, Riwayat PO_Log, Email Ringkasan | - | - | Ya (Approve / Reject PO via Email Link) |
 | **System Cron / Worker** | Tidak (service account) | Pemindaian Tabel Stok & Pemasok | Record PO_Log, File PDF PO di Storage | Status PO_Log (`DRAFT` -> `PENDING_APPROVAL` -> `SENT`/`REJECTED`) | - |
 
@@ -46,6 +46,9 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
 * **K-IND-1.11:** **SELAMA** status `PO_Log` bernilai `DRAFT` atau `REJECTED`, dokumen PDF tidak boleh dikirimkan ke email pemasok.
 * **K-IND-1.12:** **JIKA** pengiriman email atau unggahan storage gagal, sistem menjalankan retry. Storage memakai backoff 2, 5, dan 10 detik, SMTP memakai satu retry dengan backoff 2 detik, dan query database memakai jeda 10 detik. Email diproses oleh antrean in-memory dengan 2 worker. Jika pengiriman tetap gagal, status PO diubah menjadi `REQUIRES_MANUAL_REVIEW`.
 * **K-IND-1.13:** **KETIKA** admin menyimpan koreksi opname lewat `PATCH /api/stok/{sku}`, sistem memperbarui `stok_saat_ini` dan mencatat jejak audit pada tabel `stok_opname` berisi nilai sebelum, nilai sesudah, alasan, dan aktor.
+* **K-IND-1.14:** **KETIKA** admin mencatat penerimaan lewat `POST /api/po-penerimaan/{id}`, sistem memvalidasi status PO `SENT` atau `PARTIALLY_RECEIVED`, memastikan setiap SKU milik PO tersebut, menambah `stok_saat_ini` sebesar qty aktual, dan mencatat header `po_penerimaan` beserta barisnya di `po_penerimaan_detail`.
+* **K-IND-1.15:** **SETELAH** setiap penerimaan, sistem menghitung total qty diterima per baris. Jika semua baris sudah mencapai `jumlah_order`, status PO menjadi `RECEIVED`; jika baru sebagian, status menjadi `PARTIALLY_RECEIVED`.
+* **K-IND-1.16:** **JIKA** PO tidak berstatus `SENT` atau `PARTIALLY_RECEIVED`, sistem menolak penerimaan dengan HTTP `409` tanpa mengubah stok.
 
 ---
 
@@ -54,7 +57,7 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
 | No. | Kode AB | Kondisi Pemicu | Hasil / Tindakan Sistem |
 | :--- | :--- | :--- | :--- |
 | 1 | AB-IND-01 | `stok_saat_ini <= reorder_point` DAN tidak ada PO aktif untuk SKU tersebut | Masukkan SKU ke daftar item yang wajib dipesan ulang (reorder). |
-| 2 | AB-IND-02 | Terdapat PO aktif untuk SKU atau pemasok tersebut. Status `DRAFT`, `PENDING_APPROVAL`, dan `REJECTED` selalu dianggap aktif. Status `SENT` dianggap aktif dalam 7 hari terakhir. | Abaikan SKU dari pemindaian otomatis untuk mencegah duplikasi PO. |
+| 2 | AB-IND-02 | Terdapat PO aktif untuk SKU atau pemasok tersebut. Status `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, dan `PARTIALLY_RECEIVED` selalu dianggap aktif. Status `SENT` dianggap aktif dalam 7 hari terakhir. | Abaikan SKU dari pemindaian otomatis untuk mencegah duplikasi PO. |
 | 3 | AB-IND-03 | `stok_saat_ini < 0` ATAU `reorder_point <= 0` ATAU `qty_min_order <= 0` | Tandai baris data dengan status `REQUIRES_MANUAL_REVIEW` dan lewati pemrosesan otomatis. |
 | 4 | AB-IND-04 | Email Pemasok kosong / format email tidak valid pada tabel `pemasok` | Buat PDF PO, ubah status PO menjadi `REQUIRES_MANUAL_REVIEW`, dan kirimkan notifikasi email tidak valid ke Manager. |
 | 5 | AB-IND-05 | Token persetujuan diklik ketika status PO bukan `PENDING_APPROVAL` | Tampilkan halaman konfirmasi: tautan sudah pernah digunakan. Jika status `DRAFT`, tampilkan bahwa PO belum diajukan. |
@@ -64,6 +67,8 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
 | 9 | AB-AUTH-03 | Password salah atau email tidak terdaftar pada login | Kembalikan HTTP `401` dengan pesan generik "Email atau password salah". |
 | 10 | AB-IND-07 | Submit draf tanpa barang atau email pemasok tidak valid | Kembalikan HTTP `400` dengan pesan validasi yang sesuai. |
 | 11 | AB-IND-08 | Admin menyimpan koreksi opname dengan stok bulat minimal 0 dan alasan `DAMAGED`, `MISCOUNT`, atau `RETURN` | Perbarui stok dan catat baris `stok_opname`. |
+| 12 | AB-IND-09 | Admin mencatat penerimaan dengan qty per SKU di rentang `0` sampai `sisa`, dan minimal satu baris lebih dari 0 | Tambah stok sesuai qty aktual, catat `po_penerimaan`, lalu perbarui status PO. |
+| 13 | AB-IND-10 | PO berstatus `PARTIALLY_RECEIVED` saat pemindaian low-stock berjalan | Anggap PO masih aktif sehingga SKU tersebut tidak memicu draf PO baru sampai sisa kiriman diterima penuh. |
 
 ---
 
@@ -75,7 +80,8 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
 * **PENDING_APPROVAL:** Status PO yang sudah dikirim admin ke manajer dan menunggu keputusan lewat tautan email.
 * **Idempotency Token:** Kode unik acak 32 karakter heksadesimal sekali pakai yang digunakan pada tautan persetujuan email.
 * **Human-in-the-Loop:** Skema alur kerja di mana sistem otomatis menyiapkan draf dan keputusan akhir pengiriman tetap berada di tangan manusia (Operations Manager).
-* **PO Aktif:** Record PO berstatus `DRAFT`, `PENDING_APPROVAL`, atau `REJECTED`, serta `SENT` yang dibuat dalam 7 hari terakhir.
+* **PO Aktif:** Record PO berstatus `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, atau `PARTIALLY_RECEIVED`, serta `SENT` yang dibuat dalam 7 hari terakhir.
+* **Penerimaan Barang (Goods Receipt):** Pencatatan qty aktual barang yang datang per SKU pada PO berstatus `SENT` atau `PARTIALLY_RECEIVED`, yang menambah stok dan memperbarui status PO.
 * **Stok Opname:** Koreksi stok manual oleh admin disertai alasan dan jejak audit.
 
 ---
@@ -89,6 +95,8 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
 4. **`po_detail`**: Menyimpan baris barang per PO (`sku`, `jumlah_order`).
 5. **`users`**: Menyimpan akun login dashboard (`email`, `password_hash` bcrypt, `nama`, `role`).
 6. **`stok_opname`**: Menyimpan jejak audit koreksi stok (`stok_sebelum`, `stok_sesudah`, `alasan`, `actor_id`).
+7. **`po_penerimaan`**: Header satu aksi penerimaan barang (`po_id`, `actor_id`, `created_at`).
+8. **`po_penerimaan_detail`**: Baris qty aktual yang datang per SKU pada satu penerimaan (`penerimaan_id`, `sku`, `qty_diterima`).
 
 ### 6.2 Status PO (POStatus Lifecycle)
 ```text
@@ -99,6 +107,9 @@ Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujua
                                     (Token 48 jam)    --> REQUIRES_MANUAL_REVIEW
                                     (Gagal kirim)     --> REQUIRES_MANUAL_REVIEW
 REJECTED / REQUIRES_MANUAL_REVIEW --(Admin edit + kirim ulang)--> PENDING_APPROVAL
+SENT --(Admin catat penerimaan sebagian)--> PARTIALLY_RECEIVED
+SENT --(Admin catat penerimaan penuh)--> RECEIVED
+PARTIALLY_RECEIVED --(Admin catat sisa kiriman)--> RECEIVED
 ```
 
 ---
@@ -111,6 +122,7 @@ REJECTED / REQUIRES_MANUAL_REVIEW --(Admin edit + kirim ulang)--> PENDING_APPROV
 4. **F-04 (Dashboard UI Monitoring):** Menyajikan visibilitas data stok, indikator badge ROP, tabel riwayat PO, filter status dan pemasok, serta detail PO.
 5. **F-05 (Autentikasi & Kontrol Akses):** Login JWT untuk admin dan manager, proteksi endpoint data, serta pembatasan aksi tulis berdasarkan role.
 6. **F-06 (Koreksi Stok Opname):** Koreksi stok oleh admin dengan alasan dan jejak audit.
+7. **F-07 (Penerimaan Barang):** Admin mencatat qty aktual yang datang per SKU (boleh bertahap), sistem menambah stok dan memperbarui status PO menjadi `PARTIALLY_RECEIVED` atau `RECEIVED`.
 
 ---
 
@@ -138,11 +150,16 @@ REJECTED / REQUIRES_MANUAL_REVIEW --(Admin edit + kirim ulang)--> PENDING_APPROV
 * **Kejadian 5 (Verifikasi Idempotency):**
   * Manager mengklik kembali tombol **Approve** pada pukul 08:20 WIB.
   * Sistem merespon dengan halaman konfirmasi: "Tautan persetujuan ini sudah pernah digunakan sebelumnya (Status: SENT)."
+* **Kejadian 6 (Barang Datang dan Dicatat Admin):**
+  * Pukul 13:00 WIB barang tiba, tetapi hanya 12 dari 20 unit yang dikirim pemasok.
+  * Admin membuka `/po-log?status=SENT`, menekan **Terima Barang**, dan mengisi qty datang `12` untuk `SKU-KOP-01`.
+  * `POST /api/po-penerimaan/1001` menambah `stok_saat_ini` dari 5 menjadi 17 dan mengubah status PO menjadi `PARTIALLY_RECEIVED`.
+  * Saat sisa 8 unit datang, admin mencatatnya lagi. Stok menjadi 25 dan status PO menjadi `RECEIVED`, sehingga SKU tersebut tidak lagi dianggap memiliki PO aktif.
 
 ---
 
 ## 9. Tidak Termasuk (Out of Scope)
-* Fitur penerimaan barang (*goods receipt*) dan penyesuaian stok otomatis setelah PO disetujui. Koreksi stok opname manual oleh admin tetap termasuk.
+* Pembatalan PO secara sebagian setelah barang datang kurang dari jumlah order. Kekurangan kiriman diselesaikan lewat koreksi stok opname manual oleh admin.
 * Pengiriman notifikasi persetujuan via WhatsApp / SMS API.
 * Integrasi otomatisasi pembayaran atau pencatatan utang usaha (*Accounts Payable*).
 * SSO, MFA/2FA, login sosial, dan alur reset password via email.

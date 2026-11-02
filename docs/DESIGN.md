@@ -41,6 +41,8 @@ Warna fokus global tetap memakai `#D4621A` dengan `outline: 2px solid` dan offse
 | `DRAFT` | `bg-brand-cream` | `text-brand-muted` | `border-brand-dark/15` | `Draf` |
 | `PENDING_APPROVAL` | `bg-amber-50` | `text-amber-800` | `border-amber-200` | `Menunggu` |
 | `SENT` | `bg-brand-dark` | `text-white` | `border-brand-dark/30` | `Terkirim` |
+| `PARTIALLY_RECEIVED` | `bg-brand-orange/10` | `text-brand-orange-strong` | `border-brand-orange/30` | `Diterima Sebagian` |
+| `RECEIVED` | `bg-emerald-50` | `text-emerald-700` | `border-emerald-200` | `Diterima` |
 | `REJECTED` | `bg-rose-50` | `text-rose-700` | `border-rose-200` | `Ditolak` |
 
 Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide`.
@@ -88,7 +90,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 
 - `KpiCard` memakai `bg-white rounded-xl border border-brand-dark/10 px-5 py-5`.
 - Angka besar dan bersih tanpa chart dekoratif.
-- Dashboard menampilkan 5 kartu: Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim.
+- Dashboard menampilkan 6 kartu: Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim, PO Diterima.
 
 ### 4. Banner Operasional
 
@@ -102,6 +104,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 - `ConfirmDialog` untuk konfirmasi scan dan pengiriman draf ke manajer.
 - `DetailDialog` menampilkan pasangan label dan nilai, termasuk daftar barang PO.
 - `OpnameDialog` berisi stok saat ini (read-only), input hasil opname, dan pilihan alasan `Rusak`, `Salah hitung`, `Retur`.
+- `TerimaBarangDialog` memakai `Modal` dengan `size="lg"`. Isinya tabel qty per SKU (order, sudah diterima, sisa, input qty) plus riwayat penerimaan sebelumnya. Di dalam dialog lebar, tabel tetap dibungkus `overflow-x-auto` sehingga aman di layar sempit.
 - Semua dialog dapat ditutup dengan tombol, klik overlay, dan tombol `Escape`.
 
 ### 6. Editor Draf PO (`/po-log/:id/draft`)
@@ -109,7 +112,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 - Baris barang editable dengan input qty `min=1`, tombol "Hapus", dan select "Tambah barang" yang hanya menampilkan SKU dari pemasok yang sama.
 - Ringkasan menampilkan jumlah barang dan total unit. Tidak ada harga, subtotal, atau pajak.
 - Tombol "Simpan Draf" dan "Kirim ke Manajer", dengan dialog konfirmasi sebelum pengiriman.
-- Status `PENDING_APPROVAL` dan `SENT` menampilkan tampilan terkunci.
+- Status `PENDING_APPROVAL`, `SENT`, `PARTIALLY_RECEIVED`, dan `RECEIVED` menampilkan tampilan terkunci.
 - Role `manager` melihat panel read-only dengan pesan bahwa persetujuan dilakukan lewat tautan email.
 
 ### 7. Idempotent Action Response Landing (Public Approval)
