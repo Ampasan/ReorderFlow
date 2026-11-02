@@ -47,6 +47,10 @@ func main() {
 				panic(err)
 			}
 		}
+		if err := db.AutoMigrate(&model.Penerimaan{}, &model.PenerimaanDetail{}); err != nil {
+			utils.Logger.Error("auto migrate penerimaan failed", "error", err)
+			panic(err)
+		}
 	}
 
 	go warmDatabase(db, 3)
@@ -64,6 +68,7 @@ func main() {
 	poRepo := repository.NewPORepository(db)
 	pemasokRepo := repository.NewPemasokRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	penerimaanRepo := repository.NewPenerimaanRepository(db)
 	cacheStore := cache.New(redisRepo)
 
 	smtpCfg := config.NewSMTPConfig(cfg)
@@ -77,12 +82,14 @@ func main() {
 	approvalService := service.NewApprovalService(poRepo, stokRepo, redisRepo, emailService, storage, emailQueue, cacheStore)
 	draftService := service.NewDraftService(poRepo, stokRepo, storage, emailService, emailQueue, cacheStore)
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTExpiry)
+	penerimaanService := service.NewPenerimaanService(penerimaanRepo, cacheStore)
 
 	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore)
 	dashboardHandler := handler.NewDashboardHandler(stokRepo, poRepo, cacheStore)
 	approvalHandler := handler.NewApprovalHandler(approvalService, cacheStore)
 	draftHandler := handler.NewDraftHandler(draftService, cacheStore)
 	authHandler := handler.NewAuthHandler(authService, userRepo)
+	penerimaanHandler := handler.NewPenerimaanHandler(penerimaanService)
 
 	if err := authService.EnsureUser(cfg.AdminEmail, cfg.AdminPassword, "Andi Pratama", model.RoleAdmin); err != nil {
 		utils.Logger.Error("ensure admin failed", "error", err)
@@ -119,6 +126,8 @@ func main() {
 			protected.PUT("/po-draft/:id", middleware.RequireRole(model.RoleAdmin), draftHandler.Update)
 			protected.POST("/po-draft/:id/submit", middleware.RequireRole(model.RoleAdmin), draftHandler.Submit)
 			protected.POST("/po-draft/:id/regenerate-pdf", middleware.RequireRole(model.RoleAdmin), draftHandler.RegeneratePDF)
+			protected.GET("/po-penerimaan/:id", penerimaanHandler.Get)
+			protected.POST("/po-penerimaan/:id", middleware.RequireRole(model.RoleAdmin), penerimaanHandler.Create)
 		}
 	}
 

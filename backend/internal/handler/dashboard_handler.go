@@ -61,13 +61,15 @@ func (h *DashboardHandler) Summary(c *gin.Context) {
 	}
 
 	summary = model.DashboardSummary{
-		TotalSKU:        stokCounts.Total,
-		LowStockCount:   stokCounts.LowStock,
-		ManualReview:    stokCounts.ManualReview,
-		DraftPOCount:    poCounts[model.POStatusDraft],
-		PendingPOCount:  poCounts[model.POStatusPendingApproval],
-		SentPOCount:     poCounts[model.POStatusSent],
-		RejectedPOCount: poCounts[model.POStatusRejected],
+		TotalSKU:                 stokCounts.Total,
+		LowStockCount:            stokCounts.LowStock,
+		ManualReview:             stokCounts.ManualReview,
+		DraftPOCount:             poCounts[model.POStatusDraft],
+		PendingPOCount:           poCounts[model.POStatusPendingApproval],
+		SentPOCount:              poCounts[model.POStatusSent],
+		RejectedPOCount:          poCounts[model.POStatusRejected],
+		PartiallyReceivedPOCount: poCounts[model.POStatusPartiallyReceived],
+		ReceivedPOCount:          poCounts[model.POStatusReceived],
 	}
 
 	h.cache.Set(cache.KeyDashboard, summary)

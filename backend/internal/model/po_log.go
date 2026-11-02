@@ -3,11 +3,13 @@ package model
 import "time"
 
 const (
-	POStatusDraft           = "DRAFT"
-	POStatusPendingApproval = "PENDING_APPROVAL"
-	POStatusSent            = "SENT"
-	POStatusRejected        = "REJECTED"
-	POStatusManualReview    = "REQUIRES_MANUAL_REVIEW"
+	POStatusDraft             = "DRAFT"
+	POStatusPendingApproval   = "PENDING_APPROVAL"
+	POStatusSent              = "SENT"
+	POStatusRejected          = "REJECTED"
+	POStatusManualReview      = "REQUIRES_MANUAL_REVIEW"
+	POStatusPartiallyReceived = "PARTIALLY_RECEIVED"
+	POStatusReceived          = "RECEIVED"
 )
 
 type POLog struct {

@@ -34,7 +34,7 @@ ALTER TABLE po_log ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP WITH TIME ZON
 ALTER TABLE po_log DROP CONSTRAINT IF EXISTS po_log_status_check;
 
 ALTER TABLE po_log ADD CONSTRAINT po_log_status_check
-    CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'SENT', 'REJECTED', 'REQUIRES_MANUAL_REVIEW'));
+    CHECK (status IN ('DRAFT', 'PENDING_APPROVAL', 'SENT', 'REJECTED', 'REQUIRES_MANUAL_REVIEW', 'PARTIALLY_RECEIVED', 'RECEIVED'));
 
 CREATE INDEX IF NOT EXISTS idx_po_token ON po_log(token);
 CREATE INDEX IF NOT EXISTS idx_po_supplier_status ON po_log(id_pemasok, status);
@@ -61,6 +61,24 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_lower ON users (LOWER(email));
+
+CREATE TABLE IF NOT EXISTS po_penerimaan (
+    id SERIAL PRIMARY KEY,
+    po_id INT NOT NULL REFERENCES po_log(id) ON DELETE CASCADE,
+    actor_id INT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS po_penerimaan_detail (
+    id SERIAL PRIMARY KEY,
+    penerimaan_id INT NOT NULL REFERENCES po_penerimaan(id) ON DELETE CASCADE,
+    sku VARCHAR(50) NOT NULL REFERENCES stok(sku),
+    qty_diterima INT NOT NULL CHECK (qty_diterima > 0)
+);
+
+CREATE INDEX IF NOT EXISTS idx_penerimaan_po ON po_penerimaan(po_id);
+CREATE INDEX IF NOT EXISTS idx_penerimaan_detail_id ON po_penerimaan_detail(penerimaan_id);
+CREATE INDEX IF NOT EXISTS idx_penerimaan_detail_sku ON po_penerimaan_detail(sku);
 
 CREATE TABLE IF NOT EXISTS stok_opname (
     id SERIAL PRIMARY KEY,

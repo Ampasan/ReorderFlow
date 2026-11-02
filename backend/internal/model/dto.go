@@ -37,13 +37,15 @@ func NewStockItem(s Stok) StockItem {
 }
 
 type DashboardSummary struct {
-	TotalSKU        int64 `json:"total_sku"`
-	LowStockCount   int64 `json:"low_stock_count"`
-	ManualReview    int64 `json:"manual_review"`
-	DraftPOCount    int64 `json:"draft_po_count"`
-	PendingPOCount  int64 `json:"pending_po_count"`
-	SentPOCount     int64 `json:"sent_po_count"`
-	RejectedPOCount int64 `json:"rejected_po_count"`
+	TotalSKU                 int64 `json:"total_sku"`
+	LowStockCount            int64 `json:"low_stock_count"`
+	ManualReview             int64 `json:"manual_review"`
+	DraftPOCount             int64 `json:"draft_po_count"`
+	PendingPOCount           int64 `json:"pending_po_count"`
+	SentPOCount              int64 `json:"sent_po_count"`
+	RejectedPOCount          int64 `json:"rejected_po_count"`
+	PartiallyReceivedPOCount int64 `json:"partially_received_po_count"`
+	ReceivedPOCount          int64 `json:"received_po_count"`
 }
 
 type ApprovalResult struct {
@@ -57,4 +59,41 @@ type ApprovalResult struct {
 type StockOpnameRequest struct {
 	StokSaatIni *int   `json:"stok_saat_ini" binding:"required,gte=0"`
 	Alasan      string `json:"alasan" binding:"required,oneof=DAMAGED MISCOUNT RETURN"`
+}
+
+type PenerimaanItemRequest struct {
+	SKU         string `json:"sku" binding:"required"`
+	QtyDiterima int    `json:"qty_diterima" binding:"gte=0"`
+}
+
+type CatatPenerimaanRequest struct {
+	Items []PenerimaanItemRequest `json:"items" binding:"required,min=1,dive"`
+}
+
+type PenerimaanItemView struct {
+	SKU           string `json:"sku"`
+	Nama          string `json:"nama"`
+	JumlahOrder   int    `json:"jumlah_order"`
+	SudahDiterima int    `json:"sudah_diterima"`
+	Sisa          int    `json:"sisa"`
+}
+
+type PenerimaanRiwayatItemView struct {
+	SKU         string `json:"sku"`
+	Nama        string `json:"nama"`
+	QtyDiterima int    `json:"qty_diterima"`
+}
+
+type PenerimaanRiwayatView struct {
+	ID        int64                       `json:"id"`
+	CreatedAt time.Time                   `json:"created_at"`
+	Items     []PenerimaanRiwayatItemView `json:"items"`
+}
+
+type PenerimaanView struct {
+	POID    int64                   `json:"po_id"`
+	NomorPO string                  `json:"nomor_po"`
+	Status  string                  `json:"status"`
+	Items   []PenerimaanItemView    `json:"items"`
+	Riwayat []PenerimaanRiwayatView `json:"riwayat"`
 }

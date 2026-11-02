@@ -1,4 +1,4 @@
-TRUNCATE TABLE po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
+TRUNCATE TABLE po_penerimaan_detail, po_penerimaan, po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
 
 INSERT INTO pemasok (id, nama, email) VALUES
     (101, 'PT Sumber Beras Sejahtera', 'n.hajime.2915@gmail.com'),

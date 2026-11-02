@@ -200,8 +200,8 @@ func (r *PORepository) UpdatePDFURL(id int64, pdfURL string) error {
 }
 
 func (r *PORepository) GetActiveReferences(since time.Time) (map[string]struct{}, map[int64]struct{}, error) {
-	activeStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected, model.POStatusSent}
-	openStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected}
+	activeStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected, model.POStatusSent, model.POStatusPartiallyReceived}
+	openStatuses := []string{model.POStatusDraft, model.POStatusPendingApproval, model.POStatusRejected, model.POStatusPartiallyReceived}
 	activeSKUs := make(map[string]struct{})
 	activeSuppliers := make(map[int64]struct{})
 

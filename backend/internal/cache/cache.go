@@ -32,6 +32,8 @@ var keys = []string{
 	poPrefix + model.POStatusSent,
 	poPrefix + model.POStatusRejected,
 	poPrefix + model.POStatusManualReview,
+	poPrefix + model.POStatusPartiallyReceived,
+	poPrefix + model.POStatusReceived,
 }
 
 type memoryEntry struct {
@@ -148,7 +150,7 @@ func POKey(status string) (string, bool) {
 		status = "all"
 	}
 	switch status {
-	case "all", model.POStatusDraft, model.POStatusPendingApproval, model.POStatusSent, model.POStatusRejected, model.POStatusManualReview:
+	case "all", model.POStatusDraft, model.POStatusPendingApproval, model.POStatusSent, model.POStatusRejected, model.POStatusManualReview, model.POStatusPartiallyReceived, model.POStatusReceived:
 		return poPrefix + status, true
 	default:
 		return "", false
