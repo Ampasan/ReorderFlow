@@ -10,7 +10,7 @@ export function LoginPage() {
   const { status, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
+  const from = (location.state as { from?: string } | null)?.from ?? '/app'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -60,7 +60,7 @@ export function LoginPage() {
               <img src="/logo-reorderflow.png" alt="" width={128} height={100} className="h-8 w-auto" />
             </span>
             <div>
-              <p className="text-sm font-bold leading-none text-brand-dark">
+              <p className="text-sm font-bold font-display leading-none text-brand-dark">
                 Reorder<span className="text-brand-orange-strong">Flow</span>
               </p>
               <p className="mt-0.5 text-[11px] text-brand-muted">Sistem Otomasi ROP</p>
@@ -68,11 +68,11 @@ export function LoginPage() {
           </div>
 
           <div className="max-w-[34rem] space-y-2">
-            <p className="text-[1.75rem] font-extrabold leading-[1.2] tracking-tight text-brand-dark">
+            <p className="font-display text-[1.75rem] font-extrabold leading-[1.2] tracking-tight text-brand-dark">
               Tahu kapan harus order,{' '}
               <span className="text-brand-orange">sebelum kehabisan.</span>
             </p>
-            <p className="text-sm leading-relaxed text-brand-muted">
+            <p className="text-sm font-light leading-relaxed text-brand-muted">
               Deteksi stok kritis, buat draf PO, dan kirim ke pemasok, semuanya berjalan otomatis setiap hari.
             </p>
           </div>
@@ -91,7 +91,7 @@ export function LoginPage() {
           />
         </div>
 
-        <p className="text-xs text-brand-muted">
+        <p className="text-xs font-light text-brand-muted">
           Untuk toko grosir dan ritel sembako UMKM Indonesia.
         </p>
       </div>
@@ -105,7 +105,7 @@ export function LoginPage() {
                 <img src="/logo-reorderflow.png" alt="" width={128} height={100} className="h-8 w-auto" />
               </span>
               <div>
-                <p className="text-sm font-bold leading-none text-brand-dark">
+                <p className="text-sm font-bold font-display leading-none text-brand-dark">
                   Reorder<span className="text-brand-orange-strong">Flow</span>
                 </p>
                 <p className="mt-0.5 text-[11px] text-brand-muted">Sistem Otomasi ROP</p>
@@ -113,11 +113,11 @@ export function LoginPage() {
             </div>
 
             <div className="mb-7">
-              <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-brand-dark">
+              <h1 className="font-display text-2xl font-extrabold leading-tight tracking-tight text-brand-dark">
                 Masuk ke akun Anda
               </h1>
-              <p className="mt-1.5 text-sm text-brand-muted">
-                Gunakan akun yang disiapkan admin toko.
+              <p className="mt-1.5 text-sm font-light text-brand-muted">
+                Gunakan akun yang disiapkan manager operasional.
               </p>
             </div>
 
@@ -182,7 +182,7 @@ export function LoginPage() {
                 type="submit"
                 disabled={pending}
                 aria-busy={pending}
-                className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange text-sm font-bold text-white transition-colors hover:bg-brand-orange-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-orange text-sm font-semibold text-white transition-colors hover:bg-brand-orange-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-orange focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {pending ? (
                   <>
@@ -215,8 +215,8 @@ export function LoginPage() {
             </form>
 
             <div className="mt-6 border-t border-brand-dark/10" />
-            <p className="mt-4 text-xs text-brand-muted">
-              Belum punya akun? Minta admin toko untuk membuat akses Anda.
+            <p className="mt-4 text-xs font-light text-brand-muted">
+              Belum punya akun? Minta manager operasional untuk membuat akses Anda.
             </p>
 
           </div>

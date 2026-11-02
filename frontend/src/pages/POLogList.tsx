@@ -118,7 +118,7 @@ export function POLogList() {
       <section className="rounded-xl border border-brand-dark/10 bg-white">
         <div className="flex flex-col gap-3 border-b border-brand-dark/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-sm font-semibold text-brand-dark">Daftar Purchase Order</h2>
+            <h2 className="font-display text-sm font-semibold text-brand-dark">Daftar Purchase Order</h2>
             {!loading && !error ? (
               <span className="text-xs font-medium text-brand-muted">
                 {formatNumber(visibleItems.length)} PO
@@ -173,7 +173,7 @@ export function POLogList() {
               }
             />
           ) : (
-            <POLogTable items={visibleItems} onSelect={setSelected} canEdit={canEdit} />
+            <POLogTable items={visibleItems} onSelect={setSelected} canEdit={canEdit} onRefresh={refetch} />
           )}
         </div>
       </section>
@@ -242,7 +242,7 @@ export function POLogList() {
         {selected ? (
           <section aria-label="Barang dalam PO">
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className="text-xs font-semibold text-brand-dark">Barang dalam PO</h3>
+              <h3 className="font-display text-xs font-semibold text-brand-dark">Barang dalam PO</h3>
               <span className="text-xs font-medium text-brand-muted">
                 {formatNumber(selectedDetails.length)} barang, {formatNumber(selectedTotalQty)} unit
               </span>

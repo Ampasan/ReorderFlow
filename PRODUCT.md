@@ -50,7 +50,7 @@ Rule-based ROP automation specifically designed for UMKM operators — not enter
 - **Language:** Indonesian (Bahasa Indonesia) — all UI copy, labels, status text, and documentation.
 - **Visual identity:** warm organic theme anchored in roasted-coffee and kraft-paper tones (`#FEF3E2` canvas, `#EAD8C0` sidebar, `#D4621A` terracotta primary, `#2A1A0E` brand dark). See DESIGN.md for full token set.
 - **Personality:** warm and trustworthy, ergonomic, low cognitive load, decisive (idempotent, no ambiguity on action outcomes).
-- **Typography:** Inter / Plus Jakarta Sans; JetBrains Mono for SKU codes, PO numbers, and currency figures.
+- **Typography:** Poppins Bold/ExtraBold for headings and display; Montserrat Light–SemiBold for body and UI text; JetBrains Mono for SKU codes, PO numbers, and currency figures.
 - **Logo asset:** `logo-reorderflow.png` (existing asset, do not invent substitutes).
 
 ## Evidence on Hand

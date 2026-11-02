@@ -41,7 +41,7 @@ export function KpiCard({ label, value, hint, tone = 'default', icon }: KpiCardP
         ) : null}
       </div>
       <div>
-        <div className={`text-2xl font-bold tabular-nums tracking-tight ${styles.value}`}>
+        <div className={`font-display text-2xl font-bold tabular-nums tracking-tight ${styles.value}`}>
           {value}
         </div>
         {hint ? <p className="mt-1 text-xs text-brand-muted">{hint}</p> : null}

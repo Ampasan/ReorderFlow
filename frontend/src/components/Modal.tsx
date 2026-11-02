@@ -147,7 +147,7 @@ export function Modal({ open, title, description, onClose, children, footer }: M
       >
         <div className="flex flex-shrink-0 items-start gap-3 px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="break-words text-base font-semibold text-brand-dark">
+            <h2 id={titleId} className="break-words font-display text-base font-bold text-brand-dark">
               {title}
             </h2>
             {description ? (

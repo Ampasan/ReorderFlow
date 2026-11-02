@@ -5,7 +5,7 @@ import { ROLE_LABELS } from '../utils/constants'
 import { BoxIcon, DashboardIcon, DocumentIcon, LogOutIcon } from './icons'
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: DashboardIcon, end: true },
+  { to: '/app', label: 'Dashboard', icon: DashboardIcon, end: true },
   { to: '/stok', label: 'Data Stok', icon: BoxIcon, end: false },
   { to: '/po-log', label: 'Riwayat PO', icon: DocumentIcon, end: false },
 ]
@@ -74,7 +74,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               />
             </span>
             <div>
-              <p className="text-sm font-bold leading-none text-brand-dark">
+              <p className="font-display text-sm font-bold leading-none text-brand-dark">
                 Reorder<span className="text-brand-orange-strong">Flow</span>
               </p>
               <p className="mt-0.5 text-[10px] text-brand-muted">Sistem Otomasi ROP</p>
@@ -117,7 +117,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               {user ? initialsOf(user.nama) : '?'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold text-brand-dark">{user?.nama ?? '-'}</p>
+              <p className="truncate font-display text-xs font-bold text-brand-dark">{user?.nama ?? '-'}</p>
               <p className="truncate text-[10px] font-medium text-brand-muted">
                 {user ? ROLE_LABELS[user.role] : '-'}
               </p>

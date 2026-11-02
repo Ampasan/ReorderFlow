@@ -20,7 +20,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+        // Montserrat Light (300) for body, labels, and UI text — clean and consistent reading
+        sans: ['"Montserrat"', "ui-sans-serif", "system-ui", "sans-serif"],
+        // Poppins Bold (700/800) for headings, page titles, and display copy — assertive and strong
+        display: ['"Poppins"', "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       opacity: {

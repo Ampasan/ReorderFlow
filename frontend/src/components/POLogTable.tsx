@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { regeneratePDF } from '../services/poService'
 import type { POLog } from '../types/po'
 import { formatDateWIB } from '../utils/formatter'
 import { StatusBadge } from './StatusBadge'
@@ -7,9 +9,22 @@ interface POLogTableProps {
   items: POLog[]
   onSelect: (po: POLog) => void
   canEdit?: boolean
+  onRefresh?: () => void
 }
 
-export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps) {
+export function POLogTable({ items, onSelect, canEdit = false, onRefresh }: POLogTableProps) {
+  const [regenerating, setRegenerating] = useState<number | null>(null)
+
+  async function handleRegenerate(po: POLog) {
+    setRegenerating(po.id)
+    try {
+      await regeneratePDF(po.id)
+      onRefresh?.()
+    } finally {
+      setRegenerating(null)
+    }
+  }
+
   return (
     <div className="-mx-4 overflow-x-auto sm:mx-0">
       <table className="w-full min-w-[760px] border-collapse text-left text-sm">
@@ -81,14 +96,26 @@ export function POLogTable({ items, onSelect, canEdit = false }: POLogTableProps
                     Detail
                   </button>
                   {po.tautan_pdf ? (
-                    <a
-                      href={po.tautan_pdf}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex h-8 items-center rounded-lg bg-brand-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-orange-strong"
-                    >
-                      Lihat PDF
-                    </a>
+                    <>
+                      <a
+                        href={po.tautan_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-8 items-center rounded-lg bg-brand-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+                      >
+                        Lihat PDF
+                      </a>
+                      {canEdit ? (
+                        <button
+                          type="button"
+                          disabled={regenerating === po.id}
+                          onClick={() => handleRegenerate(po)}
+                          className="h-8 rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-muted transition-colors hover:bg-brand-cream disabled:opacity-50"
+                        >
+                          {regenerating === po.id ? 'Memproses…' : 'Perbaiki PDF'}
+                        </button>
+                      ) : null}
+                    </>
                   ) : (
                     <span className="inline-flex h-8 items-center rounded-lg border border-dashed border-brand-dark/15 px-3 text-xs text-brand-muted">
                       PDF belum tersedia

@@ -222,7 +222,7 @@ function DraftForm({
 
       <section className="rounded-xl border border-brand-dark/10 bg-white">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-brand-dark/8 px-5 py-4">
-          <h2 className="text-sm font-semibold text-brand-dark">Barang dalam draf</h2>
+          <h2 className="font-display text-sm font-semibold text-brand-dark">Barang dalam draf</h2>
           <span className="text-xs font-medium text-brand-muted">
             {formatNumber(lines.length)} barang, {formatNumber(totalQty)} unit
           </span>
@@ -232,7 +232,7 @@ function DraftForm({
           <div className="p-4 sm:p-5">
             {lines.length === 0 ? (
               <div className="flex flex-col items-center py-8 text-center">
-                <p className="text-sm font-bold text-brand-dark">Draf ini belum punya barang</p>
+                <p className="font-display text-sm font-bold text-brand-dark">Draf ini belum punya barang</p>
                 <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-brand-muted">
                   Tambahkan barang dari daftar di bawah. Draf tanpa barang tidak bisa dikirim ke
                   manajer.
@@ -463,20 +463,32 @@ export function PODraftEditor() {
   } = useResource('stock:all', fetchStock)
 
   const backLink = (
-    <Link
-      to={
-        po?.status === 'DRAFT'
-          ? '/po-log?status=DRAFT'
-          : po?.status === 'REJECTED'
-            ? '/po-log?status=REJECTED'
-            : po?.status === 'REQUIRES_MANUAL_REVIEW'
-              ? '/po-log?status=REQUIRES_MANUAL_REVIEW'
-              : '/po-log'
-      }
-      className="inline-flex h-9 items-center justify-center rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
-    >
-      Kembali ke Riwayat PO
-    </Link>
+    <div className="flex flex-wrap items-center gap-2">
+      {po?.tautan_pdf ? (
+        <a
+          href={po.tautan_pdf}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-9 items-center justify-center rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
+        >
+          Lihat PDF Dokumen
+        </a>
+      ) : null}
+      <Link
+        to={
+          po?.status === 'DRAFT'
+            ? '/po-log?status=DRAFT'
+            : po?.status === 'REJECTED'
+              ? '/po-log?status=REJECTED'
+              : po?.status === 'REQUIRES_MANUAL_REVIEW'
+                ? '/po-log?status=REQUIRES_MANUAL_REVIEW'
+                : '/po-log'
+        }
+        className="inline-flex h-9 items-center justify-center rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
+      >
+        Kembali ke Riwayat PO
+      </Link>
+    </div>
   )
 
   if (!isAdmin) {
@@ -484,7 +496,7 @@ export function PODraftEditor() {
       <div className="mx-auto max-w-3xl space-y-5">
         <PageHeader title="Periksa Draf PO" actions={backLink} />
         <div className="rounded-xl border border-brand-dark/10 bg-white px-5 py-8 text-center">
-          <p className="text-sm font-bold text-brand-dark">
+          <p className="font-display text-sm font-bold text-brand-dark">
             Hanya admin inventori yang dapat mengubah draf
           </p>
           <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-brand-muted">

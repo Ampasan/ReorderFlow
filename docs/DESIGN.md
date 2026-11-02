@@ -49,8 +49,9 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 
 ## 3. Typography Scale & Hierarchy
 
-- **Font Sans**: `Plus Jakarta Sans`, fallback `ui-sans-serif`, `system-ui`.
-- **Font Mono**: `JetBrains Mono`, dipakai untuk SKU, nomor PO, dan angka.
+- **Font Display (Heading)**: `Poppins` Bold (700) dan ExtraBold (800), dipakai untuk judul halaman, section header, dan hero display copy. Tegas dan kuat.
+- **Font Sans (Body)**: `Montserrat` Light (300) hingga SemiBold (600), dipakai untuk teks isi, label, caption, dan UI text. Bersih dan nyaman dibaca.
+- **Font Mono**: `JetBrains Mono`, dipakai untuk SKU, nomor PO, dan angka tabular.
 
 | Level | Size / Weight | Penggunaan |
 | :--- | :--- | :--- |

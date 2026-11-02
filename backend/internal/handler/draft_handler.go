@@ -74,6 +74,21 @@ func (h *DraftHandler) Submit(c *gin.Context) {
 	Success(c, http.StatusOK, "Draf PO diterima, email ke manajer sedang dikirim", po)
 }
 
+func (h *DraftHandler) RegeneratePDF(c *gin.Context) {
+	id, ok := parseDraftID(c)
+	if !ok {
+		return
+	}
+
+	po, err := h.drafts.RegeneratePDF(c.Request.Context(), id)
+	if err != nil {
+		Error(c, http.StatusInternalServerError, "Gagal regenerasi PDF", err.Error())
+		return
+	}
+
+	Success(c, http.StatusOK, "PDF berhasil diregenerasi", po)
+}
+
 func parseDraftID(c *gin.Context) (int64, bool) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id <= 0 {

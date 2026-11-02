@@ -146,7 +146,7 @@ export function Dashboard() {
       <section className="rounded-xl border border-brand-dark/10 bg-white">
         <div className="flex items-center justify-between border-b border-brand-dark/8 px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-brand-dark">Stok di bawah ROP</h2>
+            <h2 className="font-display text-sm font-semibold text-brand-dark">Stok di bawah ROP</h2>
             <p className="mt-0.5 text-xs text-brand-muted">
               Produk yang mencapai atau di bawah Reorder Point.
             </p>

@@ -97,7 +97,7 @@ export function StockList() {
 
       <section className="rounded-xl border border-brand-dark/10 bg-white">
         <div className="flex items-center justify-between border-b border-brand-dark/8 px-5 py-4">
-          <h2 className="text-sm font-semibold text-brand-dark">Daftar SKU</h2>
+          <h2 className="font-display text-sm font-semibold text-brand-dark">Daftar SKU</h2>
           {!loading && !error ? (
             <span className="text-xs font-medium text-brand-muted">
               {formatNumber(items.length)} produk

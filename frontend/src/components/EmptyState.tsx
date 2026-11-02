@@ -25,7 +25,7 @@ export function EmptyState({ title, description, action }: EmptyStateProps) {
           />
         </svg>
       </div>
-      <p className="text-sm font-bold text-brand-dark">{title}</p>
+      <p className="font-display text-sm font-bold text-brand-dark">{title}</p>
       <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-brand-muted">{description}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>

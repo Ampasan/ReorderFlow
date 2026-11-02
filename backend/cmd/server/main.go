@@ -118,6 +118,7 @@ func main() {
 			protected.GET("/po-draft/:id", draftHandler.Get)
 			protected.PUT("/po-draft/:id", middleware.RequireRole(model.RoleAdmin), draftHandler.Update)
 			protected.POST("/po-draft/:id/submit", middleware.RequireRole(model.RoleAdmin), draftHandler.Submit)
+			protected.POST("/po-draft/:id/regenerate-pdf", middleware.RequireRole(model.RoleAdmin), draftHandler.RegeneratePDF)
 		}
 	}
 

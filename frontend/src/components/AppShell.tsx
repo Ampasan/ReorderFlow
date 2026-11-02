@@ -54,7 +54,7 @@ export function AppShell() {
                 className="h-7 w-auto"
               />
             </span>
-            <span className="text-sm font-bold tracking-tight text-brand-dark">
+            <span className="font-display text-sm font-bold tracking-tight text-brand-dark">
               Reorder<span className="text-brand-orange-strong">Flow</span>
             </span>
           </span>

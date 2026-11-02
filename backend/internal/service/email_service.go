@@ -48,7 +48,7 @@ func (s *EmailService) SendManagerApproval(ctx context.Context, data POEmailData
 }
 
 func (s *EmailService) SendSupplierPO(ctx context.Context, data POEmailData, filename string, pdfBytes []byte) error {
-	subject := fmt.Sprintf("Purchase Order #%s - ReorderFlow", data.NomorPO)
+	subject := fmt.Sprintf("Purchase Order #%s - Mitra Sembako", data.NomorPO)
 	body := s.supplierBody(data)
 
 	return Retry(ctx, 1, SMTPStorageBackoff, func() error {
@@ -117,7 +117,7 @@ func (s *EmailService) supplierBody(data POEmailData) string {
 	return fmt.Sprintf(`<!DOCTYPE html>
 <html><body style="font-family:Arial,Helvetica,sans-serif;color:#2A1A0E;padding:24px;">
 <p>Kepada <strong>%s</strong>,</p>
-<p>Terlampir Purchase Order <strong>#%s</strong> dari ReorderFlow.</p>
+<p>Terlampir Purchase Order <strong>#%s</strong> dari Mitra Sembako.</p>
 <p>Total qty: <strong>%d</strong>. Silakan tinjau dokumen PDF terlampir.</p>
 </body></html>`,
 		html.EscapeString(data.PemasokNama),

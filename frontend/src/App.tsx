@@ -4,6 +4,9 @@ import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 
+const LandingPage = lazy(() =>
+  import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })),
+)
 const LoginPage = lazy(() =>
   import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })),
 )
@@ -35,10 +38,11 @@ export function App() {
     <AuthProvider>
       <Suspense fallback={<FullPageFallback />}>
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/app" element={<Dashboard />} />
               <Route path="/stok" element={<StockList />} />
               <Route path="/po-log" element={<POLogList />} />
               <Route path="/po-log/:id/draft" element={<PODraftEditor />} />

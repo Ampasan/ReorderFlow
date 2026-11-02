@@ -16,3 +16,7 @@ export function updateDraft(id: number, items: DraftItemInput[]): Promise<POLog>
 export function submitDraft(id: number): Promise<POLog> {
   return post<POLog>(`/api/po-draft/${id}/submit`)
 }
+
+export function regeneratePDF(id: number): Promise<POLog> {
+  return post<POLog>(`/api/po-draft/${id}/regenerate-pdf`)
+}
