@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { POLog, PenerimaanItemInput, PenerimaanView } from '../types/po'
 import { formatDateWIB, formatNumber } from '../utils/formatter'
@@ -20,6 +20,12 @@ interface LineState {
   error: string | null
 }
 
+interface FormState {
+  view: PenerimaanView | null
+  lines: Record<string, LineState>
+  formError: string | null
+}
+
 export function TerimaBarangDialog({
   open,
   po,
@@ -29,24 +35,16 @@ export function TerimaBarangDialog({
   onConfirm,
   onClose,
 }: TerimaBarangDialogProps) {
-  const [lines, setLines] = useState<Record<string, LineState>>({})
-  const [formError, setFormError] = useState<string | null>(null)
+  const [formState, setFormState] = useState<FormState>({
+    view: null,
+    lines: {},
+    formError: null,
+  })
 
   const items = view?.items ?? []
-  const firstOpenSku = useMemo(
-    () => items.find((item) => item.sisa > 0)?.sku ?? '',
-    [items],
-  )
-
-  useEffect(() => {
-    if (!view) return
-    const initial: Record<string, LineState> = {}
-    for (const item of view.items) {
-      initial[item.sku] = { qty: String(item.sisa), error: null }
-    }
-    setLines(initial)
-    setFormError(null)
-  }, [view])
+  const lines = formState.view === view ? formState.lines : {}
+  const formError = formState.view === view ? formState.formError : null
+  const firstOpenSku = items.find((item) => item.sisa > 0)?.sku ?? ''
 
   function updateQty(sku: string, raw: string, sisa: number) {
     let nextError: string | null = null
@@ -61,11 +59,14 @@ export function TerimaBarangDialog({
       }
     }
 
-    setLines((current) => ({
-      ...current,
-      [sku]: { qty: raw, error: nextError },
+    setFormState((current) => ({
+      view,
+      lines: {
+        ...(current.view === view ? current.lines : {}),
+        [sku]: { qty: raw, error: nextError },
+      },
+      formError: null,
     }))
-    setFormError(null)
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -73,27 +74,25 @@ export function TerimaBarangDialog({
     if (!view || pending) return
 
     const payload: PenerimaanItemInput[] = []
+    const nextLines = { ...lines }
     let hasError = false
     let totalQty = 0
 
     for (const item of view.items) {
-      const line = lines[item.sku]
-      const raw = line?.qty.trim() ?? ''
+      const line = lines[item.sku] ?? { qty: String(item.sisa), error: null }
+      const raw = line.qty.trim()
       if (raw === '') continue
 
       const value = Number(raw)
       if (!Number.isInteger(value) || value < 0 || value > item.sisa) {
         hasError = true
-        setLines((current) => ({
-          ...current,
-          [item.sku]: {
-            qty: raw,
-            error:
-              value > item.sisa
-                ? `Maksimal ${formatNumber(item.sisa)} unit.`
-                : 'Isi dengan angka bulat minimal 0.',
-          },
-        }))
+        nextLines[item.sku] = {
+          qty: raw,
+          error:
+            value > item.sisa
+              ? `Maksimal ${formatNumber(item.sisa)} unit.`
+              : 'Isi dengan angka bulat minimal 0.',
+        }
         continue
       }
 
@@ -104,15 +103,19 @@ export function TerimaBarangDialog({
     }
 
     if (hasError) {
-      setFormError('Periksa kembali qty yang ditandai.')
+      setFormState({ view, lines: nextLines, formError: 'Periksa kembali qty yang ditandai.' })
       return
     }
     if (payload.length === 0 || totalQty === 0) {
-      setFormError('Isi minimal satu barang dengan qty lebih dari 0.')
+      setFormState({
+        view,
+        lines,
+        formError: 'Isi minimal satu barang dengan qty lebih dari 0.',
+      })
       return
     }
 
-    setFormError(null)
+    setFormState({ view, lines, formError: null })
     onConfirm(payload)
   }
 

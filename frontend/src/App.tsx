@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 
 const LandingPage = lazy(() =>
-  import('./pages/LandingPage').then((module) => ({ default: module.LandingPage })),
+  import('./pages/landing/LandingPage').then((module) => ({ default: module.LandingPage })),
 )
 const LoginPage = lazy(() =>
   import('./pages/LoginPage').then((module) => ({ default: module.LoginPage })),
@@ -20,7 +20,7 @@ const POLogList = lazy(() =>
   import('./pages/POLogList').then((module) => ({ default: module.POLogList })),
 )
 const PODraftEditor = lazy(() =>
-  import('./pages/PODraftEditor').then((module) => ({ default: module.PODraftEditor })),
+  import('./pages/po-draft/PODraftEditor').then((module) => ({ default: module.PODraftEditor })),
 )
 
 function FullPageFallback() {

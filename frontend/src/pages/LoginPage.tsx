@@ -80,7 +80,7 @@ export function LoginPage() {
 
         <div className="flex flex-1 items-center justify-center py-4">
           <img
-            src="/illustration.webp"
+            src="https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683652/lgshsoglycvskgtqiyb8.webp"
             alt=""
             aria-hidden="true"
             width={460}

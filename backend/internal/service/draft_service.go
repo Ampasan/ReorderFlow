@@ -70,63 +70,23 @@ func (s *DraftService) RegeneratePDF(ctx context.Context, id int64) (*model.POLo
 		return nil, err
 	}
 
-	skus := make([]string, 0, len(po.Details))
-	for _, detail := range po.Details {
-		skus = append(skus, detail.SKU)
-	}
+	stockBySKU := loadStockNames(s.stokRepo, detailSKUs(po.Details), po.NomorPO)
+	pdfItems, totalQty := pdfItemsFromDetails(po.Details, stockBySKU)
 
-	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
-	if err != nil {
-		utils.Logger.Warn("stock lookup failed while regenerating PDF", "nomor_po", po.NomorPO, "error", err)
-	}
-
-	pdfItems := make([]utils.PDFItem, 0, len(po.Details))
-	totalQty := 0
-	for _, detail := range po.Details {
-		nama := detail.SKU
-		if stok, ok := stockBySKU[detail.SKU]; ok {
-			nama = stok.Nama
-		}
-		pdfItems = append(pdfItems, utils.PDFItem{
-			SKU:    detail.SKU,
-			Nama:   nama,
-			Jumlah: detail.JumlahOrder,
-		})
-		totalQty += detail.JumlahOrder
-	}
-
-	pemasokNama := ""
-	pemasokEmail := ""
-	if po.Pemasok != nil {
-		pemasokNama = po.Pemasok.Nama
-		pemasokEmail = po.Pemasok.Email
-	}
-
-	isFinal := po.Status == model.POStatusSent
-
-	pdfBytes, err := utils.GeneratePO(utils.PODocument{
-		NomorPO:      po.NomorPO,
-		Tanggal:      po.CreatedAt.Format("02/01/2006"),
-		PemasokNama:  pemasokNama,
-		PemasokEmail: pemasokEmail,
-		Items:        pdfItems,
-		TotalQty:     totalQty,
-		Final:        isFinal,
-	})
+	pdfBytes, err := utils.GeneratePO(newPODocument(
+		po,
+		pdfItems,
+		totalQty,
+		po.CreatedAt.Format("02/01/2006"),
+		po.Status == model.POStatusSent,
+	))
 	if err != nil {
 		return nil, fmt.Errorf("render PDF gagal: %w", err)
 	}
 
 	filename := fmt.Sprintf("PO_%s_regen_%d.pdf", po.NomorPO, time.Now().Unix())
-	var pdfURL string
-	if err := Retry(ctx, 3, StorageBackoff, func() error {
-		url, uploadErr := s.storage.Upload(filename, pdfBytes, "application/pdf")
-		if uploadErr != nil {
-			return uploadErr
-		}
-		pdfURL = url
-		return nil
-	}); err != nil {
+	pdfURL, err := uploadPDF(ctx, s.storage, filename, pdfBytes)
+	if err != nil {
 		return nil, fmt.Errorf("upload PDF gagal: %w", err)
 	}
 
@@ -231,60 +191,22 @@ func (s *DraftService) renderPO(
 	po *model.POLog,
 	details []model.PODetail,
 ) (string, []utils.PDFItem, int, error) {
-	skus := make([]string, 0, len(details))
-	for _, detail := range details {
-		skus = append(skus, detail.SKU)
-	}
+	stockBySKU := loadStockNames(s.stokRepo, detailSKUs(details), po.NomorPO)
+	pdfItems, totalQty := pdfItemsFromDetails(details, stockBySKU)
 
-	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
-	if err != nil {
-		utils.Logger.Error("stock lookup failed while rendering PO", "nomor_po", po.NomorPO, "error", err)
-	}
-
-	pdfItems := make([]utils.PDFItem, 0, len(details))
-	totalQty := 0
-	for _, detail := range details {
-		nama := detail.SKU
-		if stok, ok := stockBySKU[detail.SKU]; ok {
-			nama = stok.Nama
-		}
-		pdfItems = append(pdfItems, utils.PDFItem{
-			SKU:    detail.SKU,
-			Nama:   nama,
-			Jumlah: detail.JumlahOrder,
-		})
-		totalQty += detail.JumlahOrder
-	}
-
-	pemasokNama := ""
-	pemasokEmail := ""
-	if po.Pemasok != nil {
-		pemasokNama = po.Pemasok.Nama
-		pemasokEmail = po.Pemasok.Email
-	}
-
-	pdfBytes, err := utils.GeneratePO(utils.PODocument{
-		NomorPO:      po.NomorPO,
-		Tanggal:      time.Now().Format("02/01/2006"),
-		PemasokNama:  pemasokNama,
-		PemasokEmail: pemasokEmail,
-		Items:        pdfItems,
-		TotalQty:     totalQty,
-	})
+	pdfBytes, err := utils.GeneratePO(newPODocument(
+		po,
+		pdfItems,
+		totalQty,
+		time.Now().Format("02/01/2006"),
+		false,
+	))
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("%w: %v", ErrDraftPDFFailed, err)
 	}
 
-	filename := fmt.Sprintf("PO_%s_%d.pdf", po.NomorPO, time.Now().Unix())
-	var pdfURL string
-	if err := Retry(ctx, 3, StorageBackoff, func() error {
-		url, uploadErr := s.storage.Upload(filename, pdfBytes, "application/pdf")
-		if uploadErr != nil {
-			return uploadErr
-		}
-		pdfURL = url
-		return nil
-	}); err != nil {
+	pdfURL, err := uploadPDF(ctx, s.storage, poPDFFilename(po), pdfBytes)
+	if err != nil {
 		return "", nil, 0, fmt.Errorf("%w: %v", ErrDraftPDFFailed, err)
 	}
 

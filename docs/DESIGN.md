@@ -127,7 +127,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 ### 8. Login Page (Public)
 
 - Layout dua kolom pada desktop:
-  - Panel kiri `lg:w-[60%]`, latar `#EAD8C0`, berisi brand, headline "Tahu kapan harus order, sebelum kehabisan.", dan ilustrasi `illustration.webp`.
+  - Panel kiri `lg:w-[60%]`, latar `#EAD8C0`, berisi brand, headline "Tahu kapan harus order, sebelum kehabisan.", dan ilustrasi yang di-host di Cloudinary.
   - Panel kanan `bg-white` dengan form `max-w-[340px]`.
 - Pada mobile, panel kiri disembunyikan dan logo muncul di atas form.
 - Judul form: "Masuk ke akun Anda", subjudul "Gunakan akun yang disiapkan admin toko."
@@ -145,5 +145,10 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 ### 10. Theme & Motion
 
 - Hanya light theme. Tidak ada toggle dark mode.
-- Animasi dibatasi pada transisi hover, overlay, dan modal (`overlay-in`, `modal-in`).
+- Navbar landing page menyediakan tautan ke section `#fitur`, `#proses`, `#harga`, dan `#kontak`; tombol Masuk menuju halaman `/login`. Pada layar sempit, tautan dilipat ke dalam menu hamburger yang dapat ditutup dengan `Escape`.
+- Kontak pelanggan tersedia pada section tersendiri, bukan sebagai tombol konsultasi di navbar.
+- Footer landing page memuat deskripsi produk, navigasi ke section yang tersedia, kontak resmi, dan tautan Masuk. Susunan tiga kolom menjaga navigasi dan identitas tetap terbaca di layar lebar, lalu menumpuk pada layar kecil.
+- Arah landing page: ENERGY 3 / RHYTHM 3 / MOTION 2; palet hangat dan tipografi brand dipertahankan, dengan hero espresso gelap sebagai anchor dan section bergantian terang dan gelap. Gerakan diarahkan ke satu momen hero (garis stok menukik melewati batas ROP) ditambah reveal scroll ringan dan hover.
+- Landing page memakai animasi hero terarah (draw garis stok, pulse pada titik ROP, kartu PO muncul), reveal saat scroll untuk header section, dan transisi hover pada kartu, tombol, dan gambar.
+- Animasi lain dibatasi pada transisi hover, overlay, dan modal (`overlay-in`, `modal-in`).
 - `prefers-reduced-motion` menonaktifkan animasi dan transisi.

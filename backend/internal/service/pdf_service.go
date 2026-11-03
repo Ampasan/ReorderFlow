@@ -102,15 +102,8 @@ func (s *PDFService) createSupplierPO(ctx context.Context, supplierID int64, gro
 	}
 
 	filename := fmt.Sprintf("PO_%s_%d.pdf", nomor, time.Now().Unix())
-	var publicURL string
-	if err := Retry(ctx, 3, StorageBackoff, func() error {
-		url, uploadErr := s.storage.Upload(filename, pdfBytes, "application/pdf")
-		if uploadErr != nil {
-			return uploadErr
-		}
-		publicURL = url
-		return nil
-	}); err != nil {
+	publicURL, err := uploadPDF(ctx, s.storage, filename, pdfBytes)
+	if err != nil {
 		utils.Logger.Error("upload PDF failed", "nomor_po", nomor, "error", err)
 		return false
 	}

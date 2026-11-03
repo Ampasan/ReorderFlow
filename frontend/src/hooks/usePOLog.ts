@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect } from 'react'
 import { listPO } from '../services/poService'
 import type { POFilter, POLog } from '../types/po'
 import { useResource } from './useResource'
@@ -9,17 +9,15 @@ export function usePOLog(status: POFilter) {
   const fetcher = useCallback(() => listPO(status), [status])
 
   const resource = useResource<POLog[]>(`po:${status}`, fetcher)
-
-  const refetchRef = useRef(resource.refetch)
-  refetchRef.current = resource.refetch
+  const { refetch } = resource
 
   // Poll setiap 15 detik agar status PO terupdate secara real-time
   useEffect(() => {
     const id = setInterval(() => {
-      refetchRef.current()
+      refetch()
     }, POLL_INTERVAL)
     return () => clearInterval(id)
-  }, [])
+  }, [refetch])
 
   return resource
 }

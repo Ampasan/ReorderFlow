@@ -143,11 +143,20 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 		Name: "supplier PO " + po.NomorPO,
 		Send: func(ctx context.Context) error {
 			defer s.cache.Invalidate()
-			pdfBytes, err := s.renderSupplierPDF(po)
+			stockBySKU := loadStockNames(s.stokRepo, detailSKUs(po.Details), po.NomorPO)
+			items, totalQty := pdfItemsFromDetails(po.Details, stockBySKU)
+			pdfBytes, err := utils.GeneratePO(newPODocument(
+				po,
+				items,
+				totalQty,
+				time.Now().Format("02/01/2006"),
+				true,
+			))
 			if err != nil {
 				return err
 			}
-			if pdfURL, uploadErr := s.uploadSupplierPDF(ctx, pdfBytes, po.NomorPO); uploadErr != nil {
+			filename := fmt.Sprintf("PO_%s_final_%d.pdf", po.NomorPO, time.Now().Unix())
+			if pdfURL, uploadErr := uploadPDF(ctx, s.storage, filename, pdfBytes); uploadErr != nil {
 				utils.Logger.Warn("upload supplier PDF failed", "nomor_po", po.NomorPO, "error", uploadErr)
 			} else if err := s.poRepo.UpdatePDFURL(po.ID, pdfURL); err != nil {
 				utils.Logger.Warn("update supplier PDF URL failed", "nomor_po", po.NomorPO, "error", err)
@@ -192,78 +201,4 @@ func (s *ApprovalService) alreadyUsedOutcome(poID int64) (*ApprovalOutcome, erro
 		Message: "Tautan persetujuan ini sudah pernah digunakan sebelumnya.",
 		Used:    true,
 	}, nil
-}
-
-func (s *ApprovalService) renderSupplierPDF(po *model.POLog) ([]byte, error) {
-	skus := make([]string, 0, len(po.Details))
-	for _, detail := range po.Details {
-		skus = append(skus, detail.SKU)
-	}
-
-	stockBySKU, err := s.stokRepo.GetBySKUs(skus)
-	if err != nil {
-		utils.Logger.Warn("stock lookup failed while rendering supplier PO", "nomor_po", po.NomorPO, "error", err)
-	}
-
-	items := make([]utils.PDFItem, 0, len(po.Details))
-	for _, detail := range po.Details {
-		nama := detail.SKU
-		if stok, ok := stockBySKU[detail.SKU]; ok {
-			nama = stok.Nama
-		}
-		items = append(items, utils.PDFItem{
-			SKU:    detail.SKU,
-			Nama:   nama,
-			Jumlah: detail.JumlahOrder,
-		})
-	}
-
-	return utils.GeneratePO(utils.PODocument{
-		NomorPO:      po.NomorPO,
-		Tanggal:      time.Now().Format("02/01/2006"),
-		PemasokNama:  supplierName(po),
-		PemasokEmail: supplierEmail(po),
-		Items:        items,
-		TotalQty:     poTotalQty(po.Details),
-		Final:        true,
-	})
-}
-
-func (s *ApprovalService) uploadSupplierPDF(ctx context.Context, pdfBytes []byte, nomorPO string) (string, error) {
-	filename := fmt.Sprintf("PO_%s_final_%d.pdf", nomorPO, time.Now().Unix())
-	var publicURL string
-	err := Retry(ctx, 3, StorageBackoff, func() error {
-		url, uploadErr := s.storage.Upload(filename, pdfBytes, "application/pdf")
-		if uploadErr != nil {
-			return uploadErr
-		}
-		publicURL = url
-		return nil
-	})
-	if err != nil {
-		return "", err
-	}
-	return publicURL, nil
-}
-
-func supplierName(po *model.POLog) string {
-	if po.Pemasok != nil {
-		return po.Pemasok.Nama
-	}
-	return ""
-}
-
-func supplierEmail(po *model.POLog) string {
-	if po.Pemasok != nil {
-		return po.Pemasok.Email
-	}
-	return ""
-}
-
-func poTotalQty(details []model.PODetail) int {
-	total := 0
-	for _, d := range details {
-		total += d.JumlahOrder
-	}
-	return total
 }
