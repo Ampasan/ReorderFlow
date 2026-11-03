@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -37,6 +38,12 @@ type Config struct {
 
 	RedisAddr     string
 	RedisPassword string
+
+	TrustedProxies []string
+
+	RateLimitLogin    int
+	RateLimitApproval int
+	RateLimitAPI      int
 
 	SMTPHost     string
 	SMTPPort     int
@@ -78,6 +85,12 @@ func Load() *Config {
 		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: normalizeOptional(getEnv("REDIS_PASSWORD", "")),
 
+		TrustedProxies: splitList(getEnv("TRUSTED_PROXIES", "")),
+
+		RateLimitLogin:    getEnvInt("RATE_LIMIT_LOGIN", 10),
+		RateLimitApproval: getEnvInt("RATE_LIMIT_APPROVAL", 30),
+		RateLimitAPI:      getEnvInt("RATE_LIMIT_API", 120),
+
 		SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
 		SMTPPort:     getEnvInt("SMTP_PORT", 587),
 		SMTPEmail:    getEnv("SMTP_EMAIL", ""),
@@ -107,4 +120,19 @@ func normalizeOptional(v string) string {
 		return ""
 	}
 	return v
+}
+
+func splitList(v string) []string {
+	if strings.TrimSpace(v) == "" {
+		return nil
+	}
+
+	parts := strings.Split(v, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
 }

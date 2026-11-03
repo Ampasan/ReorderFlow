@@ -9,6 +9,14 @@ import (
 
 var ErrRedisDisabled = errors.New("redis disabled")
 
+var incrScript = redis.NewScript(`
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then
+  redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+return {count, redis.call("PTTL", KEYS[1])}
+`)
+
 type RedisRepository struct {
 	client *redis.Client
 }
@@ -72,4 +80,35 @@ func (r *RedisRepository) Ping() error {
 		return ErrRedisDisabled
 	}
 	return r.client.Ping().Err()
+}
+
+func (r *RedisRepository) Incr(key string, window time.Duration) (int64, time.Duration, error) {
+	if !r.Enabled() {
+		return 0, 0, ErrRedisDisabled
+	}
+
+	result, err := incrScript.Run(r.client, []string{key}, window.Milliseconds()).Result()
+	if err != nil {
+		return 0, 0, err
+	}
+
+	values, ok := result.([]interface{})
+	if !ok || len(values) != 2 {
+		return 0, 0, errors.New("unexpected redis incr response")
+	}
+
+	count, _ := values[0].(int64)
+	ttlMillis, _ := values[1].(int64)
+	if ttlMillis < 0 {
+		ttlMillis = window.Milliseconds()
+	}
+
+	return count, time.Duration(ttlMillis) * time.Millisecond, nil
+}
+
+func (r *RedisRepository) Close() error {
+	if !r.Enabled() {
+		return nil
+	}
+	return r.client.Close()
 }

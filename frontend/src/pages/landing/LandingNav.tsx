@@ -27,7 +27,7 @@ export function LandingNav() {
           </span>
         </a>
 
-        <nav className="hidden items-center gap-6 text-sm text-brand-shell md:flex">
+        <nav className="hidden items-center gap-5 text-sm text-brand-shell md:flex">
           {NAV_LINKS.map(({ label, href }) => (
             <a
               key={href}

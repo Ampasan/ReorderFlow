@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ScrollToTop } from './components/ScrollToTop'
 import { AuthProvider } from './context/AuthProvider'
 
 const LandingPage = lazy(() =>
@@ -22,6 +23,18 @@ const POLogList = lazy(() =>
 const PODraftEditor = lazy(() =>
   import('./pages/po-draft/PODraftEditor').then((module) => ({ default: module.PODraftEditor })),
 )
+const BlogPage = lazy(() =>
+  import('./pages/blog/BlogPage').then((module) => ({ default: module.BlogPage })),
+)
+const BlogArticlePage = lazy(() =>
+  import('./pages/blog/BlogArticlePage').then((module) => ({ default: module.BlogArticlePage })),
+)
+const FaqPage = lazy(() =>
+  import('./pages/faq/FaqPage').then((module) => ({ default: module.FaqPage })),
+)
+const TentangPage = lazy(() =>
+  import('./pages/tentang/TentangPage').then((module) => ({ default: module.TentangPage })),
+)
 
 function FullPageFallback() {
   return (
@@ -36,9 +49,14 @@ function FullPageFallback() {
 export function App() {
   return (
     <AuthProvider>
+      <ScrollToTop />
       <Suspense fallback={<FullPageFallback />}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/artikel" element={<BlogPage />} />
+          <Route path="/artikel/:slug" element={<BlogArticlePage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="/tentang" element={<TentangPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<AppShell />}>

@@ -4,7 +4,7 @@ import { IconCheck, IconCheckWhite } from '../landingIcons'
 
 export function PricingSection() {
   return (
-    <section id="harga" className="border-y border-brand-shell/40 bg-white/40 py-16 sm:py-24">
+    <section id="harga" className="scroll-mt-20 border-y border-brand-shell/40 bg-white/40 pb-16 pt-12 sm:pb-24 sm:pt-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal className="mb-12 max-w-2xl">
           <h2 className="font-display text-3xl font-bold leading-snug text-brand-dark sm:text-4xl">

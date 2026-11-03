@@ -4,7 +4,7 @@ import { IconWhatsApp } from '../landingIcons'
 
 export function ContactSection() {
   return (
-    <section id="kontak" className="scroll-mt-20 border-y border-brand-shell/40 bg-white/40 px-4 py-16 text-center sm:px-6 sm:py-24">
+    <section id="kontak" className="scroll-mt-20 border-y border-brand-shell/40 bg-white/40 px-4 pb-16 pt-12 text-center sm:px-6 sm:pb-24 sm:pt-16">
       <div className="mx-auto max-w-3xl">
         <Reveal>
           <h2 className="font-display text-3xl font-extrabold leading-snug text-brand-dark sm:text-4xl">

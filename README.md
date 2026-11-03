@@ -92,6 +92,7 @@ Akun dashboard dibuat otomatis saat startup:
 cd frontend
 npm install
 cp .env.example .env   # default VITE_API_BASE_URL=http://localhost:8080
+# VITE_SITE_URL opsional, dipakai untuk URL absolut di JSON-LD
 npm run dev
 ```
 
@@ -137,7 +138,11 @@ Backend lalu menyajikan `index.html`, `/assets`, `/fonts`, dan file publik lain 
 | `MANAGER_EMAIL`, `MANAGER_PASSWORD` | Akun manager dan alamat penerima email persetujuan. |
 | `SUPABASE_DB_*` | Koneksi PostgreSQL Supabase. |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET_NAME` | Konfigurasi Supabase Storage. |
-| `REDIS_ADDR`, `REDIS_PASSWORD` | Redis untuk cache dan lock. Opsional. |
+| `REDIS_ADDR`, `REDIS_PASSWORD` | Redis untuk cache, lock, dan rate limit. Opsional. |
+| `RATE_LIMIT_LOGIN` | Batas percobaan login per IP dan per email dalam 15 menit, default `10`. `0` menonaktifkan. |
+| `RATE_LIMIT_APPROVAL` | Batas permintaan tautan approval per IP per menit, default `30`. |
+| `RATE_LIMIT_API` | Batas permintaan `/api` per IP per menit, default `120`. |
+| `TRUSTED_PROXIES` | Daftar CIDR/IP proxy yang dipisahkan koma agar `ClientIP` membaca `X-Forwarded-For` dengan benar. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD` | Konfigurasi pengiriman email. |
 
 Untuk Gmail, aktifkan 2-Step Verification dan gunakan App Password 16 karakter pada `SMTP_PASSWORD`.

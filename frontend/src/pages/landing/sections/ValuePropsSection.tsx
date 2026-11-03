@@ -13,7 +13,7 @@ const VALUE_ICONS: Record<ValueIconKey, ReactNode> = {
 
 export function ValuePropsSection() {
   return (
-    <section className="border-b border-brand-shell/40 bg-brand-cream py-16 sm:py-20">
+    <section className="border-b border-brand-shell/40 bg-brand-cream pb-16 pt-12 sm:pb-20 sm:pt-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <Reveal>
           <div className="grid gap-10 lg:grid-cols-[1fr_1.5fr] lg:gap-16">

@@ -3,7 +3,7 @@ import { AS_IS_STEPS, TO_BE_STEPS } from '../landingContent'
 
 export function ProcessSection() {
   return (
-    <section id="proses" className="relative scroll-mt-20 overflow-hidden bg-brand-dark py-16 sm:py-24">
+    <section id="proses" className="relative scroll-mt-20 overflow-hidden bg-brand-dark pb-16 pt-12 sm:pb-24 sm:pt-16">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div className="absolute right-0 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-brand-orange/15 blur-3xl" />
         <div className="paper-grain absolute inset-0 opacity-15" />

@@ -1,4 +1,4 @@
-import { FlowVisual } from '../FlowVisual'
+import { IndustryShowcase } from '../IndustryShowcase'
 
 export function HeroSection() {
   return (
@@ -9,7 +9,7 @@ export function HeroSection() {
         <div className="paper-grain absolute inset-0 opacity-20" />
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-20 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:pb-28 lg:pt-24">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-20 pt-12 sm:px-6 md:grid-cols-2 lg:gap-16 lg:pb-28 lg:pt-16">
         <div className="landing-hero-copy">
           <h1 className="font-display text-[2.75rem] font-extrabold leading-[1.05] tracking-[-0.02em] text-white sm:text-5xl">
             Stok menipis,
@@ -37,7 +37,7 @@ export function HeroSection() {
         </div>
 
         <div className="landing-hero-summary">
-          <FlowVisual />
+          <IndustryShowcase />
         </div>
       </div>
     </section>

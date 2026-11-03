@@ -128,12 +128,6 @@ export const TO_BE_STEPS: StepItem[] = [
   },
 ]
 
-export const ABOUT_POINTS = [
-  'Mempermudah pekerjaan operasional bisnis.',
-  'Menghadirkan sistem teknologi otomasi yang sederhana, terjangkau, dan mudah digunakan.',
-  'Mengurangi pekerjaan manual sehingga meminimalkan kesalahan.',
-]
-
 export const BASIC_FEATURES = [
   'Pantau ketersediaan stok',
   'Kirim PO ke pemasok setelah disetujui',
@@ -157,46 +151,70 @@ export const BASIC_LIMITS = [
 export interface IndustryItem {
   slug: string
   name: string
+  businessType: string
   desc: string
+  industryDesc: string
   imageUrl: string
+  industryImageUrl: string
 }
 
 export const INDUSTRIES: IndustryItem[] = [
   {
     slug: 'retail',
     name: 'Toko Ritel',
+    businessType: 'Minimarket',
     desc: 'Kelola stok produk kebutuhan sehari-hari dengan pemantauan otomatis agar rak toko selalu terisi.',
-    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683703/f19djre8e5uw6ojvm3ad.png',
+    industryDesc: 'Pantau barang kebutuhan harian dan siapkan draf PO saat stok mencapai batas minimum.',
+    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793720633/d42jqq63umt5dhxgev9y.png',
+    industryImageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683703/f19djre8e5uw6ojvm3ad.png',
   },
   {
     slug: 'fnb',
     name: 'Food & Beverages',
+    businessType: 'Restoran',
     desc: 'Pantau bahan baku kafe dan restoran sebelum kehabisan sehingga dapur beroperasi tanpa gangguan.',
-    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683701/mkngxcgamowkzrpoa5yp.png',
+    industryDesc: 'Kelola persediaan bahan baku dan tinjau kebutuhan pesanan sebelum PO dikirim ke pemasok.',
+    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793720631/yuorhvuj9oxuaqz5wr02.png',
+    industryImageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683701/mkngxcgamowkzrpoa5yp.png',
   },
   {
-    slug: 'manufacturing',
-    name: 'Manufaktur',
-    desc: 'Pastikan bahan produksi selalu tersedia sesuai jadwal dan hindari penundaan lini produksi.',
-    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683701/tua0pfxgicm1liqkarkh.png',
-  },
-  {
-    slug: 'apotek',
-    name: 'Apotek',
+    slug: 'kesehatan-farmasi',
+    name: 'Kesehatan & Farmasi',
+    businessType: 'Klinik',
     desc: 'Jaga ketersediaan obat dan suplemen agar resep pelanggan bisa langsung terlayani.',
-    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793696577/fsda2ogdnv7hk5jbvpbq.png',
+    industryDesc: 'Catat stok obat dan suplemen per SKU, lalu ajukan PO untuk persetujuan manajer.',
+    imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793720630/dkxcprin5whqp5fg1noo.png',
+    industryImageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793696577/fsda2ogdnv7hk5jbvpbq.png',
   },
   {
     slug: 'distributor',
     name: 'Distributor',
+    businessType: 'Distributor Bahan Pokok',
     desc: 'Atur pemesanan ulang stok gudang secara terpusat untuk memenuhi permintaan dari banyak pelanggan.',
+    industryDesc: 'Kelompokkan kebutuhan stok gudang berdasarkan pemasok untuk menyiapkan draf PO.',
     imageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793683702/fspux9wekvc0duuwl460.png',
+    industryImageUrl: 'https://res.cloudinary.com/drrmbeiyk/image/upload/v1793720633/seowrp9arodx3q28vp2t.png',
   },
 ]
 
 export const NAV_LINKS = [
   { label: 'Fitur', href: '#fitur' },
+  { label: 'Industri', href: '#industri' },
   { label: 'Cara Kerja', href: '#proses' },
   { label: 'Harga', href: '#harga' },
   { label: 'Kontak', href: '#kontak' },
+]
+
+export const FOOTER_SECTIONS = [
+  { label: 'Fitur', to: '/#fitur' },
+  { label: 'Industri', to: '/#industri' },
+  { label: 'Cara Kerja', to: '/#proses' },
+  { label: 'Harga', to: '/#harga' },
+  { label: 'Kontak', to: '/#kontak' },
+]
+
+export const FOOTER_RESOURCES = [
+  { label: 'Tentang', to: '/tentang' },
+  { label: 'Artikel', to: '/artikel' },
+  { label: 'FAQ', to: '/faq' },
 ]

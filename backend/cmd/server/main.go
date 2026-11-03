@@ -18,9 +18,16 @@ import (
 	"reorderflow-backend/internal/job"
 	"reorderflow-backend/internal/middleware"
 	"reorderflow-backend/internal/model"
+	"reorderflow-backend/internal/ratelimit"
 	"reorderflow-backend/internal/repository"
 	"reorderflow-backend/internal/service"
 	"reorderflow-backend/internal/utils"
+)
+
+const (
+	loginRateLimitWindow    = 15 * time.Minute
+	approvalRateLimitWindow = time.Minute
+	apiRateLimitWindow      = time.Minute
 )
 
 func main() {
@@ -70,6 +77,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	penerimaanRepo := repository.NewPenerimaanRepository(db)
 	cacheStore := cache.New(redisRepo)
+	rateLimiter := ratelimit.New(redisRepo)
 
 	smtpCfg := config.NewSMTPConfig(cfg)
 	emailSender := utils.NewEmailSender(smtpCfg)
@@ -103,14 +111,20 @@ func main() {
 	scheduler.Start()
 
 	router := gin.New()
+	if len(cfg.TrustedProxies) > 0 {
+		if err := router.SetTrustedProxies(cfg.TrustedProxies); err != nil {
+			utils.Logger.Warn("trusted proxies configuration invalid", "error", err)
+		}
+	}
 	router.Use(gin.Recovery(), middleware.Logger(), middleware.CORS(), middleware.Gzip())
 
 	router.GET("/health", healthHandler)
 
 	api := router.Group("/api")
+	api.Use(middleware.RateLimit(rateLimiter, "api", cfg.RateLimitAPI, apiRateLimitWindow))
 	{
-		api.POST("/auth/login", authHandler.Login)
-		api.GET("/po/approval", approvalHandler.Approval)
+		api.POST("/auth/login", middleware.LoginRateLimit(rateLimiter, cfg.RateLimitLogin, loginRateLimitWindow), authHandler.Login)
+		api.GET("/po/approval", middleware.RateLimit(rateLimiter, "approval", cfg.RateLimitApproval, approvalRateLimitWindow), approvalHandler.Approval)
 
 		protected := api.Group("")
 		protected.Use(middleware.Auth(cfg.JWTSecret))
@@ -167,6 +181,10 @@ func main() {
 	defer cancelQueue()
 	if err := emailQueue.Stop(queueCtx); err != nil {
 		utils.Logger.Warn("email queue shutdown incomplete", "error", err)
+	}
+
+	if err := redisRepo.Close(); err != nil {
+		utils.Logger.Warn("redis close failed", "error", err)
 	}
 
 	utils.Logger.Info("server stopped")

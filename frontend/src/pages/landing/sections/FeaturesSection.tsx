@@ -14,7 +14,7 @@ const FEATURE_ICONS: Record<FeatureIconKey, ReactNode> = {
 
 export function FeaturesSection() {
   return (
-    <section id="fitur" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:px-6 sm:py-24">
+    <section id="fitur" className="mx-auto max-w-6xl scroll-mt-20 px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-16">
       <Reveal className="mb-12 max-w-2xl">
         <h2 className="font-display text-3xl font-bold leading-snug text-brand-dark sm:text-4xl">
           Satu alur, dari stok menipis sampai PO terkirim.
