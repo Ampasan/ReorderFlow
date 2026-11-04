@@ -7,11 +7,11 @@ Fitur ini bertanggung jawab untuk mengambil daftar SKU *low-stock* hasil penyari
 
 ## 2. Peran & Hak Akses
 
-| Peran | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
-| :--- | :--- | :--- | :--- | :--- |
-| **System PDF Builder** | Data SKU *low-stock*, Detail Pemasok | File PDF di Supabase Storage, Record `po_log` | Status PO ke `DRAFT` | - |
-| **Operations Manager** | Dokumen PDF PO via tautan Supabase Storage | - | - | - |
-| **Staf Inventori / Admin** | Dokumen PDF PO via Dashboard | - | - | - |
+| Peran | Login Dashboard | Hak Lihat (Read) | Hak Buat (Create) | Hak Ubah (Update) | Hak Setujui (Approve) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **System PDF Builder** | Tidak | Data SKU *low-stock*, Detail Pemasok | File PDF di Supabase Storage, Record `po_log` | Status PO ke `DRAFT` | - |
+| **Operations Manager** | Ya (`manager`, read-only) | Dokumen PDF PO via tautan Supabase Storage | - | - | - |
+| **Staf Inventori / Procurement Admin** | Ya (`admin`) | Dokumen PDF PO via Dashboard | Trigger pembuatan draf PO lewat scan | Baris barang draf PO (`DRAFT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`) | - |
 
 ---
 
@@ -25,6 +25,7 @@ Fitur ini bertanggung jawab untuk mengambil daftar SKU *low-stock* hasil penyari
 * **K-02.6:** **JIKA** proses pengunggahan ke Supabase Storage gagal, sistem melakukan percobaan ulang (*retry*) maksimal 3 kali sebelum mencatat log kegagalan.
 * **K-02.7:** **JIKA** detail alamat email pemasok pada tabel `pemasok` tidak terisi/kosong, sistem tetap menghasilkan PDF PO tetapi menandai status `po_log` sebagai `REQUIRES_MANUAL_REVIEW`.
 * **K-02.8:** **SELAMA** file PDF PO sedang diunggah ke storage, sistem memastikan nama file di-hash/diberi timestamp unik untuk mencegah penimpaan file (*file overwriting*).
+* **K-02.9:** **SELAMA** status PO `DRAFT`, `REJECTED`, atau `REQUIRES_MANUAL_REVIEW`, admin dapat mengubah baris barang lewat `PUT /api/po-draft/{id}`. Setiap perubahan merender ulang PDF draf dan memperbarui `tautan_pdf`.
 
 ---
 
@@ -53,9 +54,10 @@ Fitur ini bertanggung jawab untuk mengambil daftar SKU *low-stock* hasil penyari
 * `id` (Serial, Primary Key)
 * `nomor_po` (String, Unique)
 * `id_pemasok` (Foreign Key ke `pemasok`)
-* `status` (String: `DRAFT`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`)
+* `status` (String: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`, `PARTIALLY_RECEIVED`, `RECEIVED`)
 * `tautan_pdf` (String, URL File Supabase Storage)
 * `token` (String, Idempotency Approval Token)
+* `submitted_at` (Timestamp, diisi saat draf dikirim ke manajer)
 * `created_at` (Timestamp)
 
 ---
@@ -98,7 +100,7 @@ Fitur ini dipecah menjadi 2 fungsi teknis:
 
 #### 1. Perilaku (Kebutuhan & AC)
 * **K-F02.2a:** **KETIKA** grup PO dibentuk, fungsi menyusun file PDF A4 menggunakan `gofpdf`, mengunggahnya ke Supabase Storage, dan mencatat `tautan_pdf` ke `po_log`.
-* **AC:** Given Group A (`PO-20261025-101-001`). When `F-02.2` me-render PDF dan mengunggah ke Supabase, Then dihasilkan file `PO-20261025-101-001.pdf` dan URL `https://example.com/storage/v1/object/public/po-documents/PO-20261025-101-001.pdf` tercatat di DB dengan `status = 'DRAFT'`.
+* **AC:** Given Group A (`PO-20261025-101-001`). When `F-02.2` me-render PDF dan mengunggah ke Supabase, Then dihasilkan file `PO-20261025-101-001.pdf` dan URL `https://example.com/storage/object/public/po-documents/PO-20261025-101-001.pdf` tercatat di DB dengan `status = 'DRAFT'`.
 
 #### 2. Tampilan & Kondisi Layar
 * *Backend Log*: `"PDF generated & uploaded: PO-20261025-101-001.pdf (Size: 42 KB)"`.
@@ -138,3 +140,4 @@ Fitur ini dipecah menjadi 2 fungsi teknis:
 ## 9. Tidak Termasuk
 * Editing layout PDF secara dinamis via WYSIWYG editor di frontend React.
 * Watermarking digital signature kompleks berbasis sertifikat SSL/PKI.
+* Editor baris barang draf, submit ke manajer, dan alur persetujuan email (ditangani Fitur 03).

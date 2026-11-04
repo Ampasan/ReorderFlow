@@ -1,1 +1,141 @@
 package repository
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+
+	"reorderflow-backend/internal/model"
+)
+
+type StokRepository struct {
+	db *gorm.DB
+}
+
+func NewStokRepository(db *gorm.DB) *StokRepository {
+	return &StokRepository{db: db}
+}
+
+func (r *StokRepository) GetAll() ([]model.Stok, error) {
+	return r.queryOrdered()
+}
+
+func (r *StokRepository) List(filter string) ([]model.Stok, error) {
+	q := r.db.Joins("Pemasok")
+
+	switch filter {
+	case "low":
+		q = q.Where("stok.stok_saat_ini <= stok.reorder_point AND stok.stok_saat_ini >= 0 AND stok.reorder_point > 0 AND stok.qty_min_order > 0")
+	case "manual":
+		q = q.Where("stok.stok_saat_ini < 0 OR stok.reorder_point <= 0 OR stok.qty_min_order <= 0")
+	}
+
+	var list []model.Stok
+	if err := q.Order("stok.stok_saat_ini <= stok.reorder_point DESC").Order("stok.sku ASC").Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (r *StokRepository) GetLowStockItems() ([]model.Stok, error) {
+	var list []model.Stok
+	if err := r.db.Joins("Pemasok").
+		Where("stok.stok_saat_ini <= stok.reorder_point").
+		Order("stok.id_pemasok ASC").
+		Order("stok.sku ASC").
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (r *StokRepository) GetBySKUs(skus []string) (map[string]model.Stok, error) {
+	stockBySKU := make(map[string]model.Stok, len(skus))
+	if len(skus) == 0 {
+		return stockBySKU, nil
+	}
+
+	var rows []model.Stok
+	if err := r.db.Where("sku IN ?", skus).Find(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		stockBySKU[row.SKU] = row
+	}
+	return stockBySKU, nil
+}
+
+func (r *StokRepository) RecordOpname(sku string, newStock int, alasan string, actorID int64) (*model.Stok, error) {
+	var updated model.Stok
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var current model.Stok
+		if err := tx.First(&current, "sku = ?", sku).Error; err != nil {
+			return err
+		}
+
+		now := time.Now()
+		if err := tx.Model(&model.Stok{}).
+			Where("sku = ?", sku).
+			Updates(map[string]interface{}{
+				"stok_saat_ini": newStock,
+				"updated_at":    now,
+			}).Error; err != nil {
+			return err
+		}
+
+		audit := model.StockOpname{
+			SKU:         sku,
+			StokSebelum: current.StokSaatIni,
+			StokSesudah: newStock,
+			Alasan:      alasan,
+			ActorID:     actorID,
+		}
+		if err := tx.Create(&audit).Error; err != nil {
+			return err
+		}
+
+		current.StokSaatIni = newStock
+		current.UpdatedAt = now
+		updated = current
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &updated, nil
+}
+
+func (r *StokRepository) Count() (int64, error) {
+	var n int64
+	if err := r.db.Model(&model.Stok{}).Count(&n).Error; err != nil {
+		return 0, err
+	}
+	return n, nil
+}
+
+type StockCountSummary struct {
+	Total        int64
+	LowStock     int64
+	ManualReview int64
+}
+
+func (r *StokRepository) CountSummary() (StockCountSummary, error) {
+	var summary StockCountSummary
+	err := r.db.Model(&model.Stok{}).
+		Select(`COUNT(*) AS total,
+			COUNT(*) FILTER (WHERE stok_saat_ini <= reorder_point AND stok_saat_ini >= 0 AND reorder_point > 0 AND qty_min_order > 0) AS low_stock,
+			COUNT(*) FILTER (WHERE stok_saat_ini < 0 OR reorder_point <= 0 OR qty_min_order <= 0) AS manual_review`).
+		Scan(&summary).Error
+	return summary, err
+}
+
+func (r *StokRepository) queryOrdered() ([]model.Stok, error) {
+	var list []model.Stok
+	if err := r.db.Joins("Pemasok").
+		Order("stok.stok_saat_ini <= stok.reorder_point DESC").
+		Order("stok.sku ASC").
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}

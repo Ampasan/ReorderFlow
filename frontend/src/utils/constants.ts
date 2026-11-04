@@ -1,0 +1,59 @@
+import type { POFilter, POStatus } from '../types/po'
+import type { OpnameReason, StockFilter } from '../types/stok'
+import type { UserRole } from '../types/auth'
+
+const devApiFallback = import.meta.env.DEV ? 'http://localhost:8080' : ''
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? devApiFallback
+
+export const ROLE_LABELS: Record<UserRole, string> = {
+  admin: 'Staf Inventori',
+  manager: 'Operations Manager',
+}
+
+export interface FilterOption<T extends string> {
+  value: T
+  label: string
+}
+
+export const STOCK_FILTERS: FilterOption<StockFilter>[] = [
+  { value: 'all', label: 'Semua' },
+  { value: 'low', label: 'Perlu Reorder' },
+  { value: 'manual', label: 'Perlu Peninjauan' },
+]
+
+export const OPNAME_REASONS: FilterOption<OpnameReason>[] = [
+  { value: 'DAMAGED', label: 'Rusak' },
+  { value: 'MISCOUNT', label: 'Salah hitung' },
+  { value: 'RETURN', label: 'Retur' },
+]
+
+export const PO_FILTERS: FilterOption<POFilter>[] = [
+  { value: 'all', label: 'Semua' },
+  { value: 'DRAFT', label: 'Draf' },
+  { value: 'PENDING_APPROVAL', label: 'Menunggu' },
+  { value: 'SENT', label: 'Terkirim' },
+  { value: 'PARTIALLY_RECEIVED', label: 'Diterima Sebagian' },
+  { value: 'RECEIVED', label: 'Diterima' },
+  { value: 'REJECTED', label: 'Ditolak' },
+  { value: 'REQUIRES_MANUAL_REVIEW', label: 'Perlu Tinjauan' },
+]
+
+const PO_STATUSES: POStatus[] = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'SENT',
+  'REJECTED',
+  'REQUIRES_MANUAL_REVIEW',
+  'PARTIALLY_RECEIVED',
+  'RECEIVED',
+]
+
+export function isStockFilter(value: string | null): value is StockFilter {
+  return value === 'all' || value === 'low' || value === 'manual'
+}
+
+export function isPOFilter(value: string | null): value is POFilter {
+  if (value === 'all') return true
+  return value !== null && PO_STATUSES.some((status) => status === value)
+}

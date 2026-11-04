@@ -3,60 +3,83 @@
 --------------------------------------------------------------------------------
 
 ##### 1. Aspek: Perilaku (Kebutuhan & AC)
-*   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka halaman Dashboard di browser, antarmuka mengirimkan request HTTP GET ke `/api/v1/stok` dan `/api/v1/po` untuk memuat statistik ringkasan.
-    *   **AC-4.1.1** : Dashboard merender 4 Kartu KPI: Total SKU, Jumlah Low Stock, Pending PO (DRAFT), dan PO Terkirim (SENT).
-*   **K-4.2 (Tabel Data Stok & Badge ROP)** : KETIKA pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU lengkap dengan status badge visual.
-    *   **AC-4.2.1** : SKU dengan `stok_saat_ini <= reorder_point` menampilkan Badge Merah `LOW STOCK`. SKU dengan stok aman menampilkan Badge Hijau `NORMAL`.
-*   **K-4.3 (Tabel Riwayat PO & File Viewer)** : KETIKA pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel riwayat seluruh PO beserta tombol tautan "Lihat PDF".
-    *   **AC-4.3.1** : Mengklik tombol "Lihat PDF" membuka URL Supabase Storage file PDF PO di tab browser baru.
+*   **K-4.0 (Autentikasi Dashboard)** : KETIKA pengguna membuka halaman dashboard, antarmuka memeriksa JWT di `localStorage`. Jika tidak ada atau sudah kedaluwarsa, pengguna diarahkan ke `/login`.
+    *   **AC-4.0.1** : Login sukses menyimpan JWT dan menampilkan dashboard sesuai role (`admin` / `manager`).
+    *   **AC-4.0.2** : Setiap request data mengirim header `Authorization: Bearer <token>`; respons `401` menghapus sesi dan redirect ke `/login`.
+*   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka Dashboard, antarmuka mengirim request `GET /api/dashboard`, `GET /api/stok?status=low`, dan `GET /api/po`.
+    *   **AC-4.1.1** : Dashboard merender 6 kartu KPI: Total SKU, Stok Rendah, Draf PO (`DRAFT`), Menunggu Persetujuan (`PENDING_APPROVAL`), PO Terkirim (`SENT`), dan PO Diterima (gabungan `PARTIALLY_RECEIVED` dan `RECEIVED`).
+    *   **AC-4.1.2** : Banner low stock dan banner data abnormal muncul hanya jika angkanya lebih dari nol.
+*   **K-4.2 (Tabel Data Stok & Badge ROP)** : KETIKA pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU dengan tab Semua, Perlu Reorder, dan Perlu Peninjauan.
+    *   **AC-4.2.1** : SKU dengan `stok_saat_ini <= reorder_point` dan data valid menampilkan badge amber `Low Stock`. SKU aman menampilkan badge hijau `Normal`.
+    *   **AC-4.2.2** : SKU dengan stok negatif atau ROP/min order tidak valid menampilkan badge ungu `Review`.
+*   **K-4.3 (Koreksi Stok Opname)** : KETIKA admin menyimpan opname, antarmuka memanggil `PATCH /api/stok/{sku}` dengan `stok_saat_ini` dan `alasan`.
+    *   **AC-4.3.1** : Stok tabel diperbarui dan dialog ditutup setelah respons sukses.
+*   **K-4.4 (Tabel Riwayat PO & File Viewer)** : KETIKA pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel PO dengan 8 pilihan filter status dan tautan "Lihat PDF".
+    *   **AC-4.4.1** : Mengklik "Lihat PDF" membuka URL Supabase Storage di tab browser baru.
+    *   **AC-4.4.2** : Filter pemasok menyaring tabel di sisi klien berdasarkan daftar PO yang sudah dimuat.
+*   **K-4.5 (Detail PO)** : KETIKA pengguna menekan **Detail**, sistem menampilkan nomor PO, pemasok, email, status, tanggal, dan daftar barang.
+*   **K-4.6 (Editor Draf PO)** : KETIKA admin membuka `/po-log/{id}/draft`, sistem memuat `GET /api/po-draft/{id}` dan daftar stok, lalu menampilkan baris barang editable.
+    *   **AC-4.6.1** : Admin dapat mengubah qty, menghapus barang, menambah barang dari pemasok yang sama, menyimpan draf (`PUT`), dan mengirim ke manajer (`POST /submit`).
+    *   **AC-4.6.2** : Role `manager` melihat tampilan read-only tanpa tombol simpan atau kirim.
+    *   **AC-4.6.3** : Status `PENDING_APPROVAL` dan `SENT` menampilkan tampilan terkunci.
 *   **Pengecualian & Batasan (JIKA / SELAMA)** :
-    *   **JIKA** koneksi API backend Go ke frontend terputus, dashboard menampilkan komponen *Error State* dengan banner alert merah dan tombol "Coba Lagi" (*Retry*).
-    *   **JIKA** tabel data stok atau PO kosong, dashboard menampilkan komponen *Empty State* dengan ilustrasi dan pesan "Belum ada data inventori / PO".
-    *   **SELAMA** data sedang diunduh (*fetching*) dari API, dashboard wajib menampilkan komponen *Skeleton Loader* berdenyut pada tabel dan kartu KPI.
+    *   **JIKA** koneksi API backend terputus, halaman menampilkan `ErrorState` dengan pesan error dan tombol "Coba Lagi".
+    *   **JIKA** tabel data stok atau PO kosong, halaman menampilkan `EmptyState` dengan copy sesuai filter.
+    *   **SELAMA** data sedang dimuat, halaman menampilkan skeleton loader pada tabel dan kartu KPI.
 
 --------------------------------------------------------------------------------
 
 ##### 2. Aspek: Tampilan & Kondisi Layar
 *   **Kondisi Memuat (Loading)** :
-    *   Menampilkan 4 box Skeleton Loader pada Kartu KPI dan 5 baris `TableSkeleton` berdenyut pada area tabel.
+    *   6 box skeleton pada Kartu KPI dan `TableSkeleton` pada area tabel.
 *   **Kondisi Ada Data (Success / Data Available)** :
-    *   Layout responsif: Sidebar Navigasi di sisi kiri, Header Banner di atas, dan Konten Tabel di tengah.
-    *   Color-coded Badges: Merah (`LOW STOCK`), Hijau (`NORMAL` / `SENT`), Kuning (`DRAFT`), Ungu (`REVIEW NEEDED`).
+    *   Layout responsif: sidebar di kiri dan konten di kanan. Pada mobile, sidebar menjadi drawer dan top bar menampilkan tombol menu.
+    *   Badge aktual: hijau `Normal`, amber `Low Stock`, ungu `Review`, cream `Draf`, amber `Menunggu`, dark `Terkirim`, terracotta `Diterima Sebagian`, hijau `Diterima`, dan rose `Ditolak`.
 *   **Kondisi Kosong (Empty State)** :
-    *   Menampilkan komponen `EmptyState` dengan pesan "Belum ada data inventori/PO".
+    *   Copy per konteks, misalnya "Belum ada data inventori", "Tidak ada produk di bawah ROP", "Belum ada riwayat Purchase Order".
 *   **Kondisi Gagal (Error Fallback)** :
-    *   Menampilkan Banner Alert Merah: `"Gagal mengambil data dari server. Silakan periksa koneksi Anda."` dengan tombol "Muat Ulang".
+    *   `ErrorState` dengan pesan "Gagal memuat data dari server" dan tombol "Coba Lagi".
 
 --------------------------------------------------------------------------------
 
 ##### 3. Aspek: Data & Validasi
 *   **Kolom Tabel Data Stok** :
-    *   SKU, Nama Produk, Stok Saat Ini, Reorder Point, Min Order, Nama Pemasok, Badge Status.
+    *   SKU, Produk, Stok, ROP, Min Order, Pemasok, Status, Aksi.
 *   **Kolom Tabel Riwayat PO** :
-    *   Nomor PO, Nama Pemasok, Status PO, Tanggal Dibuat (`DD/MM/YYYY HH:mm WIB`), Tautan PDF.
+    *   Nomor PO, Pemasok, Status, Barang, Dibuat (`DD/MM/YYYY HH:mm WIB`), Aksi.
 *   **Pengurutan (Sorting)** :
-    *   Default Tabel Stok: Item `LOW STOCK` diurutkan paling atas (`stok_saat_ini <= reorder_point` DESC).
-    *   Default Tabel PO: Diurutkan berdasarkan `created_at` DESC (terbaru terlebih dahulu).
+    *   Tabel Stok: backend mengurutkan SKU low-stock lebih dulu, lalu `sku ASC`.
+    *   Tabel PO: backend mengurutkan `created_at DESC`.
+*   **Pagination** :
+    *   Tidak tersedia. Seluruh baris yang dikembalikan API dirender.
+*   **Penyimpanan Sesi** :
+    *   `localStorage` dengan kunci `reorderflow.token` dan `reorderflow.user`.
 
 --------------------------------------------------------------------------------
 
 ##### 4. Aspek: Error & Pengecualian
 *   **Backend Off / 500 Server Error** :
-    *   Frontend menangkap error via Axios Interceptor dan memunculkan notifikasi Toast Error tanpa menyebabkan aplikasi React crash.
-*   **Tautan PDF Broken (404 Not Found)** :
-    *   JIKA URL PDF tidak ditemukan, munculkan toast "File PDF tidak ditemukan di Supabase Storage".
+    *   `ErrorState` muncul tanpa membuat aplikasi React crash.
+*   **401 Unauthorized (Token Kosong / Kedaluwarsa)** :
+    *   Sesi dihapus dan pengguna diarahkan ke `/login`.
+*   **403 Forbidden (Role Tidak Cukup)** :
+    *   Toast "Anda tidak memiliki akses untuk aksi ini". Tombol khusus admin tidak dirender untuk manager.
+*   **Tautan PDF Belum Tersedia** :
+    *   Aksi "Lihat PDF" tidak ditampilkan atau diganti teks "PDF belum tersedia".
 
 --------------------------------------------------------------------------------
 
 ##### 5. Aspek: Hak Akses
-*   **Staf Inventori & Operations Manager** :
-    *   Hak akses: **Read-Only Dashboard View** (Dapat melihat ringkasan stok, tabel SKU, riwayat PO, dan mengunduh PDF).
+*   **Staf Inventori / Procurement Admin (`admin`)** :
+    *   Login wajib. Dapat melihat dashboard, tabel SKU, riwayat PO, mengunduh PDF, memicu scan, menyimpan opname, mengedit draf, dan mengirim draf ke manajer.
+*   **Operations Manager (`manager`)** :
+    *   Login wajib. Hak akses read-only: dashboard, tabel SKU, riwayat PO, detail, dan PDF. Editor draf tampil read-only.
 
 --------------------------------------------------------------------------------
 
 ##### 6. Aspek: Jumlah Data & Kecepatan
 *   **Volume Data** :
-    *   Mampu menampilkan hingga 200 baris data stok dan log PO tanpa penurunan performa.
+    *   Mampu menampilkan hingga 200 baris data stok dan log PO tanpa pagination.
 *   **Target Waktu & Performa** :
     *   Render time UI Frontend React: **< 300 ms**.
     *   First Contentful Paint (FCP): **< 1.0 detik**.
@@ -66,3 +89,4 @@
 ##### 7. Aspek: Bukan Bagian Ini (Out-of-Scope)
 *   Modul ini **TIDAK** mencakup grafik analisis tren penjualan 6 bulan ke depan.
 *   Modul ini **TIDAK** mencakup Dark Mode toggle switcher.
+*   Modul ini **TIDAK** mencakup pagination, pencarian teks, filter tanggal, ekspor CSV, atau approve/reject dari dashboard.

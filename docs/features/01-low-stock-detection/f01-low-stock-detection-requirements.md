@@ -7,7 +7,7 @@
     *   **AC-1.1.1** : Sistem mengeksekusi query pemindaian otomatis dan mencatat log "Executing Low-Stock Scanner...".
 *   **K-1.2 (Penyaringan Reorder Point / ROP)** : KETIKA runner berjalan, sistem memfilter produk yang memiliki `stok_saat_ini <= reorder_point`.
     *   **AC-1.2.1** : SKU `SKU-BTL-01` dengan `stok_saat_ini = 3` dan `reorder_point = 10` berhasil terdeteksi dan masuk ke antrean kualifikasi low-stock dengan jumlah order disarankan sebesar `qty_min_order` (50 unit).
-*   **K-1.3 (Pencegahan PO Ganda / Active PO Filter)** : KETIKA SKU memenuhi kriteria ROP, sistem memeriksa tabel `po_log` apakah SKU atau Pemasok terkait sudah memiliki PO aktif berstatus `DRAFT` atau `SENT` dalam 7 hari terakhir.
+*   **K-1.3 (Pencegahan PO Ganda / Active PO Filter)** : KETIKA SKU memenuhi kriteria ROP, sistem memeriksa tabel `po_log` apakah SKU atau pemasok terkait sudah memiliki PO aktif. Status `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, dan `PARTIALLY_RECEIVED` selalu aktif. Status `SENT` aktif dalam 7 hari terakhir.
     *   **AC-1.3.1** : SKU `SKU-BTL-01` yang sudah terdaftar di `po_log` dengan nomor `PO-20261025-001` (status `DRAFT`) akan diabaikan (`has_active_po = true`) untuk mencegah pemesanan ganda.
 *   **Pengecualian & Batasan (JIKA / SELAMA)** :
     *   **JIKA** `stok_saat_ini < 0` ATAU `reorder_point <= 0` ATAU `qty_min_order <= 0`, sistem menandai SKU sebagai `REQUIRES_MANUAL_REVIEW`, mengecualikannya dari pembuatan PO otomatis, dan mencatat log peringatan data abnormal.
@@ -59,8 +59,10 @@
 *   **System Cron Runner & Service Account Go** :
     *   Hak akses: **Full Read & Internal Processing**.
     *   Eksekusi berjalan secara otomatis via jadwal cron atau internal API trigger.
-*   **Staf Inventori & Manager** :
-    *   Dapat melihat hasil deteksi SKU low-stock melalui antarmuka Dashboard.
+*   **Staf Inventori / Procurement Admin (`admin`)** :
+    *   Login wajib. Dapat memicu `POST /api/stok/scan` dari dashboard dan melihat hasil deteksi.
+*   **Operations Manager (`manager`)** :
+    *   Login wajib. Dapat melihat hasil deteksi SKU low-stock secara read-only, tetapi tidak dapat memicu pemindaian (`403`).
 
 --------------------------------------------------------------------------------
 

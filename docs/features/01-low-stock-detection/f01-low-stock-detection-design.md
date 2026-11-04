@@ -34,9 +34,9 @@ Redis Key Structure:
 --------------------------------------------------------------------------------
 
 ##### 2. API Contract Specification (Golang Gin)
-###### A. POST /api/v1/stok/scan
+###### A. POST /api/stok/scan
 *   **Deskripsi** : Memicu pemindaian stok low-stock secara manual / via cron runner.
-*   **Headers** : `Content-Type: application/json`
+*   **Headers** : `Content-Type: application/json`, `Authorization: Bearer <token>` (role `admin`)
 *   **Response 200 OK** :
 ```json
 {
@@ -46,16 +46,29 @@ Redis Key Structure:
     "scanned_items": 20,
     "low_stock_count": 3,
     "draft_po_created": 2,
-    "skipped_active_po": 1
+    "skipped_active_po": 1,
+    "manual_review": 0
   },
   "error": null
 }
+```
+*   **Response 401 Unauthorized** :
+```json
+{ "success": false, "message": "Token otentikasi diperlukan", "data": null, "error": "missing bearer token" }
+```
+*   **Response 403 Forbidden (role manager)** :
+```json
+{ "success": false, "message": "Anda tidak memiliki akses untuk aksi ini", "data": null, "error": "insufficient role" }
+```
+*   **Response 409 Conflict (pemindaian lain sedang berjalan)** :
+```json
+{ "success": false, "message": "Pemindaian sedang berlangsung", "data": null, "error": "pemindaian sedang berlangsung" }
 ```
 *   **Response 500 Internal Server Error** :
 ```json
 {
   "success": false,
-  "message": "Gagal terhubung ke database Supabase",
+  "message": "Gagal menjalankan pemindaian stok",
   "data": null,
   "error": "pq: connection refused"
 }
@@ -67,12 +80,12 @@ Redis Key Structure:
 ```text
 backend/internal/
 ├── job/
-│   └── low_stock_job.go          # Runner robfig/cron harian jam 08:00 WIB
+│   └── low_stock_job.go          # Runner robfig/cron harian jam 08:00 WIB (Asia/Jakarta)
 ├── service/
-│   └── detection_service.go      # Business Logic: Filter ROP & Check Active PO
+│   └── detection_service.go      # Business Logic: Filter ROP & Check Active PO (Redis lock + fallback proses lokal)
 ├── repository/
 │   ├── stok_repository.go        # Query DB: GetLowStockItems()
-│   └── po_repository.go          # Query DB: HasActivePO()
+│   └── po_repository.go          # Query DB: GetActiveReferences()
 └── handler/
-    └── stock_handler.go          # HTTP Handler POST /api/v1/stok/scan
+    └── stock_handler.go          # HTTP Handler POST /api/stok/scan
 ```

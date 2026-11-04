@@ -1,84 +1,159 @@
-# DESIGN.md — ReorderFlow Design System & UI Specifications
+# DESIGN.md: ReorderFlow Design System & UI Specifications
 
 ## 1. Brand Overview & Persona
-**ReorderFlow** adalah platform sistem otomasi Reorder Point (ROP) & pengadaan barang mandiri yang dirancang khusus bagi pemilik usaha mikro, kecil, dan menengah (UMKM) seperti ritel sembako, kafe kopi, dan toko grosir.
+
+**ReorderFlow** adalah platform sistem otomasi Reorder Point (ROP) dan pengadaan barang mandiri yang dirancang bagi pemilik usaha mikro, kecil, dan menengah (UMKM) seperti toko grosir dan ritel sembako.
 
 ### Brand Personality & Core Principles:
-- **Warm & Trustworthy**: Menghilangkan kesan software enterprise yang kaku dengan pendekatan warna hangat berbasis *roasted coffee & kraft paper*.
-- **Ergonomic & Low Cognitive Load**: Layout didesain lapang (*generous vertical padding* `py-4`) agar staf gudang atau admin toko dapat memeriksa angka stok kritis dan batas ROP dengan sekali lirik tanpa kelelahan mata.
-- **Idempotent & Decisive Action**: Alur transaksi penting (seperti persetujuan manajer melalui email publik dan pembuatan draft PO) memberikan kepastian status instan serta proteksi pemesanan ganda.
+- **Warm & Trustworthy**: Menghindari kesan software enterprise yang kaku dengan pendekatan warna hangat berbasis *roasted coffee & kraft paper*.
+- **Ergonomic & Low Cognitive Load**: Layout lapang agar staf gudang atau admin toko dapat memeriksa angka stok kritis dan batas ROP dengan cepat.
+- **Idempotent & Decisive Action**: Alur draf, persetujuan manajer lewat email publik, dan pengiriman ke pemasok memberi kepastian status serta mencegah pemesanan ganda.
 
 ---
 
 ## 2. Color System & Design Tokens
 
+Token warna didefinisikan di `frontend/tailwind.config.js` dan dipakai lewat kelas `brand-*`.
+
 ### Primary Palette (Warm Organic Theme)
-| Token Name | Hex Code | Role & Usage |
+
+| Token Tailwind | Hex | Role & Usage |
 | :--- | :--- | :--- |
-| **Canvas Background** | `#FEF3E2` | Latar belakang kanvas utama (*main page canvas*) yang hangat dan lembut di mata |
-| **Sidebar Background** | `#EAD8C0` | Latar sidebar navigasi; turunan `#FEF3E2` yang digelapkan secara proporsional untuk kontras struktur |
-| **Brand Dark (Typography & Shell)** | `#2A1A0E` | Teks judul, label primer, border kontras, dan tombol aksi netral tinggi |
-| **Brand Primary / Terracotta** | `#D4621A` | Aksen tombol utama (*Primary CTA*), active menu sidebar, tautan aktif, dan penanda penting |
-| **Warm Accent / Amber Gold** | `#F4AE52` | Status draf, badge penanda peringatan awal ROP, dan aksen sekunder |
+| `brand-cream` | `#FEF3E2` | Latar kanvas utama dan latar halaman login kiri |
+| `brand-shell` | `#E2CBB0` | Latar sidebar, dipakai sebagai `bg-brand-shell/50` |
+| `brand-line` | `#CEB394` | Border pemisah sidebar dan skeleton bar |
+| `brand-dark` | `#2A1A0E` | Teks judul, label primer, border kontras, dan badge `SENT` |
+| `brand-muted` | `#6A5B4E` | Teks sekunder dan keterangan |
+| `brand-field` | `#A08972` | Outline field input dan select |
+| `brand-orange` | `#B85114` | Tombol utama, menu aktif, tautan aksi, dan fokus |
+| `brand-orange-strong` | `#9C4410` | Hover tombol utama |
+| `brand-amber` | `#F4AE52` | Aksen sekunder |
+
+Warna fokus global tetap memakai `#D4621A` dengan `outline: 2px solid` dan offset 2px di `src/index.css`.
 
 ### Semantic & Feedback Colors
-| Status / Intent | Background | Text Color | Border Color | Makna Operasional |
+
+| Status | Background | Text | Border | Label Badge |
 | :--- | :--- | :--- | :--- | :--- |
-| **LOW STOCK (Kritis)** | `bg-rose-50` (`#FFF1F2`) | `text-rose-700` (`#BE123C`) | `border-rose-200` | Stok telah mencapai atau di bawah batas ROP; butuh order segera |
-| **NORMAL (Aman)** | `bg-emerald-50` (`#ECFDF5`) | `text-emerald-700` (`#047857`) | `border-emerald-200` | Ketersediaan stok berada di atas batas ROP aman |
-| **DRAFT / PENDING** | `bg-amber-50` (`#FFFBEB`) | `text-amber-800` (`#92400E`) | `border-amber-200` | PO selesai dibuat sistem dan menunggu tanda tangan/persetujuan manajer |
-| **REVIEW NEEDED (Anomali)** | `bg-purple-50` (`#FAF5FF`) | `text-purple-700` (`#7E22CE`) | `border-purple-200` | Terjadi anomali fisik (misal stok negatif); butuh stok opname |
-| **REJECTED (Ditolak)** | `bg-rose-50` (`#FFF1F2`) | `text-rose-800` (`#9F1239`) | `border-rose-200` | Penawaran atau draf PO ditolak manajer operasional |
+| `NORMAL` | `bg-emerald-50` | `text-emerald-700` | `border-emerald-200` | `Normal` |
+| `LOW_STOCK` | `bg-amber-50` | `text-amber-800` | `border-amber-200` | `Low Stock` |
+| `REQUIRES_MANUAL_REVIEW` | `bg-purple-50` | `text-purple-700` | `border-purple-200` | `Review` |
+| `DRAFT` | `bg-brand-cream` | `text-brand-muted` | `border-brand-dark/15` | `Draf` |
+| `PENDING_APPROVAL` | `bg-amber-50` | `text-amber-800` | `border-amber-200` | `Menunggu` |
+| `SENT` | `bg-brand-dark` | `text-white` | `border-brand-dark/30` | `Terkirim` |
+| `PARTIALLY_RECEIVED` | `bg-brand-orange/10` | `text-brand-orange-strong` | `border-brand-orange/30` | `Diterima Sebagian` |
+| `RECEIVED` | `bg-emerald-50` | `text-emerald-700` | `border-emerald-200` | `Diterima` |
+| `REJECTED` | `bg-rose-50` | `text-rose-700` | `border-rose-200` | `Ditolak` |
+
+Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold tracking-wide`.
 
 ---
 
 ## 3. Typography Scale & Hierarchy
 
-- **Font Family**: Modern Sans-Serif (`Inter`, `Plus Jakarta Sans`, atau sistem fallback sans-serif).
-- **Monospace Font**: `JetBrains Mono` / standard monospace untuk SKU kode barang (`SKU-KOPI-01`), Nomor PO (`#PO-20261026-01-001`), dan angka nominal mata uang (`Rp 1.200.000`).
+- **Font Display (Heading)**: `Poppins` Bold (700) dan ExtraBold (800), dipakai untuk judul halaman, section header, dan hero display copy. Tegas dan kuat.
+- **Font Sans (Body)**: `Montserrat` Light (300) hingga SemiBold (600), dipakai untuk teks isi, label, caption, dan UI text. Bersih dan nyaman dibaca.
+- **Font Mono**: `JetBrains Mono`, dipakai untuk SKU, nomor PO, dan angka tabular.
 
-| Level | Size / Weight | Line Height | Contoh Penggunaan |
-| :--- | :--- | :--- | :--- |
-| **Display / Page Header** | `28px - 32px` (`text-2xl` - `text-3xl`), **Extrabold (800)** | Tight | "Ringkasan Operasional", "Kelola Data Stok", "Riwayat Purchase Order" |
-| **Section Header** | `18px - 20px` (`text-lg` - `text-xl`), **Extrabold (800)** | Snug | "Low Stock", Kartu Response Persetujuan, Header Modal |
-| **Card Metric Numbers** | `32px - 36px` (`text-3xl` - `text-4xl`), **Extrabold (800)** | None / Tight | "20 SKU", "3 SKU", "1 PO" |
-| **Table Head / Micro Label** | `11px - 12px` (`text-xs`), **Bold (700)**, Uppercase Tracking | Wide | Kolom Header Tabel: `SKU`, `NAMA PRODUK`, `STOK SAAT INI` |
-| **Body Primary** | `13px - 14px` (`text-xs` - `text-sm`), **Semibold / Medium** | Normal | Nama produk, nama supplier, catatan penerimaan |
-| **Caption / Supporting Text** | `10px - 11px` (`text-[10px]` - `text-[11px]`), **Medium (500)** | Normal | Tanggal transaksi, status toko ("UMKM Aktif"), subketerangan |
+| Level | Size / Weight | Penggunaan |
+| :--- | :--- | :--- |
+| **Page Header** | `text-xl` sampai `text-2xl`, Bold | "Ringkasan Operasional", "Data Stok", "Riwayat PO" |
+| **Section Header** | `text-sm` sampai `text-lg`, Semibold | "Stok di bawah ROP", "Daftar SKU", "Daftar Purchase Order" |
+| **Card Metric Numbers** | `text-2xl`, Bold, tabular nums | Angka KPI |
+| **Table Head / Micro Label** | `text-[11px]` sampai `text-xs`, Bold, Uppercase | Header tabel |
+| **Body** | `text-xs` sampai `text-sm`, Medium/Semibold | Isi tabel dan form |
+| **Caption** | `text-[10px]` sampai `text-xs`, Medium | Tanggal, role, subketerangan |
 
 ---
 
 ## 4. Layout Architecture & Component Rules
 
-### 1. Persistent App Shell (Web Dashboard Layout)
-- **Left Sidebar**: 
-  - Lebar tetap `w-64` (256px), `fixed h-full`, background `#EAD8C0`, border kanan `border-r border-[#2A1A0E]/10`.
-  - Bagian atas: Logo brand `Logo_ReorderFlow.png` dalam kontainer putih rounded-xl dengan teks nama aplikasi `ReorderFlow` (aksen "Flow" `#D4621A`) + subjudul `Sistem Otomasi ROP`.
-  - Navigasi: Menu aktif menggunakan background solid terracotta `#D4621A` dengan teks putih dan ikon 16px. Menu inaktif menggunakan teks `#2A1A0E/75` dengan efek hover `#FEF3E2/70`.
-  - Bagian bawah: Profile card toko (misal *"Toko Sembako Berkah"* atau *"Kopi Kenangan UMKM"*) berlatar `#FEF3E2` dengan avatar badge oranye dan indikator aktif dot hijau `bg-emerald-500`.
-- **Main Canvas**:
-  - `flex-1 ml-64 p-6 sm:p-8`, background `#FEF3E2`, scroll vertikal bersih.
+### 1. Persistent App Shell
 
-### 2. Data Table Standards (Ergonomic UMKM Table)
-- **Container**: `bg-white rounded-2xl border border-[#2A1A0E]/10 overflow-hidden shadow-sm`.
-- **Thead**: `bg-[#FEF3E2]/60 text-[#2A1A0E] text-xs font-bold uppercase tracking-wider border-b border-[#2A1A0E]/10`.
-- **Row Padding**: Vertikal lega `py-4 px-4` untuk meminimalisir kesalahan klik oleh staf.
-- **Zebra & Hover**: `hover:bg-[#FEF3E2]/40 transition-colors`. Baris Low Stock memiliki highlight halus `bg-rose-50/20`.
-- **Action Buttons**: Tombol aksi cepat seperti `+ Buat PO` menggunakan terracotta `#D4621A text-white rounded-lg px-3 py-1.5 font-semibold text-xs`.
+- **Sidebar**: lebar tetap `w-64`, `fixed inset-y-0 left-0`, `bg-brand-shell/50`, `border-r border-brand-dark/10`.
+  - Brand: logo `logo-reorderflow.png` dalam kontainer putih `rounded-xl`, teks `ReorderFlow` dengan aksen `Flow` berwarna `text-brand-orange`, subjudul "Sistem Otomasi ROP".
+  - Navigasi: tiga item aplikasi, yaitu Dashboard (`/app`), Data Stok (`/stok`), dan Riwayat PO (`/po-log`). Item aktif memakai `bg-brand-orange text-white`.
+  - Profil: kartu putih berisi inisial user, nama, label role (`Admin Inventori` / `Operations Manager`), dan tombol logout.
+  - Mobile: sidebar menjadi drawer dengan backdrop dan tombol hamburger di top bar `lg:hidden`.
+- **Main Canvas**: `lg:pl-64`, kontainer `max-w-7xl` dengan padding `px-4 py-8 sm:px-6 lg:px-8`.
+- **Skip link**: "Lewati ke konten utama" menuju `#main`.
+
+### 2. Data Table Standards
+
+- **Container**: `bg-white rounded-xl border border-brand-dark/10`.
+- **Thead**: teks `text-[11px]` atau `text-xs`, `font-semibold`, uppercase.
+- **Row Padding**: `py-3` sampai `py-4`, nyaman untuk staf yang memeriksa banyak baris.
+- **Hover**: `hover:bg-brand-cream/40`.
+- **Aksi**: tombol dan tautan kecil `text-xs font-semibold`, aksi admin memakai `text-brand-orange`.
 
 ### 3. Metric Summary Cards
-- Kartu ringkasan operasional dengan latar `bg-white p-5 rounded-2xl border border-[#2A1A0E]/10 shadow-sm`.
-- Angka metrik ditampilkan bersih dan besar tanpa chart 3D dekoratif yang tidak perlu, langsung menjawab pertanyaan kunci pengguna: *"Berapa produk kritis hari ini?"*.
 
-### 4. Document Modal & Physical Paper Simulation (A4 Standard)
-- Slide-over drawer sisi kanan dengan lebar `520px - 560px` dan `backdrop-blur-xs bg-[#2A1A0E]/30`.
-- Lembar dokumen meniru layout fisik kertas A4 (`bg-white rounded-2xl p-6 sm:p-8 border border-[#2A1A0E]/10`):
-  - Kop surat resmi lengkap dengan logo perusahaan, NPWP, dan alamat gudang.
-  - Watermark diagonal dinamis (`DRAFT / MENUNGGU PERSETUJUAN`) menggunakan teks uppercase berputar -30 derajat dengan opacity rendah.
-  - Kolom tanda tangan digital berpasangan (*Staf Pengadaan* dan *Manajer Operasional*).
+- `KpiCard` memakai `bg-white rounded-xl border border-brand-dark/10 px-5 py-5`.
+- Angka besar dan bersih tanpa chart dekoratif.
+- Dashboard menampilkan 6 kartu: Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim, PO Diterima.
 
-### 5. Idempotent Action Response Landing (Public Approval)
-- Halaman tanpa autentikasi untuk manajer via link email:
-  - Tata letak terpusat penuh (*Centered Card* `max-w-[560px] bg-white rounded-3xl p-8 border border-[#2A1A0E]/10 shadow-xl`).
-  - Bar indikator warna status di tepi atas kartu (Hijau untuk sukses disetujui, Amber untuk tautan telah terpakai, Merah untuk token kedaluwarsa).
-  - Penjelasan idempotent eksplisit agar manajer yakin pemesanan ganda tidak akan pernah terjadi.
+### 4. Banner Operasional
+
+- **Low stock**: `border-amber-200 bg-amber-50`, teks `text-amber-900`, tombol "Buat Draf PO" untuk admin.
+- **Data abnormal**: `border-purple-200 bg-purple-50`, teks `text-purple-800`, tautan "Periksa Data" ke `/stok?status=manual`.
+- **Gemini stock assistance**: the explanation action opens a modal immediately and sends aggregate counts only. Scheduled and manual scans may send anonymous per-item stock, ROP, and minimum-order numbers for a priority recommendation; the draft displays its priority and reason while the quantity remains rule-based.
+
+### 5. Dialog & Modal
+
+- `Modal` memakai overlay `bg-brand-dark/50 backdrop-blur-sm` dan panel `bg-white rounded-2xl max-w-md`. Pada mobile panel muncul sebagai bottom sheet (`rounded-t-2xl`), pada `sm` ke atas menjadi dialog tengah.
+- Fokus dikunci di dalam dialog, `Escape` menutup, dan fokus kembali ke elemen pemicu setelah dialog ditutup.
+- `ConfirmDialog` untuk konfirmasi scan dan pengiriman draf ke manajer.
+- `DetailDialog` menampilkan pasangan label dan nilai, termasuk daftar barang PO.
+- `OpnameDialog` berisi stok saat ini (read-only), input hasil opname, dan pilihan alasan `Rusak`, `Salah hitung`, `Retur`.
+- `TerimaBarangDialog` memakai `Modal` dengan `size="lg"`. Isinya tabel qty per SKU (order, sudah diterima, sisa, input qty) plus riwayat penerimaan sebelumnya. Di dalam dialog lebar, tabel tetap dibungkus `overflow-x-auto` sehingga aman di layar sempit.
+- Semua dialog dapat ditutup dengan tombol, klik overlay, dan tombol `Escape`.
+
+### 6. Editor Draf PO (`/po-log/:id/draft`)
+
+- Baris barang editable dengan input qty `min=1`, tombol "Hapus", dan select "Tambah barang" yang hanya menampilkan SKU dari pemasok yang sama.
+- Ringkasan menampilkan jumlah barang dan total unit. Tidak ada harga, subtotal, atau pajak.
+- Tombol "Simpan Draf" dan "Kirim ke Manajer", dengan dialog konfirmasi sebelum pengiriman.
+- Status `PENDING_APPROVAL`, `SENT`, `PARTIALLY_RECEIVED`, dan `RECEIVED` menampilkan tampilan terkunci.
+- Role `manager` melihat panel read-only dengan pesan bahwa persetujuan dilakukan lewat tautan email.
+
+### 7. Idempotent Action Response Landing (Public Approval)
+
+- Halaman HTML dari backend, bukan route React.
+- Kartu terpusat `max-w-[560px] bg-white`, `border-radius: 16px`, dengan bar aksen atas:
+  - Hijau `#047857` untuk sukses.
+  - Amber `#D97706` untuk tautan sudah digunakan atau PO belum diajukan.
+  - Merah `#BE123C` untuk token invalid atau kedaluwarsa.
+- Menampilkan nomor PO dan status terbaru jika tersedia.
+
+### 8. Login Page (Public)
+
+- Layout dua kolom pada desktop:
+  - Panel kiri `lg:w-[60%]`, latar `#E2CBB0`, berisi brand, headline "Tahu kapan harus order, sebelum kehabisan.", dan ilustrasi yang di-host di Cloudinary.
+  - Panel kanan `bg-white` dengan form `max-w-[340px]`.
+- Pada mobile, panel kiri disembunyikan dan logo muncul di atas form.
+- Judul form: "Masuk ke akun Anda", subjudul "Gunakan akun yang disiapkan admin toko."
+- Field email dan password memakai `rounded-xl border border-brand-field bg-brand-cream/40 px-4 py-3 text-sm`.
+- Tombol utama full-width `h-11 bg-brand-orange text-white rounded-xl font-bold` dengan label "Masuk".
+- Loading: tombol disabled, spinner, teks "Memproses...".
+- Error: banner `border-rose-200 bg-rose-50 text-rose-700`.
+- Validasi klien: format email dan password minimal 8 karakter.
+
+### 9. PDF Access
+
+- Aksi PDF berupa tautan "Lihat PDF" yang membuka `tautan_pdf` Supabase Storage di tab baru.
+- Tidak ada modal preview PDF, slide-over A4, watermark, atau blok tanda tangan digital di UI.
+
+### 10. Theme & Motion
+
+- Hanya light theme. Tidak ada toggle dark mode.
+- Navbar landing page menyediakan tautan ke section `#fitur`, `#proses`, `#harga`, dan `#kontak`; tombol Masuk menuju halaman `/login`. Pada layar sempit, tautan dilipat ke dalam menu hamburger yang dapat ditutup dengan `Escape`.
+- Kontak pelanggan tersedia pada section tersendiri, bukan sebagai tombol konsultasi di navbar.
+- Footer landing page memuat deskripsi produk, navigasi ke section yang tersedia, kontak resmi, dan tautan Masuk. Susunan tiga kolom menjaga navigasi dan identitas tetap terbaca di layar lebar, lalu menumpuk pada layar kecil.
+- Arah landing page: ENERGY 3 / RHYTHM 3 / MOTION 2; palet hangat dan tipografi brand dipertahankan, dengan hero espresso gelap sebagai anchor dan section bergantian terang dan gelap. Gerakan diarahkan ke satu momen hero (garis stok menukik melewati batas ROP) ditambah reveal scroll ringan dan hover.
+- Landing page memakai animasi hero terarah (draw garis stok, pulse pada titik ROP, kartu PO muncul), reveal saat scroll untuk header section, dan transisi hover pada kartu, tombol, dan gambar.
+- Animasi lain dibatasi pada transisi hover, overlay, dan modal (`overlay-in`, `modal-in`).
+- `prefers-reduced-motion` menonaktifkan animasi dan transisi.
+
+## 11. Rute Aplikasi
+
+Landing page dan halaman artikel, FAQ, serta Tentang bersifat publik. Login tersedia di `/login`. Dashboard dan fitur inventori berada di `/app`, `/stok`, `/po-log`, dan `/po-log/:id/draft`; keempat rute aplikasi itu memerlukan login.
