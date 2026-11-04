@@ -111,6 +111,16 @@ func (s *DraftService) Update(ctx context.Context, id int64, items []DraftItem) 
 	if err != nil {
 		return nil, err
 	}
+	recommendations := make(map[string]model.PODetail, len(po.Details))
+	for _, detail := range po.Details {
+		recommendations[detail.SKU] = detail
+	}
+	for i := range details {
+		if recommendation, exists := recommendations[details[i].SKU]; exists {
+			details[i].AIPriority = recommendation.AIPriority
+			details[i].AIReason = recommendation.AIReason
+		}
+	}
 
 	pdfURL, _, _, err := s.renderPO(ctx, po, details)
 	if err != nil {

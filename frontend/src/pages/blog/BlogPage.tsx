@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { JsonLd } from '../../components/JsonLd'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   blogSchema,
   breadcrumbSchema,
@@ -28,9 +28,7 @@ const BLOG_JSON_LD = graph(
 )
 
 export function BlogPage() {
-  useEffect(() => {
-    document.title = 'Artikel & Panduan | ReorderFlow'
-  }, [])
+  useDocumentTitle('Artikel & Panduan | ReorderFlow')
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

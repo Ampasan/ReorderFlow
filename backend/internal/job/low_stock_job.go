@@ -32,5 +32,6 @@ func (j *LowStockJob) Run() {
 		"draft_po_created", result.DraftPOCreated,
 		"skipped_active_po", result.SkippedActivePO,
 		"manual_review", result.ManualReview,
+		"ai_recommendation_status", result.AIRecommendationStatus,
 	)
 }

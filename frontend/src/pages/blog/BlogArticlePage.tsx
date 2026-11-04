@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { JsonLd } from '../../components/JsonLd'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   blogPostingSchema,
   breadcrumbSchema,
@@ -19,9 +19,7 @@ export function BlogArticlePage() {
   const { slug } = useParams<{ slug: string }>()
   const article = ARTICLES.find((item) => item.slug === slug)
 
-  useEffect(() => {
-    document.title = article ? `${article.title} | ReorderFlow` : 'Artikel tidak ditemukan | ReorderFlow'
-  }, [article])
+  useDocumentTitle(article ? `${article.title} | ReorderFlow` : 'Artikel tidak ditemukan | ReorderFlow')
 
   if (!article) {
     return (

@@ -23,9 +23,14 @@ function buildUrl(path: string, params?: QueryParams): string {
   return suffix ? `${base}${path}?${suffix}` : `${base}${path}`
 }
 
-async function request<T>(path: string, init: RequestInit, params?: QueryParams): Promise<T> {
+async function request<T>(
+  path: string,
+  init: RequestInit,
+  params?: QueryParams,
+  timeoutMs = TIMEOUT_MS,
+): Promise<T> {
   const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
@@ -84,8 +89,8 @@ export function get<T>(url: string, params?: QueryParams): Promise<T> {
   return request<T>(url, { method: 'GET' }, params)
 }
 
-export function post<T>(url: string, body?: unknown): Promise<T> {
-  return request<T>(url, { method: 'POST', body: jsonBody(body) })
+export function post<T>(url: string, body?: unknown, timeoutMs?: number): Promise<T> {
+  return request<T>(url, { method: 'POST', body: jsonBody(body) }, undefined, timeoutMs)
 }
 
 export function patch<T>(url: string, body?: unknown): Promise<T> {

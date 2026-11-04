@@ -1,4 +1,5 @@
 import { JsonLd } from '../../components/JsonLd'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   SITE_DESCRIPTION,
   graph,
@@ -25,6 +26,8 @@ const LANDING_JSON_LD = graph(
 )
 
 export function LandingPage() {
+  useDocumentTitle('ReorderFlow - Dashboard Inventori')
+
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">
       <JsonLd data={LANDING_JSON_LD} />

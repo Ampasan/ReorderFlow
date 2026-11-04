@@ -106,7 +106,7 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
                   setNewStock(event.target.value)
                   setError(null)
                 }}
-                className={`mt-2 block w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted ${
+                className={`mt-2 block min-h-11 w-full rounded-lg border bg-white px-3 py-2.5 text-sm text-brand-dark focus:outline-none focus:ring-2 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted ${
                   error
                     ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-200'
                     : 'border-brand-dark/15 focus:border-brand-orange focus:ring-brand-orange/15'
@@ -137,7 +137,7 @@ export function OpnameDialog({ open, item, pending, onConfirm, onClose }: Opname
               value={reason}
               disabled={pending}
               onChange={(event) => setReason(event.target.value as OpnameReason)}
-              className="mt-2 block w-full rounded-lg border border-brand-dark/15 bg-white px-3 py-2.5 text-sm text-brand-dark focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted"
+              className="mt-2 block min-h-11 w-full rounded-lg border border-brand-dark/15 bg-white px-3 py-2.5 text-sm text-brand-dark focus:border-brand-orange focus:outline-none focus:ring-2 focus:ring-brand-orange/15 disabled:cursor-not-allowed disabled:bg-brand-cream/40 disabled:text-brand-muted"
             >
               {OPNAME_REASONS.map((option) => (
                 <option key={option.value} value={option.value}>

@@ -40,7 +40,11 @@ func NewPDFService(
 	}
 }
 
-func (s *PDFService) CreateDraftPOs(ctx context.Context, items []model.Stok) (int, error) {
+func (s *PDFService) CreateDraftPOs(
+	ctx context.Context,
+	items []model.Stok,
+	recommendations map[string]model.StockRecommendation,
+) (int, error) {
 	groups := groupBySupplier(items)
 	keys := sortedSupplierIDs(groups)
 
@@ -51,7 +55,7 @@ func (s *PDFService) CreateDraftPOs(ctx context.Context, items []model.Stok) (in
 	for _, supplierID := range keys {
 		group := groups[supplierID]
 		g.Go(func() error {
-			if s.createSupplierPO(gctx, supplierID, group) {
+			if s.createSupplierPO(gctx, supplierID, group, recommendations) {
 				atomic.AddInt64(&created, 1)
 			}
 			return nil
@@ -63,7 +67,12 @@ func (s *PDFService) CreateDraftPOs(ctx context.Context, items []model.Stok) (in
 	return int(atomic.LoadInt64(&created)), nil
 }
 
-func (s *PDFService) createSupplierPO(ctx context.Context, supplierID int64, group []model.Stok) bool {
+func (s *PDFService) createSupplierPO(
+	ctx context.Context,
+	supplierID int64,
+	group []model.Stok,
+	recommendations map[string]model.StockRecommendation,
+) bool {
 	pemasok, err := s.pemasokRepo.GetByID(supplierID)
 	if err != nil {
 		utils.Logger.Error("supplier not found while building PO", "id_pemasok", supplierID, "error", err)
@@ -82,7 +91,13 @@ func (s *PDFService) createSupplierPO(ctx context.Context, supplierID int64, gro
 	for _, stok := range group {
 		qty := stok.QtyMinOrder
 		pdfItems = append(pdfItems, utils.PDFItem{SKU: stok.SKU, Nama: stok.Nama, Jumlah: qty})
-		details = append(details, model.PODetail{SKU: stok.SKU, JumlahOrder: qty})
+		recommendation := recommendations[stok.SKU]
+		details = append(details, model.PODetail{
+			SKU:         stok.SKU,
+			JumlahOrder: qty,
+			AIPriority:  recommendation.Priority,
+			AIReason:    recommendation.Reason,
+		})
 		totalQty += qty
 	}
 

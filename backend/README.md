@@ -46,12 +46,13 @@ Pengiriman dibatasi 15 detik per percobaan dengan dua percobaan. Error 5xx dari 
 
 ## Migrasi Database
 
-Jalankan dua file berikut berurutan di Supabase SQL Editor:
+Jalankan file berikut berurutan di Supabase SQL Editor:
 
 1. `migrations/001_schema.sql`: semua tabel, index, dan constraint. Versi terbaru juga menambah tabel `po_penerimaan` dan `po_penerimaan_detail` serta dua nilai status PO (`PARTIALLY_RECEIVED`, `RECEIVED`) pada `po_log_status_check`. Aman dijalankan ulang karena constraint lama di-drop lebih dulu.
-2. `migrations/002_seed.sql`: reset data demo lalu isi ulang pemasok, stok grosir/sembako, dua PO `DRAFT`, dan satu PO `SENT`.
+2. `migrations/003_ai_stock_recommendations.sql`: menambah kolom prioritas dan alasan Gemini ke detail PO. Aman dijalankan ulang.
+3. `migrations/002_seed.sql` (opsional): reset data demo lalu isi ulang pemasok, stok grosir/sembako, dua PO `DRAFT`, dan satu PO `SENT`.
 
-Keduanya aman dijalankan berulang. `002_seed.sql` selalu mengosongkan riwayat PO, stok opname, stok, dan pemasok lebih dulu, jadi bisa dipakai untuk mengembalikan demo ke kondisi awal. Akun `users` tidak direset karena dibuat dari `ADMIN_EMAIL` dan `MANAGER_EMAIL` saat server start.
+Ketiga migrasi dapat dijalankan berulang. `002_seed.sql` selalu mengosongkan riwayat PO, stok opname, stok, dan pemasok lebih dulu, jadi hanya jalankan jika ingin mengembalikan demo ke kondisi awal. Akun `users` tidak direset karena dibuat dari `ADMIN_EMAIL` dan `MANAGER_EMAIL` saat server start.
 
 Tabel `users` diisi otomatis saat server start:
 - Admin dari `ADMIN_EMAIL` + `ADMIN_PASSWORD`.
@@ -67,6 +68,7 @@ Jika `ENV=production`, `AutoMigrate` tidak berjalan, jadi migrasi SQL wajib diek
 | POST | `/api/auth/login` | Login, body `{"email","password"}`, menghasilkan JWT Bearer token. |
 | GET | `/api/auth/me` | Profil user terautentikasi. |
 | GET | `/api/stok` | Daftar stok. Query `status=all|low|manual`. |
+| POST | `/api/stok/ai-analysis` | Penjelasan Gemini untuk barang low-stock. JWT wajib; maksimal 5 permintaan per menit per IP. |
 | POST | `/api/stok/scan` | Memicu pemindaian low-stock dan pembuatan draf PO. Draf belum dikirim ke manajer. |
 | GET | `/api/dashboard` | Ringkasan KPI dashboard. |
 | GET | `/api/po` | Riwayat PO. Query `status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW|PARTIALLY_RECEIVED|RECEIVED`. |
@@ -79,6 +81,12 @@ Jika `ENV=production`, `AutoMigrate` tidak berjalan, jadi migrasi SQL wajib diek
 | GET | `/api/po/approval?token=...&action=approve|reject` | Halaman konfirmasi persetujuan dari email (publik). |
 
 Endpoint selain `/health`, `/api/auth/login`, dan `/api/po/approval` wajib memakai header `Authorization: Bearer <token>`. `POST /api/stok/scan`, `PUT /api/po-draft/:id`, `POST /api/po-draft/:id/submit`, dan `POST /api/po-penerimaan/:id` hanya untuk role `admin`; role `manager` bersifat read-only.
+
+Endpoint analisis Gemini juga dapat dipakai admin dan manager setelah login. Saat pemindaian stok terjadwal atau manual berjalan dan `GEMINI_API_KEY` tersedia, Gemini menilai prioritas pemeriksaan barang yang memenuhi syarat untuk draf PO. Backend hanya mengirim nomor urut sementara, stok, ROP, dan minimum order. Nama barang, SKU, pemasok, serta identitas tidak dikirim. Gemini memberi tingkat prioritas dan alasan, tetapi tidak menentukan jumlah order. Backend tetap memakai aturan minimum order untuk jumlah PO. Jika Gemini gagal, pemindaian tetap membuat draf dengan aturan yang sama dan respons/log menandai rekomendasi tidak tersedia. Admin tetap memeriksa dan mengirim draf ke manajer; Gemini tidak mengubah stok atau menyetujui/mengirim PO.
+
+Endpoint `/api/stok/ai-analysis` tetap memakai hitungan agregat saja untuk penjelasan umum dan tidak membuat PO.
+
+Permintaan rekomendasi mengirim angka stok dan ROP per barang ke Google, meski tanpa nama atau SKU. Google dapat menggunakan konten pada layanan gratis untuk peningkatan produk dan peninjauan manusia. Periksa ketentuan serta kuota terkini Gemini API sebelum mengirim data produksi.
 
 Alur draf PO: pemindaian membuat `DRAFT` tanpa mengirim email, admin dapat mengubah barang, lalu submit mengubah status ke `PENDING_APPROVAL` dan mengirim email ke manajer. Persetujuan manajer mengubah status ke `SENT` dan mengirim PDF ke pemasok. Setelah barang datang, admin mencatat penerimaan per SKU: stok bertambah sesuai qty aktual dan status berubah ke `PARTIALLY_RECEIVED` atau `RECEIVED`.
 

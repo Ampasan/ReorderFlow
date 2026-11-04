@@ -58,6 +58,8 @@ export function DraftForm({
   const isEditable = isEditableStatus(po.status)
   const isResubmit = isResubmitStatus(po.status)
   const canAct = isEditable && lines.length > 0 && !busy
+  const recommendationsBySku = new Map((po.details ?? []).map((detail) => [detail.sku, detail]))
+  const hasAiRecommendations = (po.details ?? []).some((detail) => detail.ai_priority && detail.ai_reason)
 
   const title =
     po.status === 'REJECTED'
@@ -135,6 +137,12 @@ export function DraftForm({
             {formatNumber(lines.length)} barang, {formatNumber(totalQty)} unit
           </span>
         </div>
+        {hasAiRecommendations ? (
+          <p className="border-b border-brand-dark/8 px-5 py-3 text-xs leading-5 text-brand-muted">
+            Prioritas Gemini adalah saran berdasarkan stok saat pemindaian. Jumlah awal mengikuti
+            minimum order; admin dapat meninjau dan mengubahnya selama draf masih bisa diedit.
+          </p>
+        ) : null}
 
         {isEditable ? (
           <div className="p-4 sm:p-5">
@@ -152,6 +160,7 @@ export function DraftForm({
                   <DraftLineRow
                     key={line.sku}
                     line={line}
+                    recommendation={recommendationsBySku.get(line.sku)}
                     stock={stockBySku.get(line.sku)}
                     busy={busy}
                     onQuantityChange={handleQuantityChange}
@@ -173,7 +182,11 @@ export function DraftForm({
             />
           </div>
         ) : (
-          <DraftReadOnlyList lines={lines} stockBySku={stockBySku} />
+          <DraftReadOnlyList
+            lines={lines}
+            stockBySku={stockBySku}
+            recommendationsBySku={recommendationsBySku}
+          />
         )}
       </section>
 

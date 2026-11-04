@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { JsonLd } from '../../components/JsonLd'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   breadcrumbSchema,
   faqPageSchema,
@@ -28,9 +28,7 @@ const FAQ_JSON_LD = graph(
 )
 
 export function FaqPage() {
-  useEffect(() => {
-    document.title = 'Pertanyaan yang Sering Diajukan | ReorderFlow'
-  }, [])
+  useDocumentTitle('Pertanyaan yang Sering Diajukan | ReorderFlow')
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

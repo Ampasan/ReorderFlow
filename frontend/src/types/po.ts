@@ -16,6 +16,8 @@ export interface PODetail {
   po_id: number
   sku: string
   jumlah_order: number
+  ai_priority?: 'TINGGI' | 'SEDANG' | 'RENDAH'
+  ai_reason?: string
 }
 
 export interface POLog {

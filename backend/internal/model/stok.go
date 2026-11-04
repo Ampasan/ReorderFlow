@@ -21,6 +21,17 @@ type Stok struct {
 
 func (Stok) TableName() string { return "stok" }
 
+const (
+	StockPriorityHigh   = "TINGGI"
+	StockPriorityMedium = "SEDANG"
+	StockPriorityLow    = "RENDAH"
+)
+
+type StockRecommendation struct {
+	Priority string
+	Reason   string
+}
+
 func (s *Stok) Status() string {
 	if s.StokSaatIni < 0 || s.ReorderPoint <= 0 || s.QtyMinOrder <= 0 {
 		return StockStatusManualReview

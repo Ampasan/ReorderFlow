@@ -9,6 +9,7 @@ import { PageHeader } from '../components/PageHeader'
 import { StatusBadge } from '../components/StatusBadge'
 import { TableSkeleton } from '../components/TableSkeleton'
 import { TerimaBarangDialog } from '../components/TerimaBarangDialog'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuth } from '../hooks/useAuth'
 import { usePenerimaan } from '../hooks/usePenerimaan'
 import { usePOLog } from '../hooks/usePOLog'
@@ -62,6 +63,8 @@ const EMPTY_COPY: Record<POFilter, { title: string; description: string }> = {
 }
 
 export function POLogList() {
+  useDocumentTitle('Riwayat PO | ReorderFlow')
+
   const [params] = useSearchParams()
   const rawStatus = params.get('status')
   const status: POFilter = isPOFilter(rawStatus) ? rawStatus : 'all'

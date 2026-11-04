@@ -58,6 +58,10 @@ func main() {
 			utils.Logger.Error("auto migrate penerimaan failed", "error", err)
 			panic(err)
 		}
+		if err := db.AutoMigrate(&model.PODetail{}); err != nil {
+			utils.Logger.Error("auto migrate PO detail recommendations failed", "error", err)
+			panic(err)
+		}
 	}
 
 	go warmDatabase(db, 3)
@@ -85,14 +89,22 @@ func main() {
 
 	emailService := service.NewEmailService(emailSender, smtpCfg, cfg.AppURL)
 	emailQueue := service.NewEmailQueue()
+	var stockAI *service.StockAIService
+	if cfg.GeminiAPIKey != "" {
+		stockAI, err = service.NewStockAIService(cfg.GeminiAPIKey, cfg.GeminiModel)
+		if err != nil {
+			utils.Logger.Error("initialize Gemini failed", "error", err)
+			panic(err)
+		}
+	}
 	pdfService := service.NewPDFService(poRepo, pemasokRepo, storage, emailService)
-	detectionService := service.NewDetectionService(stokRepo, poRepo, redisRepo, pdfService)
+	detectionService := service.NewDetectionService(stokRepo, poRepo, redisRepo, pdfService, stockAI)
 	approvalService := service.NewApprovalService(poRepo, stokRepo, redisRepo, emailService, storage, emailQueue, cacheStore)
 	draftService := service.NewDraftService(poRepo, stokRepo, storage, emailService, emailQueue, cacheStore)
 	authService := service.NewAuthService(userRepo, cfg.JWTSecret, cfg.JWTExpiry)
 	penerimaanService := service.NewPenerimaanService(penerimaanRepo, cacheStore)
 
-	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore)
+	stockHandler := handler.NewStockHandler(detectionService, stokRepo, cacheStore, stockAI)
 	dashboardHandler := handler.NewDashboardHandler(stokRepo, poRepo, cacheStore)
 	approvalHandler := handler.NewApprovalHandler(approvalService, cacheStore)
 	draftHandler := handler.NewDraftHandler(draftService, cacheStore)
@@ -131,6 +143,7 @@ func main() {
 		{
 			protected.GET("/auth/me", authHandler.Me)
 			protected.GET("/stok", stockHandler.List)
+			protected.POST("/stok/ai-analysis", middleware.RateLimit(rateLimiter, "gemini", 5, time.Minute), stockHandler.AnalyzeLowStock)
 			protected.POST("/stok/scan", middleware.RequireRole(model.RoleAdmin), stockHandler.Scan)
 			protected.PATCH("/stok/:sku", middleware.RequireRole(model.RoleAdmin), stockHandler.Opname)
 			protected.GET("/dashboard", dashboardHandler.Summary)

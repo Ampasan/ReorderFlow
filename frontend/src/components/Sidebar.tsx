@@ -94,7 +94,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                     end={item.end}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                      `flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                         isActive
                           ? 'bg-brand-orange font-semibold text-white'
                           : 'font-medium text-brand-dark/70 hover:bg-brand-dark/6 hover:text-brand-dark'
@@ -127,7 +127,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               onClick={handleLogout}
               title="Keluar"
               aria-label="Keluar dari akun"
-              className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-dark/8 hover:text-brand-dark"
+              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-brand-muted transition-colors hover:bg-brand-dark/8 hover:text-brand-dark"
             >
               <LogOutIcon className="h-3.5 w-3.5" />
             </button>

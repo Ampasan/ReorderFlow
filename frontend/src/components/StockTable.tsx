@@ -11,7 +11,7 @@ interface StockTableProps {
 
 export function StockTable({ items, onSelect, onOpname, compact = false }: StockTableProps) {
   return (
-    <div className="-mx-4 overflow-x-auto sm:mx-0">
+    <div className="-mx-4 contain-layout overflow-x-auto sm:mx-0">
       <table className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-brand-dark/8">
@@ -90,7 +90,7 @@ export function StockTable({ items, onSelect, onOpname, compact = false }: Stock
                       <button
                         type="button"
                         onClick={() => onOpname(item)}
-                        className="h-8 rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
+                        className="h-11 rounded-lg border border-brand-dark/12 bg-white px-3 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cream"
                       >
                         Opname
                       </button>
@@ -98,7 +98,7 @@ export function StockTable({ items, onSelect, onOpname, compact = false }: Stock
                     <button
                       type="button"
                       onClick={() => onSelect(item)}
-                      className="h-8 rounded-lg bg-brand-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-orange-strong"
+                      className="h-11 rounded-lg bg-brand-orange px-3 text-xs font-semibold text-white transition-colors hover:bg-brand-orange-strong"
                     >
                       Detail
                     </button>

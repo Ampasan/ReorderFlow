@@ -41,8 +41,10 @@ Rule-based ROP automation specifically designed for UMKM operators — not enter
 - Per-SKU goods receipt: admin records the actual received qty (partial deliveries allowed), stock increments by that qty, and the PO moves to `PARTIALLY_RECEIVED` or `RECEIVED`. Over-receipt is blocked; a partially received PO still counts as active so scanning does not create a duplicate draft.
 - JWT-protected dashboard and API endpoints; public-only endpoint is the approval/rejection page.
 - Role-based action restriction: "Pindai Stok Sekarang" (manual scan trigger) visible to admin role only; manager sees read-only dashboard.
+- Gemini explains aggregate low-stock counts on request. During scheduled or manual scans, it can also prioritize eligible low-stock items and provide a short reason using per-item stock, ROP, and minimum-order numbers sent without SKU, name, or supplier identity.
+- Gemini recommendations are advisory: the backend still sets PO quantity from its minimum-order rule, creates drafts if Gemini is unavailable, and requires an admin to review before manager approval. Gemini cannot change stock or approve/send POs.
 - Out of scope for MVP: AI/ML stock prediction, third-party marketplace/POS API integration, invoice payment management, multi-branch warehouse management.
-- Rule-based logic only — no AI to avoid hallucinated data.
+- ROP eligibility and PO quantities remain rule-based. Gemini contributes priority and explanation text, not demand forecasts.
 - Approval tokens: random one-time-use, time-limited.
 
 ## Brand Commitments

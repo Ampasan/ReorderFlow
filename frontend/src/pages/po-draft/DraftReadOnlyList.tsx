@@ -1,13 +1,14 @@
-import type { DraftItemInput } from '../../types/po'
+import type { DraftItemInput, PODetail } from '../../types/po'
 import type { StockItem } from '../../types/stok'
 import { formatNumber } from '../../utils/formatter'
 
 interface DraftReadOnlyListProps {
   lines: DraftItemInput[]
   stockBySku: Map<string, StockItem>
+  recommendationsBySku: Map<string, PODetail>
 }
 
-export function DraftReadOnlyList({ lines, stockBySku }: DraftReadOnlyListProps) {
+export function DraftReadOnlyList({ lines, stockBySku, recommendationsBySku }: DraftReadOnlyListProps) {
   return (
     <ul className="divide-y divide-brand-dark/8" role="list">
       {lines.length === 0 ? (
@@ -17,6 +18,7 @@ export function DraftReadOnlyList({ lines, stockBySku }: DraftReadOnlyListProps)
       ) : (
         lines.map((line) => {
           const stock = stockBySku.get(line.sku)
+          const recommendation = recommendationsBySku.get(line.sku)
           return (
             <li
               key={line.sku}
@@ -28,9 +30,16 @@ export function DraftReadOnlyList({ lines, stockBySku }: DraftReadOnlyListProps)
                   {stock?.nama ?? 'Nama barang tidak ditemukan'}
                 </p>
               </div>
-              <span className="text-sm font-semibold tabular-nums text-brand-dark">
-                {formatNumber(line.jumlah_order)} unit
-              </span>
+              <div className="min-w-0 sm:text-right">
+                <span className="text-sm font-semibold tabular-nums text-brand-dark">
+                  {formatNumber(line.jumlah_order)} unit
+                </span>
+                {recommendation?.ai_priority && recommendation.ai_reason ? (
+                  <p className="mt-1 break-words text-xs leading-5 text-brand-muted">
+                    Prioritas Gemini: {recommendation.ai_priority.toLowerCase()}. {recommendation.ai_reason}
+                  </p>
+                ) : null}
+              </div>
             </li>
           )
         })

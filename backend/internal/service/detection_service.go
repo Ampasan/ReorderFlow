@@ -23,6 +23,7 @@ type DetectionService struct {
 	poRepo   *repository.PORepository
 	redis    *repository.RedisRepository
 	pdf      *PDFService
+	stockAI  *StockAIService
 	scanLock atomic.Bool
 }
 
@@ -31,12 +32,14 @@ func NewDetectionService(
 	poRepo *repository.PORepository,
 	redisRepo *repository.RedisRepository,
 	pdf *PDFService,
+	stockAI *StockAIService,
 ) *DetectionService {
 	return &DetectionService{
 		stokRepo: stokRepo,
 		poRepo:   poRepo,
 		redis:    redisRepo,
 		pdf:      pdf,
+		stockAI:  stockAI,
 	}
 }
 
@@ -68,6 +71,7 @@ func (s *DetectionService) RunScan(ctx context.Context) (*model.ScanResult, erro
 	}
 
 	result := &model.ScanResult{ScannedItems: int(total)}
+	result.AIRecommendationStatus = model.AIRecommendationNotNeeded
 
 	if len(items) == 0 {
 		utils.Logger.Info("No low-stock items detected")
@@ -114,7 +118,20 @@ func (s *DetectionService) RunScan(ctx context.Context) (*model.ScanResult, erro
 		return result, nil
 	}
 
-	created, err := s.pdf.CreateDraftPOs(ctx, valid)
+	recommendations := map[string]model.StockRecommendation{}
+	result.AIRecommendationStatus = model.AIRecommendationNotConfigured
+	if s.stockAI != nil {
+		result.AIRecommendationStatus = model.AIRecommendationUnavailable
+		var recommendationErr error
+		recommendations, recommendationErr = s.stockAI.PrioritizeLowStock(ctx, valid)
+		if recommendationErr != nil {
+			utils.Logger.Warn("Gemini stock prioritization failed; continuing with standard draft quantities", "error", recommendationErr)
+		} else {
+			result.AIRecommendationStatus = model.AIRecommendationAvailable
+		}
+	}
+
+	created, err := s.pdf.CreateDraftPOs(ctx, valid, recommendations)
 	if err != nil {
 		return nil, err
 	}

@@ -11,19 +11,22 @@ import (
 	"reorderflow-backend/internal/model"
 	"reorderflow-backend/internal/repository"
 	"reorderflow-backend/internal/service"
+	"reorderflow-backend/internal/utils"
 )
 
 type StockHandler struct {
 	detection *service.DetectionService
 	stokRepo  *repository.StokRepository
 	cache     *cache.Cache
+	stockAI   *service.StockAIService
 }
 
-func NewStockHandler(detection *service.DetectionService, stokRepo *repository.StokRepository, cacheStore *cache.Cache) *StockHandler {
+func NewStockHandler(detection *service.DetectionService, stokRepo *repository.StokRepository, cacheStore *cache.Cache, stockAI *service.StockAIService) *StockHandler {
 	return &StockHandler{
 		detection: detection,
 		stokRepo:  stokRepo,
 		cache:     cacheStore,
+		stockAI:   stockAI,
 	}
 }
 
@@ -67,6 +70,27 @@ func (h *StockHandler) List(c *gin.Context) {
 	Success(c, http.StatusOK, "Berhasil mengambil data stok", view)
 }
 
+func (h *StockHandler) AnalyzeLowStock(c *gin.Context) {
+	if h.stockAI == nil {
+		Error(c, http.StatusServiceUnavailable, "Analisis Gemini belum dikonfigurasi", "GEMINI_API_KEY belum diatur pada backend")
+		return
+	}
+
+	items, err := h.stokRepo.List("low")
+	if err != nil {
+		Error(c, http.StatusInternalServerError, "Gagal mengambil data stok", err.Error())
+		return
+	}
+	analysis, err := h.stockAI.AnalyzeLowStock(c.Request.Context(), items)
+	if err != nil {
+		utils.Logger.Error("Gemini low-stock analysis failed", "error", err)
+		Error(c, http.StatusBadGateway, "Analisis Gemini gagal. Coba lagi nanti.", err.Error())
+		return
+	}
+
+	Success(c, http.StatusOK, "Analisis stok berhasil", analysis)
+}
+
 func (h *StockHandler) Opname(c *gin.Context) {
 	sku := c.Param("sku")
 
@@ -94,7 +118,7 @@ func (h *StockHandler) Opname(c *gin.Context) {
 
 	h.cache.Invalidate()
 	Success(c, http.StatusOK, "Stok berhasil diperbarui", gin.H{
-		"sku":          updated.SKU,
+		"sku":           updated.SKU,
 		"stok_saat_ini": updated.StokSaatIni,
 	})
 }

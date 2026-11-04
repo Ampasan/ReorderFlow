@@ -11,8 +11,14 @@ export function useScan(onFinished: () => void) {
     try {
       const result = await runScan()
       invalidateResourceCache()
+      const aiNotice = {
+        available: ' Prioritas AI tersedia di draf; jumlah awal mengikuti aturan minimum order.',
+        unavailable: ' Draf tetap dibuat tanpa rekomendasi AI karena analisis Gemini gagal.',
+        not_configured: ' Draf tetap dibuat tanpa rekomendasi AI karena Gemini belum dikonfigurasi.',
+        not_needed: '',
+      }[result.ai_recommendation_status] ?? ''
       toast.success(
-        `Pemindaian selesai: ${result.draft_po_created} draf PO dibuat, ${result.skipped_active_po} dilewati karena sudah punya PO aktif, ${result.manual_review} perlu peninjauan manual. Buka Riwayat PO untuk memeriksa draf sebelum dikirim ke manajer.`,
+        `Pemindaian selesai: ${result.draft_po_created} draf PO dibuat, ${result.skipped_active_po} dilewati karena sudah punya PO aktif, ${result.manual_review} perlu peninjauan manual. Buka Riwayat PO untuk memeriksa draf sebelum dikirim ke manajer.${aiNotice}`,
       )
       onFinished()
       return true

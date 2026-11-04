@@ -2,12 +2,35 @@ package model
 
 import "time"
 
+const (
+	AIRecommendationAvailable     = "available"
+	AIRecommendationUnavailable   = "unavailable"
+	AIRecommendationNotConfigured = "not_configured"
+	AIRecommendationNotNeeded     = "not_needed"
+)
+
 type ScanResult struct {
-	ScannedItems    int `json:"scanned_items"`
-	LowStockCount   int `json:"low_stock_count"`
-	DraftPOCreated  int `json:"draft_po_created"`
-	SkippedActivePO int `json:"skipped_active_po"`
-	ManualReview    int `json:"manual_review"`
+	ScannedItems           int    `json:"scanned_items"`
+	LowStockCount          int    `json:"low_stock_count"`
+	DraftPOCreated         int    `json:"draft_po_created"`
+	SkippedActivePO        int    `json:"skipped_active_po"`
+	ManualReview           int    `json:"manual_review"`
+	AIRecommendationStatus string `json:"ai_recommendation_status"`
+}
+
+type StockAnalysisItem struct {
+	SKU          string `json:"sku"`
+	Nama         string `json:"nama"`
+	StokSaatIni  int    `json:"stok_saat_ini"`
+	ReorderPoint int    `json:"reorder_point"`
+	Prioritas    string `json:"prioritas"`
+	Alasan       string `json:"alasan"`
+}
+
+type StockAnalysis struct {
+	ItemCount   int                 `json:"item_count"`
+	Explanation string              `json:"explanation"`
+	Items       []StockAnalysisItem `json:"items"`
 }
 
 type StockItem struct {

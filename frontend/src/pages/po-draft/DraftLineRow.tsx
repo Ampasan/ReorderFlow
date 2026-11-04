@@ -1,9 +1,10 @@
-import type { DraftItemInput } from '../../types/po'
+import type { DraftItemInput, PODetail } from '../../types/po'
 import type { StockItem } from '../../types/stok'
 import { formatNumber } from '../../utils/formatter'
 
 interface DraftLineRowProps {
   line: DraftItemInput
+  recommendation?: PODetail
   stock?: StockItem
   busy: boolean
   onQuantityChange: (sku: string, value: string) => void
@@ -12,6 +13,7 @@ interface DraftLineRowProps {
 
 export function DraftLineRow({
   line,
+  recommendation,
   stock,
   busy,
   onQuantityChange,
@@ -30,6 +32,14 @@ export function DraftLineRow({
               ? `Stok ${formatNumber(stock.stok_saat_ini)} unit, min order ${formatNumber(stock.qty_min_order)} unit`
               : 'Data stok barang ini tidak tersedia'}
           </p>
+          {recommendation?.ai_priority && recommendation.ai_reason ? (
+            <div className="mt-2 space-y-0.5">
+              <p className="text-xs font-semibold text-brand-orange-strong">
+                Prioritas Gemini: {recommendation.ai_priority.toLowerCase()}
+              </p>
+              <p className="break-words text-xs leading-5 text-brand-muted">{recommendation.ai_reason}</p>
+            </div>
+          ) : null}
         </div>
         <div className="flex items-end gap-2">
           <div>

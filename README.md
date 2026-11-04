@@ -12,6 +12,7 @@ Platform otomasi Reorder Point (ROP) dan pengadaan barang untuk UMKM. ReorderFlo
 - Dashboard stok dengan tab Semua, Perlu Reorder, dan Perlu Peninjauan.
 - Riwayat PO dengan 6 filter status, filter pemasok, detail barang, dan tautan PDF.
 - Koreksi stok opname dengan alasan `DAMAGED`, `MISCOUNT`, atau `RETURN` dan jejak audit.
+- Gemini memberi prioritas pemeriksaan dan alasan pada barang low-stock saat pemindaian; jumlah draf tetap memakai aturan minimum order dan perlu ditinjau admin.
 - Autentikasi JWT dengan dua role: `admin` dan `manager` (read-only di dashboard).
 
 ## Arsitektur
@@ -75,7 +76,8 @@ curl http://localhost:8080/health
 Jalankan migrasi di Supabase SQL Editor secara berurutan:
 
 1. `backend/migrations/001_schema.sql`
-2. `backend/migrations/002_seed.sql` (opsional, untuk data demo)
+2. `backend/migrations/003_ai_stock_recommendations.sql`
+3. `backend/migrations/002_seed.sql` (opsional, untuk data demo)
 
 `002_seed.sql` mengosongkan riwayat PO, stok opname, stok, dan pemasok, lalu mengisi ulang data demo. Akun `users` tidak direset karena dibuat dari environment variable saat server start.
 
@@ -142,6 +144,7 @@ Backend lalu menyajikan `index.html`, `/assets`, `/fonts`, dan file publik lain 
 | `RATE_LIMIT_LOGIN` | Batas percobaan login per IP dan per email dalam 15 menit, default `10`. `0` menonaktifkan. |
 | `RATE_LIMIT_APPROVAL` | Batas permintaan tautan approval per IP per menit, default `30`. |
 | `RATE_LIMIT_API` | Batas permintaan `/api` per IP per menit, default `120`. |
+| `GEMINI_API_KEY` | Opsional. API key Google AI Studio untuk endpoint penjelasan stok low-stock. |
 | `TRUSTED_PROXIES` | Daftar CIDR/IP proxy yang dipisahkan koma agar `ClientIP` membaca `X-Forwarded-For` dengan benar. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD` | Konfigurasi pengiriman email. |
 
@@ -160,11 +163,14 @@ Untuk Gmail, aktifkan 2-Step Verification dan gunakan App Password 16 karakter p
 | GET | `/api/po?status=...` dan `/api/po-log` | Semua role |
 | GET | `/api/po-draft/:id` | Semua role |
 | POST | `/api/stok/scan` | Admin |
+| POST | `/api/stok/ai-analysis` | Role terautentikasi, maksimal 5 permintaan per menit per IP |
 | PATCH | `/api/stok/:sku` | Admin |
 | PUT | `/api/po-draft/:id` | Admin |
 | POST | `/api/po-draft/:id/submit` | Admin |
 
 Detail kontrak dan contoh respons ada di `backend/README.md`.
+
+Gemini juga memberi prioritas pemeriksaan pada pemindaian stok otomatis atau manual. Gemini menerima stok, ROP, dan minimum order per barang dengan nomor urut sementara, tanpa nama, SKU, atau pemasok. Jumlah PO tetap ditetapkan backend dan draf perlu diperiksa admin. Google dapat menggunakan data yang dikirim melalui layanan gratis untuk peningkatan produk dan peninjauan manusia, jadi periksa ketentuan Gemini sebelum mengirim data produksi. Analisis penjelasan di halaman stok tetap memakai hitungan agregat saja.
 
 ## Dokumentasi
 

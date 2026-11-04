@@ -2,11 +2,14 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { WarningIcon } from '../components/icons'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuth } from '../hooks/useAuth'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function LoginPage() {
+  useDocumentTitle('Masuk | ReorderFlow')
+
   const { status, login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

@@ -29,7 +29,7 @@ export function FilterTabs<T extends string>({
               key={option.value}
               to={`${basePath}?${param}=${option.value}`}
               aria-current={isActive ? 'page' : undefined}
-              className={`inline-flex h-8 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-semibold transition-colors ${
+              className={`inline-flex h-11 items-center whitespace-nowrap rounded-lg px-3.5 text-sm font-semibold transition-colors ${
                 isActive
                   ? 'bg-brand-orange text-white'
                   : 'text-brand-muted hover:bg-brand-cream hover:text-brand-dark'

@@ -10,6 +10,7 @@ import { StatusBadge } from '../components/StatusBadge'
 import { StockTable } from '../components/StockTable'
 import { TableSkeleton } from '../components/TableSkeleton'
 import { CalendarIcon, PlusIcon, WarningIcon } from '../components/icons'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { useAuth } from '../hooks/useAuth'
 import { useDashboard } from '../hooks/useDashboard'
 import { useScan } from '../hooks/useScan'
@@ -20,6 +21,8 @@ const SCAN_DESCRIPTION =
   'Sistem memindai stok dan membuat draf PO untuk produk yang berada di bawah ROP, dikelompokkan per pemasok. Draf belum dikirim ke siapa pun, jadi Anda bisa memeriksa dan mengeditnya dulu di Riwayat PO sebelum mengirim ke manajer. Produk yang sudah punya PO aktif akan dilewati.'
 
 export function Dashboard() {
+  useDocumentTitle('Ringkasan Operasional | ReorderFlow')
+
   const { data, loading, error, refetch } = useDashboard()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [selected, setSelected] = useState<StockItem | null>(null)

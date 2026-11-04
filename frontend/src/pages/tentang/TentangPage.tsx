@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { JsonLd } from '../../components/JsonLd'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import {
   breadcrumbSchema,
   graph,
@@ -103,9 +103,7 @@ const ABOUT_JSON_LD = graph(
 )
 
 export function TentangPage() {
-  useEffect(() => {
-    document.title = 'Tentang ReorderFlow | ReorderFlow'
-  }, [])
+  useDocumentTitle('Tentang ReorderFlow | ReorderFlow')
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

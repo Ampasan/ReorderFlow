@@ -33,6 +33,8 @@ type PODetail struct {
 	POID        int64  `gorm:"column:po_id;not null;index:idx_po_detail_po_id" json:"po_id"`
 	SKU         string `gorm:"column:sku;type:varchar(50);not null;index:idx_po_detail_sku" json:"sku"`
 	JumlahOrder int    `gorm:"column:jumlah_order;not null" json:"jumlah_order"`
+	AIPriority  string `gorm:"column:ai_priority;type:varchar(10);not null;default:''" json:"ai_priority,omitempty"`
+	AIReason    string `gorm:"column:ai_reason;type:text;not null;default:''" json:"ai_reason,omitempty"`
 }
 
 func (PODetail) TableName() string { return "po_detail" }

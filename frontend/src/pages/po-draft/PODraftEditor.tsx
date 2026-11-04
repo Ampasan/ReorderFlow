@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ErrorState } from '../../components/ErrorState'
 import { PageHeader } from '../../components/PageHeader'
+import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAuth } from '../../hooks/useAuth'
 import { useResource } from '../../hooks/useResource'
 import { getPO } from '../../services/poService'
@@ -9,6 +10,8 @@ import { listStock } from '../../services/stockService'
 import { DraftForm } from './DraftForm'
 
 export function PODraftEditor() {
+  useDocumentTitle('Periksa Draf PO | ReorderFlow')
+
   const { id } = useParams()
   const { user } = useAuth()
   const poId = Number(id)

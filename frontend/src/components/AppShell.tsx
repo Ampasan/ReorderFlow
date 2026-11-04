@@ -63,7 +63,7 @@ export function AppShell() {
             onClick={() => setMenuOpen(true)}
             aria-expanded={menuOpen}
             aria-controls="app-sidebar"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-brand-dark/12 bg-white text-brand-dark transition-colors hover:bg-brand-cream"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-brand-dark/12 bg-white text-brand-dark transition-colors hover:bg-brand-cream"
             aria-label="Buka menu navigasi"
           >
             <MenuIcon className="h-4 w-4" />

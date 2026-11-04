@@ -96,6 +96,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 
 - **Low stock**: `border-amber-200 bg-amber-50`, teks `text-amber-900`, tombol "Buat Draf PO" untuk admin.
 - **Data abnormal**: `border-purple-200 bg-purple-50`, teks `text-purple-800`, tautan "Periksa Data" ke `/stok?status=manual`.
+- **Gemini stock assistance**: the explanation action opens a modal immediately and sends aggregate counts only. Scheduled and manual scans may send anonymous per-item stock, ROP, and minimum-order numbers for a priority recommendation; the draft displays its priority and reason while the quantity remains rule-based.
 
 ### 5. Dialog & Modal
 

@@ -50,6 +50,9 @@ type Config struct {
 	SMTPEmail    string
 	SMTPPassword string
 	ManagerEmail string
+
+	GeminiAPIKey string
+	GeminiModel  string
 }
 
 func Load() *Config {
@@ -96,6 +99,9 @@ func Load() *Config {
 		SMTPEmail:    getEnv("SMTP_EMAIL", ""),
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
 		ManagerEmail: getEnv("MANAGER_EMAIL", ""),
+
+		GeminiAPIKey: strings.TrimSpace(getEnv("GEMINI_API_KEY", "")),
+		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-flash-lite-latest"),
 	}
 }
 

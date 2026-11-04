@@ -26,6 +26,22 @@ export interface ScanResult {
   draft_po_created: number
   skipped_active_po: number
   manual_review: number
+  ai_recommendation_status: 'available' | 'unavailable' | 'not_configured' | 'not_needed'
+}
+
+export interface StockAnalysis {
+  item_count: number
+  explanation: string
+  items: StockAnalysisItem[]
+}
+
+export interface StockAnalysisItem {
+  sku: string
+  nama: string
+  stok_saat_ini: number
+  reorder_point: number
+  prioritas: 'TINGGI' | 'SEDANG' | 'RENDAH'
+  alasan: string
 }
 
 export type OpnameReason = 'DAMAGED' | 'MISCOUNT' | 'RETURN'
