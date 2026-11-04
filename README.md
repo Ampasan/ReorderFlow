@@ -1,6 +1,6 @@
 # ReorderFlow
 
-Platform otomasi Reorder Point (ROP) dan pengadaan barang untuk UMKM. ReorderFlow memindai stok harian, membuat draf Purchase Order (PO) per pemasok, memberi admin ruang meninjau draf, lalu mengirim PO ke pemasok setelah manajer menyetujui lewat tautan email.
+ReorderFlow membantu toko UMKM memantau stok dan menyiapkan Purchase Order (PO). Aplikasi publik berisi halaman produk, artikel, FAQ, dan Tentang. Dashboard staf memungkinkan admin meninjau draf sebelum manajer menyetujui PO lewat tautan email.
 
 ## Fitur Utama
 
@@ -9,8 +9,9 @@ Platform otomasi Reorder Point (ROP) dan pengadaan barang untuk UMKM. ReorderFlo
 - Editor draf PO: ubah kuantitas, hapus barang, tambah barang dari pemasok yang sama, simpan, lalu kirim ke manajer.
 - Persetujuan manajer lewat email bertoken, berlaku 48 jam dan hanya dapat dipakai sekali.
 - Pengiriman PDF final ke email pemasok setelah disetujui.
+- Situs publik dengan halaman beranda, artikel, FAQ, dan Tentang.
 - Dashboard stok dengan tab Semua, Perlu Reorder, dan Perlu Peninjauan.
-- Riwayat PO dengan 6 filter status, filter pemasok, detail barang, dan tautan PDF.
+- Riwayat PO dengan 8 filter status, filter pemasok, detail barang, penerimaan, dan tautan PDF.
 - Koreksi stok opname dengan alasan `DAMAGED`, `MISCOUNT`, atau `RETURN` dan jejak audit.
 - Gemini memberi prioritas pemeriksaan dan alasan pada barang low-stock saat pemindaian; jumlah draf tetap memakai aturan minimum order dan perlu ditinjau admin.
 - Autentikasi JWT dengan dua role: `admin` dan `manager` (read-only di dashboard).
@@ -19,11 +20,11 @@ Platform otomasi Reorder Point (ROP) dan pengadaan barang untuk UMKM. ReorderFlo
 
 | Lapisan | Teknologi |
 | :--- | :--- |
-| Frontend | React 19, Vite 8, TypeScript, Tailwind CSS v3, React Router, React Hot Toast |
+| Frontend | React 19, Vite 8, TypeScript, Tailwind CSS v3, React Router v7, React Hot Toast |
 | Backend | Go 1.26, Gin, GORM |
 | Database | PostgreSQL (Supabase) |
 | Storage | Supabase Storage bucket `po-documents` |
-| Cache dan lock | Redis, dengan fallback cache in-memory dan lock proses lokal |
+| Cache dan lock | Redis opsional, dengan fallback cache in-memory dan lock proses lokal |
 | Email | SMTP, diproses lewat antrean in-memory 2 worker |
 | PDF | `gofpdf` |
 
@@ -32,7 +33,7 @@ Struktur repositori:
 ```text
 reorderflow/
 ├── backend/     # API Go, cron, layanan PDF, email, dan migrasi SQL
-├── frontend/    # SPA React untuk dashboard admin dan manager
+├── frontend/    # SPA React untuk situs publik dan dashboard admin/manager
 └── docs/        # PRD, FRD, IA, DESIGN, dan dokumen per fitur
 ```
 
@@ -47,13 +48,14 @@ Alur status PO:
 ```
 
 `DRAFT` berarti PO sudah dibuat tetapi belum dikirim ke siapa pun. Email ke manajer baru dikirim saat admin menekan **Kirim ke Manajer**.
+Pemindaian terjadwal berjalan setiap hari pukul 08.00 WIB. Penerimaan barang dapat mengubah status `SENT` menjadi `PARTIALLY_RECEIVED`, lalu `RECEIVED`.
 
 ## Menjalankan Proyek
 
 Prasyarat:
 
 - Go 1.26 atau lebih baru.
-- Node.js 20 atau lebih baru.
+- Node.js yang didukung Vite 8.
 - PostgreSQL Supabase dan bucket storage `po-documents`.
 - Redis opsional. Tanpa Redis, cache dan lock memakai memori proses.
 - Akun SMTP dengan App Password untuk pengiriman email.
@@ -79,7 +81,7 @@ Jalankan migrasi di Supabase SQL Editor secara berurutan:
 2. `backend/migrations/003_ai_stock_recommendations.sql`
 3. `backend/migrations/002_seed.sql` (opsional, untuk data demo)
 
-`002_seed.sql` mengosongkan riwayat PO, stok opname, stok, dan pemasok, lalu mengisi ulang data demo. Akun `users` tidak direset karena dibuat dari environment variable saat server start.
+`002_seed.sql` mengosongkan riwayat PO, penerimaan, stok opname, stok, dan pemasok, lalu mengisi ulang data demo. Akun `users` tidak direset karena dibuat dari environment variable saat server start.
 
 Akun dashboard dibuat otomatis saat startup:
 
@@ -162,13 +164,18 @@ Untuk Gmail, aktifkan 2-Step Verification dan gunakan App Password 16 karakter p
 | GET | `/api/dashboard` | Semua role |
 | GET | `/api/po?status=...` dan `/api/po-log` | Semua role |
 | GET | `/api/po-draft/:id` | Semua role |
+| POST | `/api/po-draft/:id/regenerate-pdf` | Admin |
 | POST | `/api/stok/scan` | Admin |
 | POST | `/api/stok/ai-analysis` | Role terautentikasi, maksimal 5 permintaan per menit per IP |
 | PATCH | `/api/stok/:sku` | Admin |
 | PUT | `/api/po-draft/:id` | Admin |
 | POST | `/api/po-draft/:id/submit` | Admin |
+| GET | `/api/po-penerimaan/:id` | Semua role |
+| POST | `/api/po-penerimaan/:id` | Admin |
 
 Detail kontrak dan contoh respons ada di `backend/README.md`.
+
+Rute publik frontend mencakup `/`, `/artikel`, `/artikel/:slug`, `/faq`, `/tentang`, dan `/login`. Dashboard yang dilindungi login berada di `/app`, `/stok`, `/po-log`, dan `/po-log/:id/draft`.
 
 Gemini juga memberi prioritas pemeriksaan pada pemindaian stok otomatis atau manual. Gemini menerima stok, ROP, dan minimum order per barang dengan nomor urut sementara, tanpa nama, SKU, atau pemasok. Jumlah PO tetap ditetapkan backend dan draf perlu diperiksa admin. Google dapat menggunakan data yang dikirim melalui layanan gratis untuk peningkatan produk dan peninjauan manusia, jadi periksa ketentuan Gemini sebelum mengirim data produksi. Analisis penjelasan di halaman stok tetap memakai hitungan agregat saja.
 
@@ -178,8 +185,7 @@ Gemini juga memberi prioritas pemeriksaan pada pemindaian stok otomatis atau man
 - `docs/FRD.md`: aturan fungsional, alur end-to-end, dan aturan bisnis.
 - `docs/IA.md`: sitemap, user flow, entity mapping, dan component tree.
 - `docs/DESIGN.md`: token warna, tipografi, layout, dan komponen UI.
-- `docs/ReorderFlow.md`: proposal konsep, riset, kompetitor, dan roadmap.
-- `docs/features/01-low-stock-detection` sampai `05-auth`: FRD, requirements, design, dan tasks per fitur.
+- `docs/features/01-low-stock-detection` sampai `06-goods-receipt`: FRD, requirements, design, dan status implementasi per fitur.
 - `backend/README.md`: setup backend, migrasi, dan endpoint.
 - `frontend/README.md`: setup frontend, rute, dan struktur komponen.
 

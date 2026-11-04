@@ -68,7 +68,7 @@ Persetujuan PO tidak memerlukan login dashboard: tautan email bersifat publik da
 ### 6.1 Data Utama (`po_log` & Token)
 * `token`: String (32 karakter heksadesimal, unique)
 * `submitted_at`: Timestamp saat draf dikirim ke manajer
-* `status`: Enum (`DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`)
+* `status`: Enum (`DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`, `PARTIALLY_RECEIVED`, `RECEIVED`)
 
 ### 6.2 Alur Perubahan Status PO
 ```text

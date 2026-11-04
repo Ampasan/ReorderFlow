@@ -54,7 +54,7 @@ Fitur ini bertanggung jawab untuk mengambil daftar SKU *low-stock* hasil penyari
 * `id` (Serial, Primary Key)
 * `nomor_po` (String, Unique)
 * `id_pemasok` (Foreign Key ke `pemasok`)
-* `status` (String: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`)
+* `status` (String: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`, `PARTIALLY_RECEIVED`, `RECEIVED`)
 * `tautan_pdf` (String, URL File Supabase Storage)
 * `token` (String, Idempotency Approval Token)
 * `submitted_at` (Timestamp, diisi saat draf dikirim ke manajer)

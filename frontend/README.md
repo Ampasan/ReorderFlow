@@ -1,102 +1,89 @@
 # ReorderFlow Frontend
 
-Antarmuka web ReorderFlow dengan React 19, Vite, TypeScript, dan Tailwind CSS v3. Semua data diambil dari backend Go melalui `/api`.
+Frontend ReorderFlow memakai React 19, Vite 8, TypeScript, Tailwind CSS v3, React Router v7, dan React Hot Toast. Halaman publik menampilkan informasi produk. Dashboard admin dan manager mengambil data dari backend Go melalui `/api`.
 
 ## Menjalankan
 
-Prasyarat: Node.js 20 atau lebih baru, dan backend ReorderFlow berjalan di `http://localhost:8080`.
+Prasyarat: Node.js yang didukung Vite 8 dan backend lokal di `http://localhost:8080`.
 
-```bash
+```powershell
 npm install
-cp .env.example .env   # opsional, default sudah http://localhost:8080
+Copy-Item .env.example .env
 npm run dev
 ```
 
+`VITE_API_BASE_URL` mengatur origin API tanpa akhiran `/api`. Jika tidak diatur, frontend memakai `http://localhost:8080`. `VITE_SITE_URL` opsional dan dipakai untuk URL absolut pada JSON-LD.
+
 Perintah lain:
 
-```bash
-npm run build   # tsc -b && vite build
-npm run lint    # eslint
-npm run preview # menyajikan hasil build
+```text
+npm run build    # type-check TypeScript lalu build produksi
+npm run lint     # ESLint
+npm run preview  # pratinjau hasil build
 ```
-
-`VITE_API_BASE_URL` diisi tanpa akhiran `/api`, misalnya `http://localhost:8080`. Path endpoint di kode sudah diawali `/api/...`.
 
 ## Rute
 
-| Rute | Isi |
-| :--- | :--- |
-| `/login` | Form login email/password (publik) |
-| `/` | Ringkasan operasional: 5 kartu KPI, banner low stock, banner data abnormal, cuplikan stok di bawah ROP |
-| `/stok` | Seluruh SKU dengan filter `?status=all\|low\|manual`, aksi scan dan opname untuk admin |
-| `/po-log` | Riwayat PO dengan 6 filter status dan filter pemasok |
-| `/po-log/:id/draft` | Editor draf PO: ubah qty, hapus atau tambah barang, simpan, kirim ke manajer |
-| `*` | Dialihkan ke `/` |
+| Rute | Akses | Isi |
+| :--- | :--- | :--- |
+| `/` | Publik | Landing page |
+| `/artikel` | Publik | Daftar artikel |
+| `/artikel/:slug` | Publik | Artikel |
+| `/faq` | Publik | Pertanyaan umum |
+| `/tentang` | Publik | Informasi produk |
+| `/login` | Publik | Login email dan password |
+| `/app` | Login | Dashboard operasional dengan 6 kartu KPI |
+| `/stok` | Login | Daftar stok dan filter `all`, `low`, `manual` |
+| `/po-log` | Login | Riwayat PO, 8 filter status, dan filter pemasok |
+| `/po-log/:id/draft` | Login | Editor draf PO; manager melihat versi read-only |
 
-Semua rute selain `/login` dilindungi `ProtectedRoute`. Tanpa token valid pengguna diarahkan ke `/login`, lalu dikembalikan ke halaman asal setelah masuk.
+Rute tak dikenal kembali ke `/`. Halaman persetujuan email bukan bagian dari SPA; backend menyajikannya di `/api/po/approval`.
 
-Filter status PO: `all`, `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, dan `REQUIRES_MANUAL_REVIEW`. Filter pemasok berjalan di sisi klien dari daftar PO yang sudah dimuat.
+## Autentikasi dan Akses
 
-Halaman konfirmasi persetujuan manajer bukan bagian SPA: backend merendernya langsung di `GET /api/po/approval?token=...&action=...`.
-
-## Autentikasi
-
-- `POST /api/auth/login` mengembalikan JWT dan profil user. Token dan user disimpan di `localStorage` dengan kunci `reorderflow.token` dan `reorderflow.user`. Tidak ada cookie httpOnly atau refresh token.
-- `services/api.ts` memakai `fetch`, menyisipkan `Authorization: Bearer <token>` pada setiap request, memakai timeout 20 detik, menghapus sesi dan memancarkan `reorderflow:unauthorized` saat menerima `401`, serta menampilkan toast saat menerima `403`.
-- `AuthProvider` memulihkan sesi lewat `GET /api/auth/me`, menyediakan `login()` dan `logout()`, dan mendengarkan event `reorderflow:unauthorized`.
-- Role `manager` bersifat read-only. Tombol scan, opname, edit draf, dan kirim ke manajer hanya dirender untuk `admin`. Halaman editor draf menampilkan panel read-only untuk manager.
-- Akun dibuat backend dari variabel `ADMIN_EMAIL`/`ADMIN_PASSWORD` dan `MANAGER_EMAIL`/`MANAGER_PASSWORD` di `backend/.env`.
+- Login memakai `POST /api/auth/login`. Frontend menyimpan token dan profil di `localStorage` dengan kunci `reorderflow.token` dan `reorderflow.user`.
+- `services/api.ts` memakai `fetch`, menambahkan header bearer untuk request terautentikasi, dan membatalkan request setelah 20 detik.
+- Respons `401` menghapus sesi dan mengarahkan pengguna ke login. Respons `403` menampilkan toast akses ditolak.
+- `manager` hanya dapat membaca dashboard, stok, dan riwayat PO. Aksi scan, opname, edit draf, submit, dan penerimaan hanya tersedia untuk `admin`.
 
 ## Endpoint yang Dipakai
 
-| Method | Path | Fungsi |
+| Method | Path | Kegunaan |
 | :--- | :--- | :--- |
-| POST | `/api/auth/login` | Login dan terima JWT |
-| GET | `/api/auth/me` | Pulihkan profil user |
+| POST | `/api/auth/login` | Login |
+| GET | `/api/auth/me` | Memulihkan profil |
 | GET | `/api/dashboard` | Ringkasan KPI |
 | GET | `/api/stok?status=...` | Daftar stok |
-| POST | `/api/stok/scan` | Jalankan pemindaian |
-| PATCH | `/api/stok/:sku` | Simpan koreksi opname |
+| POST | `/api/stok/scan` | Membuat draf PO dari stok yang perlu reorder |
+| POST | `/api/stok/ai-analysis` | Penjelasan agregat stok low-stock |
+| PATCH | `/api/stok/:sku` | Koreksi stok opname |
 | GET | `/api/po?status=...` | Riwayat PO |
-| GET | `/api/po-draft/:id` | Detail draf PO |
-| PUT | `/api/po-draft/:id` | Simpan baris draf |
-| POST | `/api/po-draft/:id/submit` | Kirim draf ke manajer |
+| GET | `/api/po-draft/:id` | Detail draf |
+| PUT | `/api/po-draft/:id` | Menyimpan perubahan draf |
+| POST | `/api/po-draft/:id/submit` | Mengirim draf ke manager |
+| GET | `/api/po-penerimaan/:id` | Memuat ringkasan penerimaan |
+| POST | `/api/po-penerimaan/:id` | Mencatat barang yang datang |
 
 ## Struktur
 
 ```text
 src/
-├── App.tsx          # Router, lazy pages, AuthProvider
-├── components/      # AppShell, Sidebar, tabel, dialog, badge, state kosong/loading/error
-├── context/         # AuthProvider dan authContext
-├── hooks/           # useAuth, useResource, useDashboard, useStock, useStockCorrection, useScan, usePOLog
-├── pages/           # LoginPage, Dashboard, StockList, POLogList, PODraftEditor
-├── services/        # api, authService, dashboardService, stockService, poService
-├── types/           # tipe response backend dan auth
-└── utils/           # authStorage, constants, formatter tanggal WIB
+├── App.tsx          # Rute publik dan rute aplikasi
+├── components/      # Shell, tabel, dialog, badge, dan state halaman
+├── context/         # AuthProvider
+├── hooks/           # Akses data dan aksi
+├── pages/           # Landing, artikel, FAQ, Tentang, dan dashboard
+├── services/        # Klien API dan service per fitur
+├── types/           # Tipe respons API dan domain
+└── utils/           # Penyimpanan sesi, konstanta, dan formatter
 ```
 
-Tidak memakai Axios dan tidak memakai library ikon eksternal. Ikon berupa komponen SVG lokal di `components/icons.tsx`.
+Frontend memakai `fetch` dan ikon SVG lokal, bukan Axios atau paket ikon eksternal. Tabel dashboard tidak menyediakan pagination, pencarian teks, filter tanggal, atau ekspor CSV.
 
-## State dan Interaksi
+## Tampilan
 
-- Setiap halaman data menangani loading skeleton, empty state, dan error state dengan tombol "Coba Lagi".
-- Dialog memakai `Modal` dengan focus trap, tombol `Escape`, dan klik overlay untuk menutup.
-- Aksi penting memakai `ConfirmDialog`, misalnya scan stok dan kirim draf ke manajer.
-- `DetailDialog` menampilkan detail SKU atau PO. `OpnameDialog` menampilkan koreksi stok.
-- Tidak ada pagination, pencarian teks, filter tanggal, ekspor CSV, atau mode gelap.
+- Font Poppins untuk heading, Montserrat untuk teks antarmuka, dan JetBrains Mono untuk SKU serta nomor PO. File font berada di `public/fonts`.
+- Token warna, status, dan aturan komponen ada di [`../docs/DESIGN.md`](../docs/DESIGN.md).
+- Dashboard memakai light theme. Dialog mendukung fokus keyboard dan tombol `Escape`.
 
-## Performa
-
-- Font `Plus Jakarta Sans` dan `JetBrains Mono` di-self-host di `public/fonts` sebagai variable font latin. Tidak ada request ke Google Fonts, jadi tidak ada third-party origin di jalur kritis.
-- `Plus Jakarta Sans` di-preload di `index.html`; ilustrasi login memakai file 460px yang sudah dioptimalkan dan di-preload dengan `fetchpriority="high"`.
-- Semua elemen `img` memakai `width` dan `height` eksplisit agar tidak ada layout shift.
-- Jalankan `npm run build` lalu `npm run preview` (atau backend dengan `FRONTEND_DIST`) saat mengukur performa. Dev server Vite menyajikan modul yang belum diminifikasi, jadi angka Lighthouse dari `npm run dev` tidak mewakili produksi.
-
-## Catatan Desain
-
-- Palet mengikuti `docs/DESIGN.md`: krem `#FEF3E2`, shell `#E2CBB0`, garis `#CEB394`, tinta `#2A1A0E`, muted `#6A5B4E`, field `#A08972`.
-- Tombol utama memakai `brand-orange #B85114` dan hover `#9C4410` agar teks putih lolos WCAG AA 4.5:1.
-- Focus ring global memakai `#D4621A` dengan outline 2px.
-- Badge status memakai label `Normal`, `Low Stock`, `Review`, `Draf`, `Menunggu`, `Terkirim`, dan `Ditolak`.
-- Tidak ada mode gelap: sesuai FRD-04 bagian 7.
+Untuk pengujian build, jalankan `npm run build`. Gunakan `npm run preview` atau atur `FRONTEND_DIST` pada backend untuk melihat hasil produksi.

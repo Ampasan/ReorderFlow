@@ -78,6 +78,9 @@ POST  /api/stok/scan                  (role admin)
 PATCH /api/stok/{sku}                 (role admin)
 PUT   /api/po-draft/{id}              (role admin)
 POST  /api/po-draft/{id}/submit       (role admin)
+POST  /api/po-draft/{id}/regenerate-pdf (role admin)
+GET   /api/po-penerimaan/{id}          (all roles)
+POST  /api/po-penerimaan/{id}          (role admin)
 ```
 *   Endpoint publik: `/health`, `/api/auth/login`, `/api/po/approval`.
 

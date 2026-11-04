@@ -17,12 +17,12 @@ Fitur ini menyediakan antarmuka web berbasis React (TypeScript) untuk memantau s
 
 ## 3. Alur Penggunaan Dashboard
 
-* **K-04.1:** **KETIKA** pengguna membuka dashboard, frontend memeriksa JWT di `localStorage`. Jika tidak ada atau invalid, pengguna diarahkan ke `/login`.
-* **K-04.2:** **KETIKA** data berhasil diterima, dashboard menampilkan 5 kartu KPI: Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, dan PO Terkirim. Banner low stock dan banner data abnormal muncul jika angkanya lebih dari nol.
+* **K-04.1:** **KETIKA** pengguna membuka `/app`, frontend memeriksa JWT di `localStorage`. Jika tidak ada atau invalid, pengguna diarahkan ke `/login`.
+* **K-04.2:** **KETIKA** data berhasil diterima, dashboard menampilkan 6 kartu KPI: Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim, dan PO Diterima. Kartu PO Diterima menggabungkan status `PARTIALLY_RECEIVED` dan `RECEIVED`. Banner low stock dan banner data abnormal muncul jika angkanya lebih dari nol.
 * **K-04.3:** **KETIKA** pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU dengan tab filter Semua, Perlu Reorder, dan Perlu Peninjauan.
 * **K-04.4:** **KETIKA** admin menekan **Pindai Stok** atau **Buat Draf PO**, sistem menampilkan dialog konfirmasi, menjalankan `POST /api/stok/scan`, lalu menampilkan toast hasil.
 * **K-04.5:** **KETIKA** admin membuka dialog Opname, sistem menampilkan stok saat ini, input hasil opname, dan pilihan alasan. Aksi simpan memanggil `PATCH /api/stok/{sku}`.
-* **K-04.6:** **KETIKA** pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel PO dengan 6 filter status: Semua, Draf, Menunggu, Terkirim, Ditolak, Perlu Tinjauan.
+* **K-04.6:** **KETIKA** pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel PO dengan 8 pilihan filter: Semua dan tujuh status PO.
 * **K-04.7:** **KETIKA** pengguna memilih pemasok pada filter pemasok, tabel langsung menyaring PO dari pemasok tersebut. Filter ini berjalan di sisi klien dari daftar PO yang sudah dimuat.
 * **K-04.8:** **KETIKA** pengguna menekan **Detail**, sistem menampilkan nomor PO, pemasok, email, status, tanggal, dan daftar barang.
 * **K-04.9:** **KETIKA** pengguna menekan **Lihat PDF**, browser membuka `tautan_pdf` Supabase Storage di tab baru. Jika PDF belum tersedia, aksi ditampilkan nonaktif.
@@ -73,7 +73,7 @@ Fitur ini menyediakan antarmuka web berbasis React (TypeScript) untuk memantau s
 
 ### 6.2 Status yang Ditampilkan
 * Stok: `NORMAL`, `LOW_STOCK`, `REQUIRES_MANUAL_REVIEW`.
-* PO: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`.
+* PO: `DRAFT`, `PENDING_APPROVAL`, `SENT`, `REJECTED`, `REQUIRES_MANUAL_REVIEW`, `PARTIALLY_RECEIVED`, `RECEIVED`.
 
 ---
 
@@ -130,7 +130,7 @@ Fitur ini dipecah menjadi 4 fungsi UI utama:
 * **Kondisi Memuat:** Skeleton loader.
 * **Kondisi Ada Data:** Tabel memuat Nomor PO, Pemasok, Status, Barang, Dibuat, dan Aksi.
 * **Kondisi Kosong:** Copy per status, misalnya "Belum ada riwayat Purchase Order" dan "Tidak ada PO berstatus draf".
-* **Filter:** 6 tab status dan filter pemasok client-side.
+* **Filter:** 8 pilihan status dan filter pemasok client-side.
 
 #### 3. Data & Validasi
 * **Format Tanggal:** `DD/MM/YYYY HH:mm WIB`.

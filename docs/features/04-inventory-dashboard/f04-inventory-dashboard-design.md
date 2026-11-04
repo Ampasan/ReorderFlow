@@ -29,7 +29,9 @@ export type POStatus =
   | 'PENDING_APPROVAL'
   | 'SENT'
   | 'REJECTED'
-  | 'REQUIRES_MANUAL_REVIEW';
+  | 'REQUIRES_MANUAL_REVIEW'
+  | 'PARTIALLY_RECEIVED'
+  | 'RECEIVED';
 
 export interface PODetail {
   id: number;
@@ -59,6 +61,8 @@ export interface DashboardSummary {
   pending_po_count: number;
   sent_po_count: number;
   rejected_po_count: number;
+  partially_received_po_count: number;
+  received_po_count: number;
 }
 
 export type UserRole = 'admin' | 'manager';
@@ -174,7 +178,7 @@ Semua endpoint data memerlukan header `Authorization: Bearer <token>` dan mengem
 }
 ```
 
-###### G. GET /api/po?status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW
+###### G. GET /api/po?status=all|DRAFT|PENDING_APPROVAL|SENT|REJECTED|REQUIRES_MANUAL_REVIEW|PARTIALLY_RECEIVED|RECEIVED
 *   **Headers**: `Authorization: Bearer <token>`
 *   **Response 200 OK**: array `POLog` dengan `pemasok` dan `details`.
 
@@ -249,7 +253,7 @@ src/
     ├── LoginPage.tsx             # Split screen, form email/password
     ├── Dashboard.tsx             # Banner, KPI, cuplikan low stock
     ├── StockList.tsx             # Tabel stok, tab, scan, opname
-    ├── POLogList.tsx             # Tabel PO, 6 tab, filter pemasok, detail
+    ├── POLogList.tsx             # Tabel PO, 8 pilihan status, filter pemasok, detail, penerimaan
     └── PODraftEditor.tsx         # Editor draf, simpan, submit ke manajer
 ```
 
@@ -259,3 +263,5 @@ src/
 * Respons `401` menghapus sesi dan memicu event `reorderflow:unauthorized`.
 * Respons `403` menampilkan toast "Anda tidak memiliki akses untuk aksi ini".
 * Base URL diambil dari `VITE_API_BASE_URL` tanpa akhiran `/api`, contoh `http://localhost:8080`.
+
+Dashboard saat ini berada di `/app`. Rute `/` menampilkan landing page publik; artikel, FAQ, dan Tentang juga tersedia tanpa login.

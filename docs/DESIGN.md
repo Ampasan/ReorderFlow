@@ -72,7 +72,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 
 - **Sidebar**: lebar tetap `w-64`, `fixed inset-y-0 left-0`, `bg-brand-shell/50`, `border-r border-brand-dark/10`.
   - Brand: logo `logo-reorderflow.png` dalam kontainer putih `rounded-xl`, teks `ReorderFlow` dengan aksen `Flow` berwarna `text-brand-orange`, subjudul "Sistem Otomasi ROP".
-  - Navigasi: hanya tiga item, yaitu Dashboard (`/`), Data Stok (`/stok`), dan Riwayat PO (`/po-log`). Item aktif memakai `bg-brand-orange text-white`.
+  - Navigasi: tiga item aplikasi, yaitu Dashboard (`/app`), Data Stok (`/stok`), dan Riwayat PO (`/po-log`). Item aktif memakai `bg-brand-orange text-white`.
   - Profil: kartu putih berisi inisial user, nama, label role (`Admin Inventori` / `Operations Manager`), dan tombol logout.
   - Mobile: sidebar menjadi drawer dengan backdrop dan tombol hamburger di top bar `lg:hidden`.
 - **Main Canvas**: `lg:pl-64`, kontainer `max-w-7xl` dengan padding `px-4 py-8 sm:px-6 lg:px-8`.
@@ -128,7 +128,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 ### 8. Login Page (Public)
 
 - Layout dua kolom pada desktop:
-  - Panel kiri `lg:w-[60%]`, latar `#EAD8C0`, berisi brand, headline "Tahu kapan harus order, sebelum kehabisan.", dan ilustrasi yang di-host di Cloudinary.
+  - Panel kiri `lg:w-[60%]`, latar `#E2CBB0`, berisi brand, headline "Tahu kapan harus order, sebelum kehabisan.", dan ilustrasi yang di-host di Cloudinary.
   - Panel kanan `bg-white` dengan form `max-w-[340px]`.
 - Pada mobile, panel kiri disembunyikan dan logo muncul di atas form.
 - Judul form: "Masuk ke akun Anda", subjudul "Gunakan akun yang disiapkan admin toko."
@@ -153,3 +153,7 @@ Badge memakai `inline-flex items-center rounded-md border px-2 py-0.5 text-[11px
 - Landing page memakai animasi hero terarah (draw garis stok, pulse pada titik ROP, kartu PO muncul), reveal saat scroll untuk header section, dan transisi hover pada kartu, tombol, dan gambar.
 - Animasi lain dibatasi pada transisi hover, overlay, dan modal (`overlay-in`, `modal-in`).
 - `prefers-reduced-motion` menonaktifkan animasi dan transisi.
+
+## 11. Rute Aplikasi
+
+Landing page dan halaman artikel, FAQ, serta Tentang bersifat publik. Login tersedia di `/login`. Dashboard dan fitur inventori berada di `/app`, `/stok`, `/po-log`, dan `/po-log/:id/draft`; keempat rute aplikasi itu memerlukan login.

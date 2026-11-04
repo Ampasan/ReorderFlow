@@ -34,7 +34,7 @@
     *   `id` (Serial, Primary Key)
     *   `nomor_po` (String, Unique, Format: `PO-YYYYMMDD-[ID_PEMASOK]-[SEQ]`)
     *   `id_pemasok` (Foreign Key ke `pemasok`)
-    *   `status` (Enum: `'DRAFT'`, `'PENDING_APPROVAL'`, `'SENT'`, `'REJECTED'`, `'REQUIRES_MANUAL_REVIEW'`)
+    *   `status` (Enum: `'DRAFT'`, `'PENDING_APPROVAL'`, `'SENT'`, `'REJECTED'`, `'REQUIRES_MANUAL_REVIEW'`, `'PARTIALLY_RECEIVED'`, `'RECEIVED'`)
     *   `tautan_pdf` (String URL, Supabase Storage Public URL)
     *   `token` (String, Idempotency Token)
     *   `submitted_at` (Timestamp, diisi saat draf dikirim ke manajer)

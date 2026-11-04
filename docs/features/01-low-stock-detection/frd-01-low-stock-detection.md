@@ -19,12 +19,13 @@ Fitur ini bertujuan untuk memindai basis data persediaan secara otomatis dan men
 
 * **K-01.1:** **KETIKA** *scheduled cron job* harian aktif pada jam 08.00 WIB, sistem memicu runner `detection_service.go`.
 * **K-01.2:** **KETIKA** runner berjalan, sistem membaca seluruh baris pada tabel `stok` di Supabase PostgreSQL.
-* **K-01.3:** **KETIKA** ditemukan baris dengan `stok_saat_ini <= reorder_point`, sistem mengecek apakah SKU tersebut atau pemasoknya memiliki PO aktif pada tabel `po_log`. Status `DRAFT`, `PENDING_APPROVAL`, dan `REJECTED` selalu dianggap aktif. Status `SENT` dianggap aktif dalam 7 hari terakhir.
+* **K-01.3:** **KETIKA** ditemukan baris dengan `stok_saat_ini <= reorder_point`, sistem mengecek apakah SKU tersebut atau pemasoknya memiliki PO aktif pada tabel `po_log`. Status `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, dan `PARTIALLY_RECEIVED` selalu dianggap aktif. Status `SENT` dianggap aktif dalam 7 hari terakhir.
 * **K-01.4:** **KETIKA** SKU tidak memiliki PO aktif, sistem memasukkan SKU tersebut ke dalam daftar *Low-Stock Valid* yang siap diproses ke tahap pembuatan PO.
 * **K-01.5:** **JIKA** `stok_saat_ini < 0` ATAU `reorder_point <= 0` ATAU `qty_min_order <= 0`, sistem menandai SKU sebagai `REQUIRES_MANUAL_REVIEW` dan mengecualikannya dari daftar otomatisasi.
 * **K-01.6:** **JIKA** SKU atau pemasoknya sudah memiliki PO aktif, sistem mengabaikan SKU tersebut untuk mencegah pemesanan ganda (*duplicate order*).
 * **K-01.7:** **JIKA** koneksi ke basis data Supabase terputus saat query dijalankan, sistem mencatat error di log dan melakukan *retry* hingga 3 kali dengan selang waktu 10 detik.
 * **K-01.8:** **SELAMA** proses pemindaian berjalan, sistem memakai lock Redis `lock:scan:active` dengan TTL 300 detik. Jika Redis tidak tersedia, sistem memakai lock proses lokal agar dua pemindaian tidak berjalan bersamaan.
+* **K-01.9:** **JIKA** `GEMINI_API_KEY` tersedia, Gemini dapat memberi prioritas dan alasan pemeriksaan pada SKU yang lolos aturan stok dan pemeriksaan PO aktif. Gemini tidak mengubah kelayakan atau jumlah order; jika layanan gagal, sistem tetap membuat draf dengan aturan minimum order.
 
 ---
 
@@ -42,7 +43,7 @@ Fitur ini bertujuan untuk memindai basis data persediaan secara otomatis dan men
 ## 5. Istilah Internal
 
 * **Reorder Point (ROP):** Batas minimal jumlah stok di mana pemesanan ulang ke pemasok harus segera dilakukan.
-* **PO Aktif:** Pesanan pembelian berstatus `DRAFT`, `PENDING_APPROVAL`, atau `REJECTED`, serta `SENT` yang dibuat dalam 7 hari terakhir.
+* **PO Aktif:** Pesanan pembelian berstatus `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, atau `PARTIALLY_RECEIVED`, serta `SENT` yang dibuat dalam 7 hari terakhir.
 * **Race Condition:** Kondisi persaingan eksekusi di mana dua proses mencoba memperbarui data stok/PO secara bersamaan.
 
 ---
@@ -109,14 +110,14 @@ Fitur ini dipecah menjadi 2 fungsi teknis utama:
 ### Spesifikasi Fungsi F-01.2: Check Duplicate Active PO
 
 #### 1. Perilaku (Kebutuhan & AC)
-* **K-F01.2a:** **KETIKA** SKU lolos dari `F-01.1`, fungsi memeriksa tabel `po_log` untuk melihat apakah ada PO aktif yang memuat SKU atau pemasok terkait. Status `DRAFT`, `PENDING_APPROVAL`, dan `REJECTED` selalu aktif. Status `SENT` aktif dalam 7 hari terakhir.
+* **K-F01.2a:** **KETIKA** SKU lolos dari `F-01.1`, fungsi memeriksa tabel `po_log` untuk melihat apakah ada PO aktif yang memuat SKU atau pemasok terkait. Status `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, dan `PARTIALLY_RECEIVED` selalu aktif. Status `SENT` aktif dalam 7 hari terakhir.
 * **AC:** Given `SKU-BTL-01` sudah ada di `po_log` nomor `PO-20261025-001` dengan status `DRAFT`. When `F-01.2` memeriksa status `SKU-BTL-01`, Then fungsi mengembalikan nilai `has_active_po = true` dan mengeluarkannya dari antrean.
 
 #### 2. Tampilan & Kondisi Layar
 * *Backend Service Log*: Log penolakan `"SKU-BTL-01 skipped: Active PO exists (PO-20261025-001)"`.
 
 #### 3. Data & Validasi
-* **Filter Query:** SKU dicek lewat join `po_detail` ke `po_log`, pemasok dicek lewat `po_log.id_pemasok`. Predikat aktif: `status IN ('DRAFT', 'PENDING_APPROVAL', 'REJECTED') OR (status = 'SENT' AND created_at >= NOW() - INTERVAL '7 days')`.
+* **Filter Query:** SKU dicek lewat join `po_detail` ke `po_log`, pemasok dicek lewat `po_log.id_pemasok`. `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, dan `PARTIALLY_RECEIVED` selalu aktif; `SENT` aktif jika dibuat dalam 7 hari terakhir.
 
 #### 4. Error
 * Jika Redis/Cache atau DB timeout, kembalikan nilai default safe `has_active_po = true` untuk mencegah duplikasi pesanan tak disengaja.

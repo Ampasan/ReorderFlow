@@ -11,12 +11,19 @@ Aplikasi ReorderFlow memakai struktur navigasi datar dengan sidebar persisten. N
 
 ```text
 [ReorderFlow Web App]
-├── 0.0 Login (/login) [Public]
+├── 0.0 Landing Page (/) [Public]
+│   ├── 0.1 Ringkasan produk dan fitur
+│   └── 0.2 Tautan ke artikel, FAQ, Tentang, dan login
+├── 0.1 Artikel (/artikel) [Public]
+│   └── 0.1.1 Detail artikel (/artikel/:slug)
+├── 0.2 FAQ (/faq) [Public]
+├── 0.3 Tentang (/tentang) [Public]
+├── 0.4 Login (/login) [Public]
 │   ├── 0.1 Form Email & Password
 │   ├── 0.2 State Loading / Error Login
-│   └── 0.3 Redirect ke halaman asal atau Dashboard setelah JWT tersimpan
+│   └── 0.3 Redirect ke halaman asal atau Dashboard (/app) setelah JWT tersimpan
 │
-├── 1.0 Dashboard Utama (/) [Protected]
+├── 1.0 Dashboard Utama (/app) [Protected]
 │   ├── 1.1 Ringkasan KPI (Total SKU, Stok Rendah, Draf PO, Menunggu Persetujuan, PO Terkirim, PO Diterima)
 │   ├── 1.2 Banner Peringatan Stok Rendah + tombol "Buat Draf PO" [Admin only]
 │   ├── 1.3 Banner Data Abnormal (REQUIRES_MANUAL_REVIEW) + tautan "Periksa Data"
@@ -48,7 +55,7 @@ Aplikasi ReorderFlow memakai struktur navigasi datar dengan sidebar persisten. N
     └── 4.5 State Error (Token tidak ditemukan / action tidak valid / server error)
 ```
 
-Rute `1.0` sampai `3.0` dilindungi login. Akses tanpa JWT valid diarahkan ke `/login`. Rute `0.0` dan `4.0` bersifat publik.
+Rute `/app`, `/stok`, `/po-log`, dan `/po-log/:id/draft` dilindungi login. Akses tanpa JWT valid diarahkan ke `/login`. Halaman publik dan halaman persetujuan email tidak memerlukan sesi dashboard.
 
 ---
 
@@ -57,7 +64,7 @@ Rute `1.0` sampai `3.0` dilindungi login. Akses tanpa JWT valid diarahkan ke `/l
 ### Flow 0: Login & Session Guard (Admin / Manager)
 
 ```text
-[Pengguna Buka Dashboard (/)]
+[Pengguna Buka Dashboard (/app)]
         │
         ├── JIKA token valid di localStorage ──► [Dashboard]
         │
@@ -117,7 +124,7 @@ Alur berjalan di latar belakang tanpa intervensi manual pengguna. Hasil pemindai
 ### Flow 2: Alur Peninjauan Draf & Pemindaian Manual (Admin Inventori Flow)
 
 ```text
-[Admin Login (/login)] ──► [Masuk Dashboard (/)]
+[Admin Login (/login)] ──► [Masuk Dashboard (/app)]
         │
         ├──────────────────────────────────────────────────────┐
         ▼                                                      ▼
@@ -277,7 +284,7 @@ Nilai status SKU turunan: `NORMAL`, `LOW_STOCK`, `REQUIRES_MANUAL_REVIEW`.
 | Halaman | Condition: Loading | Condition: Empty State | Condition: Data Available | Condition: Error State |
 | :--- | :--- | :--- | :--- | :--- |
 | **Login (/login)** | Tombol submit disabled + spinner saat request login. | - | Form email/password, redirect ke halaman asal atau dashboard setelah sukses. | Pesan merah "Email atau password salah" / pesan koneksi. |
-| **Dashboard (/)** | Skeleton 6 kartu KPI + skeleton tabel. | KPI bernilai 0, tabel "Semua stok di atas ROP". | Kartu KPI terisi, banner low stock dan banner data abnormal jika ada. | `ErrorState`: "Gagal memuat data dari server" + tombol "Coba Lagi". |
+| **Dashboard (/app)** | Skeleton 6 kartu KPI + skeleton tabel. | KPI bernilai 0, tabel "Semua stok di atas ROP". | Kartu KPI terisi, banner low stock dan banner data abnormal jika ada. | `ErrorState`: "Gagal memuat data dari server" + tombol "Coba Lagi". |
 | **Data Stok (/stok)** | Skeleton baris tabel. | Copy berbeda per tab: "Belum ada data inventori", "Tidak ada produk di bawah ROP", "Tidak ada produk yang perlu peninjauan". | Tabel SKU dengan badge status, aksi Opname (admin) dan Detail. | `ErrorState` dengan tombol "Coba Lagi". |
 | **Riwayat PO (/po-log)** | Skeleton baris tabel. | Copy per status: "Belum ada riwayat Purchase Order", "Tidak ada PO berstatus draf", dan seterusnya. | Tabel PO, filter pemasok, aksi Detail dan Lihat PDF, tautan edit dan tombol "Terima Barang" untuk admin. | `ErrorState` dengan tombol "Coba Lagi". |
 | **Dialog Terima Barang (Riwayat PO)** | "Memuat data penerimaan..." di dalam dialog. | Dialog hanya dibuka untuk PO `SENT` atau `PARTIALLY_RECEIVED`, jadi selalu ada baris barang. | Tabel qty per SKU, riwayat penerimaan sebelumnya, dan tombol Simpan Penerimaan. | Pesan "Data penerimaan gagal dimuat" atau validasi per baris saat qty melebihi sisa. |

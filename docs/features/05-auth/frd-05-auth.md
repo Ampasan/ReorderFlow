@@ -9,7 +9,7 @@ Fitur ini melindungi dashboard dan endpoint data ReorderFlow dengan login email/
 
 | Peran | Login Dashboard | Endpoint Read | Endpoint Write | Approve via Email |
 | :--- | :--- | :--- | :--- | :--- |
-| **Staf Inventori / Procurement Admin** | Ya (`admin`) | Semua data | `POST /api/stok/scan`, `PATCH /api/stok/{sku}`, `PUT /api/po-draft/{id}`, `POST /api/po-draft/{id}/submit` | Tidak |
+| **Staf Inventori / Procurement Admin** | Ya (`admin`) | Semua data | `POST /api/stok/scan`, `PATCH /api/stok/{sku}`, perubahan/regenerasi/submit draf, `POST /api/po-penerimaan/{id}` | Tidak |
 | **Operations Manager** | Ya (`manager`) | Semua data | Tidak (`403`) | Ya |
 | **System Cron / Worker** | Tidak | Internal | Internal | - |
 | **Pemasok / Vendor** | Tidak | - | - | - |

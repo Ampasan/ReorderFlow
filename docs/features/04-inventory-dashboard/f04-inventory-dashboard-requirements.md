@@ -7,14 +7,14 @@
     *   **AC-4.0.1** : Login sukses menyimpan JWT dan menampilkan dashboard sesuai role (`admin` / `manager`).
     *   **AC-4.0.2** : Setiap request data mengirim header `Authorization: Bearer <token>`; respons `401` menghapus sesi dan redirect ke `/login`.
 *   **K-4.1 (Pemuatan Kartu KPI Ringkasan)** : KETIKA pengguna membuka Dashboard, antarmuka mengirim request `GET /api/dashboard`, `GET /api/stok?status=low`, dan `GET /api/po`.
-    *   **AC-4.1.1** : Dashboard merender 5 Kartu KPI: Total SKU, Stok Rendah, Draf PO (`DRAFT`), Menunggu Persetujuan (`PENDING_APPROVAL`), dan PO Terkirim (`SENT`).
+    *   **AC-4.1.1** : Dashboard merender 6 kartu KPI: Total SKU, Stok Rendah, Draf PO (`DRAFT`), Menunggu Persetujuan (`PENDING_APPROVAL`), PO Terkirim (`SENT`), dan PO Diterima (gabungan `PARTIALLY_RECEIVED` dan `RECEIVED`).
     *   **AC-4.1.2** : Banner low stock dan banner data abnormal muncul hanya jika angkanya lebih dari nol.
 *   **K-4.2 (Tabel Data Stok & Badge ROP)** : KETIKA pengguna membuka tab **Data Stok**, sistem menampilkan tabel seluruh SKU dengan tab Semua, Perlu Reorder, dan Perlu Peninjauan.
     *   **AC-4.2.1** : SKU dengan `stok_saat_ini <= reorder_point` dan data valid menampilkan badge amber `Low Stock`. SKU aman menampilkan badge hijau `Normal`.
     *   **AC-4.2.2** : SKU dengan stok negatif atau ROP/min order tidak valid menampilkan badge ungu `Review`.
 *   **K-4.3 (Koreksi Stok Opname)** : KETIKA admin menyimpan opname, antarmuka memanggil `PATCH /api/stok/{sku}` dengan `stok_saat_ini` dan `alasan`.
     *   **AC-4.3.1** : Stok tabel diperbarui dan dialog ditutup setelah respons sukses.
-*   **K-4.4 (Tabel Riwayat PO & File Viewer)** : KETIKA pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel PO dengan 6 filter status dan tautan "Lihat PDF".
+*   **K-4.4 (Tabel Riwayat PO & File Viewer)** : KETIKA pengguna membuka tab **Riwayat PO**, sistem menampilkan tabel PO dengan 8 pilihan filter status dan tautan "Lihat PDF".
     *   **AC-4.4.1** : Mengklik "Lihat PDF" membuka URL Supabase Storage di tab browser baru.
     *   **AC-4.4.2** : Filter pemasok menyaring tabel di sisi klien berdasarkan daftar PO yang sudah dimuat.
 *   **K-4.5 (Detail PO)** : KETIKA pengguna menekan **Detail**, sistem menampilkan nomor PO, pemasok, email, status, tanggal, dan daftar barang.
@@ -31,10 +31,10 @@
 
 ##### 2. Aspek: Tampilan & Kondisi Layar
 *   **Kondisi Memuat (Loading)** :
-    *   5 box skeleton pada Kartu KPI dan `TableSkeleton` pada area tabel.
+    *   6 box skeleton pada Kartu KPI dan `TableSkeleton` pada area tabel.
 *   **Kondisi Ada Data (Success / Data Available)** :
     *   Layout responsif: sidebar di kiri dan konten di kanan. Pada mobile, sidebar menjadi drawer dan top bar menampilkan tombol menu.
-    *   Badge aktual: hijau `Normal`, amber `Low Stock`, ungu `Review`, cream `Draf`, amber `Menunggu`, dark `Terkirim`, rose `Ditolak`.
+    *   Badge aktual: hijau `Normal`, amber `Low Stock`, ungu `Review`, cream `Draf`, amber `Menunggu`, dark `Terkirim`, terracotta `Diterima Sebagian`, hijau `Diterima`, dan rose `Ditolak`.
 *   **Kondisi Kosong (Empty State)** :
     *   Copy per konteks, misalnya "Belum ada data inventori", "Tidak ada produk di bawah ROP", "Belum ada riwayat Purchase Order".
 *   **Kondisi Gagal (Error Fallback)** :

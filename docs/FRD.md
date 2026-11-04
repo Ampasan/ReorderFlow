@@ -13,7 +13,7 @@ Alur saat ini memakai tahap peninjauan draf: hasil pemindaian berhenti di `DRAFT
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Staf Inventori / Procurement Admin** | Ya (`admin`) | Data Stok, Data Pemasok, Riwayat PO_Log, Draf PO | Draf Reorder Manual (trigger scan) | Data Stok (Koreksi Opnam), Baris Barang Draf PO, Penerimaan Barang | Tidak Boleh |
 | **Operations Manager** | Ya (`manager`) | Dashboard, Data Stok, Riwayat PO_Log, Email Ringkasan | - | - | Ya (Approve / Reject PO via Email Link) |
-| **System Cron / Worker** | Tidak (service account) | Pemindaian Tabel Stok & Pemasok | Record PO_Log, File PDF PO di Storage | Status PO_Log (`DRAFT` -> `PENDING_APPROVAL` -> `SENT`/`REJECTED`) | - |
+| **System Cron / Worker** | Tidak (service account) | Pemindaian tabel stok dan pemasok | Record `PO_Log` berstatus `DRAFT` dan PDF draf | - | - |
 
 Catatan: login dashboard memakai email/password dan menghasilkan JWT. Persetujuan PO tetap dilakukan lewat tautan email publik bertoken, bukan lewat sesi login. Role `manager` bersifat read-only di dashboard, termasuk pada halaman editor draf.
 
@@ -165,3 +165,13 @@ PARTIALLY_RECEIVED --(Admin catat sisa kiriman)--> RECEIVED
 * SSO, MFA/2FA, login sosial, dan alur reset password via email.
 * Manajemen pengguna (tambah/ubah/hapus akun) dari dashboard; akun dibuat dari environment variable saat startup.
 * Harga satuan, subtotal, pajak, dan total nominal pada PO. Saat ini hanya kuantitas yang dihitung.
+
+---
+
+## 10. Rute Frontend Saat Ini
+
+Frontend memiliki halaman publik `/`, `/artikel`, `/artikel/:slug`, `/faq`, `/tentang`, dan `/login`. Area aplikasi yang memerlukan login berada di `/app`, `/stok`, `/po-log`, dan `/po-log/:id/draft`. Persetujuan manager tetap ditangani halaman HTML backend pada `/api/po/approval`.
+
+Dashboard menampilkan enam kartu KPI. Kartu `PO Diterima` menggabungkan PO berstatus `PARTIALLY_RECEIVED` dan `RECEIVED`. Riwayat PO menyediakan filter untuk seluruh tujuh status PO dan filter pemasok di sisi klien.
+
+Gemini bersifat opsional. Gemini dapat menjelaskan hitungan low-stock agregat dan membantu memberi prioritas saat pemindaian, tetapi aturan backend tetap menentukan kelayakan reorder dan jumlah PO.

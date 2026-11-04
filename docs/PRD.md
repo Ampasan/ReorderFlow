@@ -24,25 +24,26 @@ Keberhasilan produk **ReorderFlow** pada tahap MVP diukur melalui indikator beri
   6. Koreksi stok opname oleh admin dengan alasan dan jejak audit.
   7. Autentikasi login staf admin dan operations manager dengan email/password serta token JWT untuk melindungi dashboard dan endpoint data.
   8. Penerimaan barang per SKU dengan qty aktual, penambahan stok otomatis, dan status PO `PARTIALLY_RECEIVED` atau `RECEIVED`.
+  9. Halaman publik beranda, artikel, FAQ, dan Tentang; dashboard staf berada di `/app`.
 * **Yang Tidak Dibuat (Out-of-Scope):**
-  1. Prediksi stok atau estimasi persediaan berbasis kecerdasan buatan (*AI / Machine Learning*).
+  1. Prediksi permintaan atau stok berbasis kecerdasan buatan (*AI / Machine Learning*). Gemini hanya memberi penjelasan dan prioritas rekomendasi; aturan backend tetap menentukan kelayakan dan jumlah PO.
   2. Integrasi langsung ke API marketplace, e-commerce, atau aplikasi POS pihak ketiga.
   3. Sistem manajemen pembayaran *invoice* dan pengelolaan gudang multi-cabang kompleks.
 
 ### 5. Batasan
-* **Pendekatan Sistem:** Wajib menggunakan automasi berbasis aturan (*rule-based*) tanpa AI guna menjamin kepastian logika dan menghindari risiko halusinasi data.
-* **Arsitektur Teknis:** Backend wajib menggunakan Go (Gin) yang di-deploy ke Railway; Frontend menggunakan React (Vite) yang di-deploy ke Vercel; basis data PostgreSQL dan penyimpanan PDF menggunakan Supabase; serta Redis untuk *cache* dan *retry logic*.
+* **Pendekatan Sistem:** Kelayakan reorder dan kuantitas PO ditentukan dengan aturan yang dapat diperiksa. Gemini bersifat opsional dan tidak mengubah stok, jumlah PO, atau keputusan persetujuan.
+* **Arsitektur Teknis:** Backend Go dengan Gin; frontend React, Vite, TypeScript, dan Tailwind CSS; PostgreSQL serta penyimpanan PDF di Supabase; Redis opsional untuk cache, rate limit, dan lock; SMTP untuk email.
 * **Keamanan Persetujuan:** Tautan persetujuan manajer wajib menggunakan token acak sekali pakai (*idempotent*) dengan masa berlaku terbatas.
 * **Autentikasi Dashboard:** Endpoint data dan dashboard wajib dilindungi login email/password dengan token JWT. Endpoint persetujuan via email tetap publik dan hanya dilindungi token sekali pakai.
 * **Penanganan Data Abnormal:** Data stok yang bernilai negatif, kosong, atau ROP yang tidak terisi wajib dialihkan ke status `REQUIRES_MANUAL_REVIEW` dan tidak diproses otomatis.
-* **Dataset:** Pengembangan dan pengujian dilakukan menggunakan dataset sintetis 20 SKU dan kredensial aman di *environment variables*.
+* **Dataset:** Repositori menyediakan data seed sintetis untuk pengembangan. Kredensial disimpan melalui environment variables.
 
 ### 6. Skala
-* **Skala Pengujian:** Sistem dikembangkan dan diuji menggunakan dataset sintetis 20 SKU dan 3–4 pemasok uji dalam durasi pengembangan MVP 2 minggu (26 Oktober – 6 November 2026).
+* **Skala Pengujian:** Target awal menggunakan data sintetis. Akurasi, penghematan waktu, dan dampak operasional pada toko nyata belum divalidasi.
 * **Tingkat Kepentingan:** Sangat krusial bagi kelangsungan operasional UMKM untuk mencegah keterlambatan pengadaan barang yang berdampak langsung pada penurunan pendapatan dan hilangnya kepercayaan pelanggan.
 
 ### 7. Daftar Fitur
-1. **[Prioritas 1] Deteksi Low-Stock Otomatis:** Pemindaian jadwal harian pada database untuk mendeteksi `stok ≤ ROP` dan mengabaikan SKU yang sudah memiliki PO aktif (`DRAFT`, `PENDING_APPROVAL`, `REJECTED`, atau `SENT` dalam 7 hari terakhir), termasuk pemblokiran level pemasok.
+1. **[Prioritas 1] Deteksi Low-Stock Otomatis:** Pemindaian pukul 08.00 WIB dan pemindaian manual mendeteksi `stok ≤ ROP`. Sistem melewati PO aktif berstatus `DRAFT`, `PENDING_APPROVAL`, `REJECTED`, atau `PARTIALLY_RECEIVED`, serta PO `SENT` yang dibuat dalam 7 hari terakhir. Pemblokiran juga berlaku pada tingkat pemasok.
 2. **[Prioritas 2] Generator Draf PO PDF Per Pemasok:** Mengelompokkan barang *low-stock* per pemasok, menerbitkan nomor PO unik, dan membuat PDF draf di Supabase Storage dengan status `DRAFT`.
 3. **[Prioritas 3] Editor Draf & Persetujuan:** Admin dapat mengubah baris draf sebelum mengirimkannya ke manajer. Pengiriman mengubah status menjadi `PENDING_APPROVAL`, membuat token 48 jam, dan mengirim email Approve/Reject. Setelah disetujui, PDF final diteruskan ke email pemasok.
 4. **[Prioritas 4] Monitoring Status Inventori & Log PO:** Dashboard untuk memantau ringkasan kondisi stok, filter status dan pemasok pada riwayat PO, serta detail barang per PO.
