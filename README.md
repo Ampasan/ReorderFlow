@@ -77,11 +77,10 @@ curl http://localhost:8080/health
 
 Jalankan migrasi di Supabase SQL Editor secara berurutan:
 
-1. `backend/migrations/001_schema.sql`
-2. `backend/migrations/003_ai_stock_recommendations.sql`
-3. `backend/migrations/002_seed.sql` (opsional, untuk data demo)
+1. `backend/migrations/001_schema.sql` — skema lengkap, termasuk kolom rekomendasi Gemini.
+2. `backend/migrations/002_seed.sql` (opsional, untuk data demo).
 
-`002_seed.sql` mengosongkan riwayat PO, penerimaan, stok opname, stok, dan pemasok, lalu mengisi ulang data demo. Akun `users` tidak direset karena dibuat dari environment variable saat server start.
+`002_seed.sql` dapat dijalankan berulang kali. Setiap kali dijalankan, seluruh data demo lama dikosongkan lalu diisi ulang dari kondisi awal. Akun `users` tidak direset karena dibuat dari environment variable saat server start.
 
 Akun dashboard dibuat otomatis saat startup:
 

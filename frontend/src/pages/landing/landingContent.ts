@@ -24,13 +24,6 @@ export interface StepItem {
   desc: string
 }
 
-export const HERO_POINTS = [
-  'Pantau stok mendekati batas minimum secara otomatis',
-  'Buat draft PO langsung dari data stok dan pemasok',
-  'Kirim PO ke pemasok setelah manajer menyetujui',
-  'Lacak riwayat dan status setiap pesanan dalam satu tempat',
-]
-
 export const VALUE_PROPS: ValueItem[] = [
   {
     icon: 'clock',

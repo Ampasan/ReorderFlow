@@ -1,3 +1,8 @@
+-- Seed demo ReorderFlow. Aman dijalankan berulang kali: semua data operasional
+-- dikosongkan lebih dulu, lalu diisi ulang dari kondisi awal. Tabel users tidak
+-- direset karena akun dibuat dari environment variable saat server start.
+BEGIN;
+
 TRUNCATE TABLE po_penerimaan_detail, po_penerimaan, po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
 
 INSERT INTO pemasok (id, nama, email) VALUES
@@ -50,3 +55,5 @@ INSERT INTO po_detail (po_id, sku, jumlah_order) VALUES
     (1003, 'SKU-MYK-04', 12);
 
 SELECT setval(pg_get_serial_sequence('po_log', 'id'), (SELECT MAX(id) FROM po_log));
+
+COMMIT;

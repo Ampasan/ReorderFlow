@@ -51,25 +51,6 @@ func (s *SupabaseStorage) Upload(path string, data []byte, contentType string) (
 	return s.PublicURL(path), nil
 }
 
-func (s *SupabaseStorage) Download(objectURL string) ([]byte, error) {
-	req, err := http.NewRequest(http.MethodGet, objectURL, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+s.serviceKey)
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("storage download failed with status %d", resp.StatusCode)
-	}
-	return io.ReadAll(resp.Body)
-}
-
 func (s *SupabaseStorage) PublicURL(path string) string {
 	return fmt.Sprintf("%s/storage/v1/object/public/%s/%s", s.baseURL, s.bucket, url.PathEscape(path))
 }

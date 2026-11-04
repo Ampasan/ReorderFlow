@@ -71,14 +71,6 @@ type DashboardSummary struct {
 	ReceivedPOCount          int64 `json:"received_po_count"`
 }
 
-type ApprovalResult struct {
-	Token       string `json:"token"`
-	NomorPO     string `json:"nomor_po"`
-	Status      string `json:"status"`
-	Message     string `json:"message"`
-	AlreadyUsed bool   `json:"already_used"`
-}
-
 type StockOpnameRequest struct {
 	StokSaatIni *int   `json:"stok_saat_ini" binding:"required,gte=0"`
 	Alasan      string `json:"alasan" binding:"required,oneof=DAMAGED MISCOUNT RETURN"`

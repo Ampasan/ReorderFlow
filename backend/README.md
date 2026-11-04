@@ -41,11 +41,10 @@ Untuk Gmail, gunakan App Password, bukan password akun biasa.
 
 Jalankan file berikut secara berurutan di Supabase SQL Editor:
 
-1. `migrations/001_schema.sql` membuat tabel, index, constraint, dan tabel penerimaan.
-2. `migrations/003_ai_stock_recommendations.sql` menambah kolom rekomendasi Gemini.
-3. `migrations/002_seed.sql` opsional untuk memuat ulang data demo.
+1. `migrations/001_schema.sql` membuat tabel, index, constraint, kolom rekomendasi Gemini, dan tabel penerimaan.
+2. `migrations/002_seed.sql` opsional untuk memuat ulang data demo.
 
-`002_seed.sql` menghapus data stok, pemasok, PO, penerimaan, dan opname sebelum memasukkan seed. Jangan jalankan pada database yang berisi data yang perlu dipertahankan. Akun `users` dibuat dari environment variable saat server mulai. Dalam mode `production`, backend tidak menjalankan `AutoMigrate`; jalankan migrasi SQL sebelum deploy.
+`002_seed.sql` dapat dijalankan berulang kali. Setiap kali dijalankan, seluruh data demo lama dikosongkan lalu diisi ulang dari kondisi awal dalam satu transaksi. Jangan jalankan pada database yang berisi data yang perlu dipertahankan. Akun `users` tidak direset karena dibuat dari environment variable saat server mulai. Dalam mode `production`, backend tidak menjalankan `AutoMigrate`; jalankan migrasi SQL sebelum deploy.
 
 ## Endpoint
 

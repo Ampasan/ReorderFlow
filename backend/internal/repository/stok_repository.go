@@ -49,14 +49,6 @@ func (r *StokRepository) GetLowStockItems() ([]model.Stok, error) {
 	return list, nil
 }
 
-func (r *StokRepository) GetBySKU(sku string) (*model.Stok, error) {
-	var s model.Stok
-	if err := r.db.First(&s, "sku = ?", sku).Error; err != nil {
-		return nil, err
-	}
-	return &s, nil
-}
-
 func (r *StokRepository) GetBySKUs(skus []string) (map[string]model.Stok, error) {
 	stockBySKU := make(map[string]model.Stok, len(skus))
 	if len(skus) == 0 {
@@ -71,10 +63,6 @@ func (r *StokRepository) GetBySKUs(skus []string) (map[string]model.Stok, error)
 		stockBySKU[row.SKU] = row
 	}
 	return stockBySKU, nil
-}
-
-func (r *StokRepository) UpdateStock(sku string, stock int) error {
-	return r.db.Model(&model.Stok{}).Where("sku = ?", sku).Update("stok_saat_ini", stock).Error
 }
 
 func (r *StokRepository) RecordOpname(sku string, newStock int, alasan string, actorID int64) (*model.Stok, error) {

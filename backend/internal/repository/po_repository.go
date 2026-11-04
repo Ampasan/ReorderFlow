@@ -52,14 +52,6 @@ func (r *PORepository) GetByToken(token string) (*model.POLog, error) {
 	return &po, nil
 }
 
-func (r *PORepository) GetByNomorPO(nomor string) (*model.POLog, error) {
-	var po model.POLog
-	if err := r.db.Where("nomor_po = ?", nomor).First(&po).Error; err != nil {
-		return nil, err
-	}
-	return &po, nil
-}
-
 func (r *PORepository) List(filter string) ([]model.POLog, error) {
 	q := r.db.Joins("Pemasok").Preload("Details")
 
