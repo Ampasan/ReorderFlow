@@ -44,7 +44,10 @@ const EMPTY_COPY: Record<StockFilter, { title: string; description: string }> = 
 }
 
 export function StockList() {
-  useDocumentTitle('Data Stok | ReorderFlow')
+  useDocumentTitle('Data Stok | ReorderFlow', {
+    description: 'Daftar inventori dan status reorder point untuk setiap SKU.',
+    noIndex: true,
+  })
 
   const [params] = useSearchParams()
   const rawStatus = params.get('status')

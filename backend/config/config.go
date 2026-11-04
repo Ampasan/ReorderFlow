@@ -38,8 +38,15 @@ type Config struct {
 
 	RedisAddr     string
 	RedisPassword string
+	RedisTLS      bool
 
-	TrustedProxies []string
+	DBMaxOpenConns int
+	DBMaxIdleConns int
+
+	EnableCron bool
+
+	TrustedProxies     []string
+	CORSAllowedOrigins []string
 
 	RateLimitLogin    int
 	RateLimitApproval int
@@ -58,10 +65,16 @@ type Config struct {
 func Load() *Config {
 	_ = godotenv.Load()
 
+	env := strings.ToLower(strings.TrimSpace(getEnv("ENV", "development")))
+	corsAllowedOrigins := normalizeOrigins(getEnv("CORS_ALLOWED_ORIGINS", ""))
+	if len(corsAllowedOrigins) == 0 && env != "production" {
+		corsAllowedOrigins = []string{"*"}
+	}
+
 	return &Config{
 		Port:   getEnv("PORT", "8080"),
-		Env:    getEnv("ENV", "development"),
-		AppURL: getEnv("APP_URL", "http://localhost:8080"),
+		Env:    env,
+		AppURL: strings.TrimRight(getEnv("APP_URL", "http://localhost:8080"), "/"),
 
 		FrontendDist: getEnv("FRONTEND_DIST", ""),
 
@@ -87,8 +100,15 @@ func Load() *Config {
 
 		RedisAddr:     getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword: normalizeOptional(getEnv("REDIS_PASSWORD", "")),
+		RedisTLS:      getEnvBool("REDIS_TLS", false),
 
-		TrustedProxies: splitList(getEnv("TRUSTED_PROXIES", "")),
+		DBMaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
+		DBMaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 15),
+
+		EnableCron: getEnvBool("ENABLE_CRON", true),
+
+		TrustedProxies:     splitList(getEnv("TRUSTED_PROXIES", "")),
+		CORSAllowedOrigins: corsAllowedOrigins,
 
 		RateLimitLogin:    getEnvInt("RATE_LIMIT_LOGIN", 10),
 		RateLimitApproval: getEnvInt("RATE_LIMIT_APPROVAL", 30),
@@ -121,11 +141,31 @@ func getEnvInt(key string, fallback int) int {
 	return fallback
 }
 
+func getEnvBool(key string, fallback bool) bool {
+	if v := strings.TrimSpace(strings.ToLower(os.Getenv(key))); v != "" {
+		switch v {
+		case "1", "true", "yes", "on":
+			return true
+		case "0", "false", "no", "off":
+			return false
+		}
+	}
+	return fallback
+}
+
 func normalizeOptional(v string) string {
 	if v == "null" || v == "none" {
 		return ""
 	}
 	return v
+}
+
+func normalizeOrigins(v string) []string {
+	parts := splitList(v)
+	for i, part := range parts {
+		parts[i] = strings.ToLower(strings.TrimRight(part, "/"))
+	}
+	return parts
 }
 
 func splitList(v string) []string {

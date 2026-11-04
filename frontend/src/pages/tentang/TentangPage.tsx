@@ -103,7 +103,7 @@ const ABOUT_JSON_LD = graph(
 )
 
 export function TentangPage() {
-  useDocumentTitle('Tentang ReorderFlow | ReorderFlow')
+  useDocumentTitle('Tentang ReorderFlow | ReorderFlow', { description: ABOUT_DESCRIPTION })
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

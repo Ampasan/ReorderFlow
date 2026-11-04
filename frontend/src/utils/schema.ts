@@ -12,10 +12,10 @@ interface ArticleEntry {
   imageUrl: string
 }
 
-const configuredSiteUrl = import.meta.env.VITE_SITE_URL
+const configuredSiteUrl = import.meta.env.VITE_SITE_URL?.trim()
 const runtimeOrigin = typeof window === 'undefined' ? '' : window.location.origin
 
-export const SITE_URL = (configuredSiteUrl ?? runtimeOrigin).replace(/\/+$/, '')
+export const SITE_URL = (configuredSiteUrl || runtimeOrigin).replace(/\/+$/, '')
 export const SITE_NAME = 'ReorderFlow'
 export const SITE_LANGUAGE = 'id-ID'
 export const SITE_DESCRIPTION =

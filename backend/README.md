@@ -29,13 +29,17 @@ Atur nilai di `backend/.env`:
 | `MANAGER_EMAIL`, `MANAGER_PASSWORD` | Akun manager yang dibuat saat startup. |
 | `SUPABASE_DB_*` atau `DATABASE_URL` | Koneksi PostgreSQL. |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_BUCKET_NAME` | Unggah PDF ke bucket Supabase Storage. |
-| `REDIS_ADDR`, `REDIS_PASSWORD` | Cache, rate limit, dan lock terdistribusi. Redis opsional; fallback hanya berlaku dalam satu proses. |
+| `REDIS_ADDR`, `REDIS_PASSWORD`, `REDIS_TLS` | Cache, rate limit, dan lock terdistribusi. Set `REDIS_TLS=true` untuk Upstash. Redis opsional; fallback hanya berlaku dalam satu proses. |
+| `DB_MAX_OPEN_CONNS`, `DB_MAX_IDLE_CONNS` | Ukuran connection pool PostgreSQL. Turunkan nilainya saat memakai beberapa replica. |
+| `ENABLE_CRON` | `true` menjalankan scan harian. Set `false` di replica web jika memakai service cron terpisah. |
 | `RATE_LIMIT_LOGIN`, `RATE_LIMIT_APPROVAL`, `RATE_LIMIT_API` | Batas request per IP. Nilai `0` menonaktifkan batas terkait. |
-| `TRUSTED_PROXIES` | IP/CIDR proxy tepercaya untuk membaca alamat client. |
+| `TRUSTED_PROXIES` | IP/CIDR proxy tepercaya untuk membaca alamat client. Tanpa konfigurasi, header proxy tidak dipercaya. |
+| `CORS_ALLOWED_ORIGINS` | Daftar origin frontend dipisahkan koma. Wajib diisi untuk akses lintas origin di production. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD`, `MANAGER_EMAIL` | Pengiriman email persetujuan dan PO. |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Opsional, untuk penjelasan dan prioritas stok. |
 
 Untuk Gmail, gunakan App Password, bukan password akun biasa.
+
 
 ## Migrasi Database
 
@@ -48,13 +52,15 @@ Jalankan file berikut secara berurutan di Supabase SQL Editor:
 
 ## Endpoint
 
-Semua endpoint selain `/health`, `POST /api/auth/login`, dan `/api/po/approval` memerlukan `Authorization: Bearer <JWT>`.
+Semua endpoint selain `/health`, `/ready`, `POST /api/auth/login`, dan `/api/po/approval` memerlukan `Authorization: Bearer <JWT>`. Respons API tidak disimpan oleh cache HTTP. Gunakan `/health` sebagai liveness probe dan `/ready` untuk readiness probe yang memeriksa koneksi database.
 
 | Method | Path | Akses |
 | :--- | :--- | :--- |
 | GET | `/health` | Publik |
+| GET | `/ready` | Publik, memeriksa koneksi database |
 | POST | `/api/auth/login` | Publik |
-| GET | `/api/po/approval?token=...&action=approve\|reject` | Publik, token terbatas waktu |
+| GET | `/api/po/approval?token=...&action=approve\|reject` | Publik, hanya menampilkan konfirmasi |
+| POST | `/api/po/approval` | Publik, memproses keputusan dari formulir konfirmasi |
 | GET | `/api/auth/me` | Semua role |
 | GET | `/api/stok?status=all\|low\|manual` | Semua role |
 | POST | `/api/stok/ai-analysis` | Semua role, maksimal 5 request per menit per IP |

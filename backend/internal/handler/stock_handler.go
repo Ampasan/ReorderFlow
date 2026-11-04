@@ -72,7 +72,7 @@ func (h *StockHandler) List(c *gin.Context) {
 
 func (h *StockHandler) AnalyzeLowStock(c *gin.Context) {
 	if h.stockAI == nil {
-		Error(c, http.StatusServiceUnavailable, "Analisis Gemini belum dikonfigurasi", "GEMINI_API_KEY belum diatur pada backend")
+		Error(c, http.StatusServiceUnavailable, "Analisis Gemini belum dikonfigurasi. Atur GEMINI_API_KEY pada backend.", nil)
 		return
 	}
 

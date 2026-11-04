@@ -30,9 +30,10 @@ func managerApprovalBody(data POEmailData, approveURL, rejectURL string) string 
 <tbody>%s</tbody>
 </table>
 <p style="margin:0 0 16px;">Total qty: <strong>%d</strong></p>
+<p style="margin:0 0 16px;">Tautan akan membuka halaman konfirmasi. Keputusan diproses setelah Anda menekan tombol konfirmasi.</p>
 <p style="margin:0 0 24px;">
-<a href="%s" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;margin-right:12px;">Approve</a>
-<a href="%s" style="display:inline-block;background:#BE123C;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;">Reject</a>
+<a href="%s" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;margin-right:12px;">Tinjau dan setujui</a>
+<a href="%s" style="display:inline-block;background:#BE123C;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;">Tinjau dan tolak</a>
 </p>
 <p style="margin:0;font-size:12px;color:#6B7280;">Tautan berlaku sekali dan kedaluwarsa dalam 48 jam.</p>
 </div>

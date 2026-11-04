@@ -10,7 +10,10 @@ import { listStock } from '../../services/stockService'
 import { DraftForm } from './DraftForm'
 
 export function PODraftEditor() {
-  useDocumentTitle('Periksa Draf PO | ReorderFlow')
+  useDocumentTitle('Periksa Draf PO | ReorderFlow', {
+    description: 'Periksa dan kelola draf purchase order.',
+    noIndex: true,
+  })
 
   const { id } = useParams()
   const { user } = useAuth()

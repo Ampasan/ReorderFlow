@@ -2,7 +2,9 @@ import type { POFilter, POStatus } from '../types/po'
 import type { OpnameReason, StockFilter } from '../types/stok'
 import type { UserRole } from '../types/auth'
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const devApiFallback = import.meta.env.DEV ? 'http://localhost:8080' : ''
+
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? devApiFallback
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Staf Inventori',

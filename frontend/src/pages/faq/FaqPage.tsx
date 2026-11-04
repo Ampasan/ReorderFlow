@@ -28,7 +28,7 @@ const FAQ_JSON_LD = graph(
 )
 
 export function FaqPage() {
-  useDocumentTitle('Pertanyaan yang Sering Diajukan | ReorderFlow')
+  useDocumentTitle('Pertanyaan yang Sering Diajukan | ReorderFlow', { description: FAQ_DESCRIPTION })
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

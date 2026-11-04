@@ -4,6 +4,26 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import './index.css'
 import { App } from './App'
+import { API_BASE_URL } from './utils/constants'
+
+function warmApiConnection() {
+  try {
+    const origin = new URL(API_BASE_URL, window.location.origin).origin
+    if (origin === window.location.origin) return
+
+    for (const rel of ['preconnect', 'dns-prefetch']) {
+      const link = document.createElement('link')
+      link.rel = rel
+      link.href = origin
+      if (rel === 'preconnect') link.crossOrigin = ''
+      document.head.appendChild(link)
+    }
+  } catch {
+    return
+  }
+}
+
+warmApiConnection()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

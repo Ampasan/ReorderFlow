@@ -1,6 +1,3 @@
--- Seed demo ReorderFlow. Aman dijalankan berulang kali: semua data operasional
--- dikosongkan lebih dulu, lalu diisi ulang dari kondisi awal. Tabel users tidak
--- direset karena akun dibuat dari environment variable saat server start.
 BEGIN;
 
 TRUNCATE TABLE po_penerimaan_detail, po_penerimaan, po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;

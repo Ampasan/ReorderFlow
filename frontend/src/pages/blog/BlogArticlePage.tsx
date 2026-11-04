@@ -19,7 +19,17 @@ export function BlogArticlePage() {
   const { slug } = useParams<{ slug: string }>()
   const article = ARTICLES.find((item) => item.slug === slug)
 
-  useDocumentTitle(article ? `${article.title} | ReorderFlow` : 'Artikel tidak ditemukan | ReorderFlow')
+  useDocumentTitle(
+    article ? `${article.title} | ReorderFlow` : 'Artikel tidak ditemukan | ReorderFlow',
+    {
+      description:
+        article?.metaDescription ?? 'Artikel yang Anda cari tidak tersedia di ReorderFlow.',
+      noIndex: !article,
+      image: article?.imageUrl,
+      imageAlt: article?.imageAlt,
+      type: article ? 'article' : 'website',
+    },
+  )
 
   if (!article) {
     return (
@@ -83,6 +93,11 @@ export function BlogArticlePage() {
           <img
             src={article.imageUrl}
             alt={article.imageAlt}
+            width={1200}
+            height={675}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
             className="mt-8 aspect-[16/9] w-full rounded-2xl object-cover"
           />
 

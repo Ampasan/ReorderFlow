@@ -12,7 +12,7 @@ interface StockTableProps {
 export function StockTable({ items, onSelect, onOpname, compact = false }: StockTableProps) {
   return (
     <div className="-mx-4 contain-layout overflow-x-auto sm:mx-0">
-      <table className="w-full min-w-[640px] border-collapse text-left text-sm">
+      <table aria-label="Daftar stok" className="w-full min-w-[640px] border-collapse text-left text-sm">
         <thead>
           <tr className="border-b border-brand-dark/8">
             <th scope="col" className="px-4 py-3 text-xs font-semibold text-brand-muted">

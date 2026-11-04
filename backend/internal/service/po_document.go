@@ -18,8 +18,6 @@ func detailSKUs(details []model.PODetail) []string {
 	return skus
 }
 
-// loadStockNames mengambil nama barang sekali untuk seluruh detail PO.
-// Kegagalan lookup tidak fatal: nama jatuh kembali ke SKU.
 func loadStockNames(
 	stokRepo *repository.StokRepository,
 	skus []string,

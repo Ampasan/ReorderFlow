@@ -7,5 +7,6 @@
 - Prefers static assets (e.g., logos) to come from remote links (Cloudinary) rather than local bundled/embedded files; when a file is deleted in the working tree, treat it as intentional and remove the now-dead embed/bundling code instead of restoring it from git. Confidence: 0.55
 - Cross-page section links (e.g., footer "Jelajahi" pointing to /#section) should land directly on the target section via hash scroll, not just reset to page top; plain page navigation still starts at top. Confidence: 0.6
 - Wants the newest and fastest model/version in use rather than a pinned older one ("yang paling cepat dan modern"). Confidence: 0.5
-- Wants commit messages written in English (Conventional Commits style) and framed around the feature being added — `feat(...)` when the change introduces functionality, not just the fix wording. Confidence: 0.6
-- Wants bug fixes taken to the actual root cause and verified working end-to-end, not a plausible patch: "buat perbaikan pokoknya sampai berhasil". Confidence: 0.55
+- Wants commit messages written in English (Conventional Commits style) and framed around the feature being added — `feat(...)` when the change introduces functionality, not just the fix wording. Confidence: 0.65
+- For configuration/setup, prefers a ready-to-copy template they can duplicate as-is over prose instructions; empty values should be filled in from the existing local config (e.g., copy real values out of `backend/.env`) rather than left as placeholders or questions. Confidence: 0.6
+- Expects work carried all the way to a working, production-ready state — root cause not a plausible patch for fixes, and full setup rather than a partial attempt ("sampai benar-benar jadi dan siap untuk deployment/production"). Confidence: 0.65

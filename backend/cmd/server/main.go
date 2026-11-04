@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -32,6 +34,7 @@ const (
 
 func main() {
 	cfg := config.Load()
+	validateProductionConfig(cfg)
 
 	if cfg.Env != "development" {
 		gin.SetMode(gin.ReleaseMode)
@@ -41,10 +44,6 @@ func main() {
 	if err != nil {
 		utils.Logger.Error("connect database failed", "error", err)
 		panic(err)
-	}
-
-	if cfg.Env == "production" && cfg.JWTSecret == "dev-secret-change-me" {
-		utils.Logger.Warn("JWT_SECRET masih memakai nilai default, ganti sebelum produksi")
 	}
 
 	if cfg.Env != "production" {
@@ -120,23 +119,28 @@ func main() {
 
 	lowStockJob := job.NewLowStockJob(detectionService)
 	scheduler := job.NewScheduler(lowStockJob.Run)
-	scheduler.Start()
+	if cfg.EnableCron {
+		scheduler.Start()
+	} else {
+		utils.Logger.Info("cron scheduler disabled by ENABLE_CRON=false")
+	}
 
 	router := gin.New()
-	if len(cfg.TrustedProxies) > 0 {
-		if err := router.SetTrustedProxies(cfg.TrustedProxies); err != nil {
-			utils.Logger.Warn("trusted proxies configuration invalid", "error", err)
-		}
+	if err := router.SetTrustedProxies(cfg.TrustedProxies); err != nil {
+		utils.Logger.Error("trusted proxies configuration invalid", "error", err)
+		panic(err)
 	}
-	router.Use(gin.Recovery(), middleware.Logger(), middleware.CORS(), middleware.Gzip())
+	router.Use(gin.Recovery(), middleware.Logger(), middleware.SecurityHeaders(cfg.Env == "production"), middleware.CORS(cfg.CORSAllowedOrigins), middleware.Gzip())
 
-	router.GET("/health", healthHandler)
+	router.GET("/health", middleware.NoStore(), healthHandler)
+	router.GET("/ready", middleware.NoStore(), readinessHandler(db))
 
 	api := router.Group("/api")
-	api.Use(middleware.RateLimit(rateLimiter, "api", cfg.RateLimitAPI, apiRateLimitWindow))
+	api.Use(middleware.NoStore(), middleware.RateLimit(rateLimiter, "api", cfg.RateLimitAPI, apiRateLimitWindow))
 	{
 		api.POST("/auth/login", middleware.LoginRateLimit(rateLimiter, cfg.RateLimitLogin, loginRateLimitWindow), authHandler.Login)
 		api.GET("/po/approval", middleware.RateLimit(rateLimiter, "approval", cfg.RateLimitApproval, approvalRateLimitWindow), approvalHandler.Approval)
+		api.POST("/po/approval", middleware.RateLimit(rateLimiter, "approval", cfg.RateLimitApproval, approvalRateLimitWindow), approvalHandler.Process)
 
 		protected := api.Group("")
 		protected.Use(middleware.Auth(cfg.JWTSecret))
@@ -158,6 +162,7 @@ func main() {
 		}
 	}
 
+	router.NoRoute(notFoundHandler)
 	handler.RegisterFrontend(router, cfg.FrontendDist)
 
 	srv := &http.Server{
@@ -203,6 +208,48 @@ func main() {
 	utils.Logger.Info("server stopped")
 }
 
+func validateProductionConfig(cfg *config.Config) {
+	if cfg.Env != "production" {
+		return
+	}
+
+	if len(cfg.JWTSecret) < 32 || cfg.JWTSecret == "dev-secret-change-me" {
+		panic("JWT_SECRET production minimal 32 karakter dan tidak boleh memakai nilai default")
+	}
+	if cfg.AdminEmail == "" || cfg.AdminPassword == "" {
+		panic("ADMIN_EMAIL dan ADMIN_PASSWORD wajib diisi di production")
+	}
+	if cfg.ManagerEmail == "" || cfg.ManagerPassword == "" {
+		panic("MANAGER_EMAIL dan MANAGER_PASSWORD wajib diisi di production")
+	}
+	if cfg.FrontendDist == "" && len(cfg.CORSAllowedOrigins) == 0 {
+		panic("CORS_ALLOWED_ORIGINS wajib diisi saat frontend dan backend berjalan di origin berbeda")
+	}
+	for _, origin := range cfg.CORSAllowedOrigins {
+		if origin == "*" {
+			panic("CORS_ALLOWED_ORIGINS tidak boleh memakai * di production")
+		}
+	}
+	if !strings.HasPrefix(cfg.AppURL, "https://") {
+		panic("APP_URL wajib memakai https di production")
+	}
+	if len(cfg.TrustedProxies) == 0 {
+		utils.Logger.Warn("TRUSTED_PROXIES kosong; rate limit akan memakai alamat proxy, bukan IP client")
+	}
+	if cfg.SMTPEmail == "" || cfg.SMTPPassword == "" {
+		utils.Logger.Warn("SMTP belum lengkap; email persetujuan dan PO tidak akan terkirim")
+	}
+}
+
+func notFoundHandler(c *gin.Context) {
+	requestPath := c.Request.URL.Path
+	if requestPath == "/api" || strings.HasPrefix(requestPath, "/api/") {
+		handler.Error(c, http.StatusNotFound, "Endpoint tidak ditemukan", nil)
+		return
+	}
+	handler.Error(c, http.StatusNotFound, "Halaman tidak ditemukan", nil)
+}
+
 func warmDatabase(db *gorm.DB, connections int) {
 	var wg sync.WaitGroup
 	for i := 0; i < connections; i++ {
@@ -218,4 +265,23 @@ func warmDatabase(db *gorm.DB, connections int) {
 
 func healthHandler(c *gin.Context) {
 	handler.Success(c, http.StatusOK, "ok", gin.H{"status": "healthy"})
+}
+
+func readinessHandler(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sqlDB, err := db.DB()
+		if err != nil {
+			handler.Error(c, http.StatusServiceUnavailable, "Database belum siap", err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
+		defer cancel()
+		if err := sqlDB.PingContext(ctx); err != nil {
+			handler.Error(c, http.StatusServiceUnavailable, "Database belum siap", err)
+			return
+		}
+
+		handler.Success(c, http.StatusOK, "ready", gin.H{"status": "ready"})
+	}
 }

@@ -11,7 +11,6 @@ export function usePOLog(status: POFilter) {
   const resource = useResource<POLog[]>(`po:${status}`, fetcher)
   const { refetch } = resource
 
-  // Poll setiap 15 detik agar status PO terupdate secara real-time
   useEffect(() => {
     const id = setInterval(() => {
       refetch()

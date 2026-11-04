@@ -26,7 +26,7 @@ const LANDING_JSON_LD = graph(
 )
 
 export function LandingPage() {
-  useDocumentTitle('ReorderFlow - Dashboard Inventori')
+  useDocumentTitle('ReorderFlow - Dashboard Inventori', { description: SITE_DESCRIPTION })
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

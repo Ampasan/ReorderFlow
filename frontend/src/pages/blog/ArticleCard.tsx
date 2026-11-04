@@ -12,7 +12,10 @@ export function ArticleCard({ article }: { article: Article }) {
         <img
           src={article.imageUrl}
           alt={article.imageAlt}
+          width={1200}
+          height={675}
           loading="lazy"
+          decoding="async"
           className="aspect-[16/9] w-full object-cover"
         />
       </Link>

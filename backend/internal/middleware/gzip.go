@@ -12,7 +12,6 @@ import (
 
 var gzipPool = sync.Pool{
 	New: func() interface{} {
-		// BestSpeed keeps CPU cost low; API payloads here are small JSON lists.
 		writer, err := gzip.NewWriterLevel(io.Discard, gzip.BestSpeed)
 		if err != nil {
 			return gzip.NewWriter(io.Discard)
@@ -26,20 +25,29 @@ type gzipWriter struct {
 	gz *gzip.Writer
 }
 
-func alreadyCompressed(requestPath string) bool {
+func skipCompression(requestPath string) bool {
 	switch strings.ToLower(path.Ext(requestPath)) {
-	case ".woff2", ".woff", ".ttf", ".otf", ".webp", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".gz", ".zip", ".pdf", ".mp4":
+	case ".woff2", ".woff", ".ttf", ".otf", ".webp", ".png", ".jpg", ".jpeg", ".gif", ".ico",
+		".gz", ".zip", ".pdf", ".mp4", ".css", ".js", ".mjs", ".map", ".html", ".xml", ".txt",
+		".svg", ".wasm":
 		return true
 	default:
 		return false
 	}
 }
 
+func (w *gzipWriter) WriteHeader(code int) {
+	w.Header().Del("Content-Length")
+	w.ResponseWriter.WriteHeader(code)
+}
+
 func (w *gzipWriter) Write(b []byte) (int, error) {
+	w.Header().Del("Content-Length")
 	return w.gz.Write(b)
 }
 
 func (w *gzipWriter) WriteString(s string) (int, error) {
+	w.Header().Del("Content-Length")
 	return w.gz.Write([]byte(s))
 }
 
@@ -47,13 +55,13 @@ func Gzip() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !strings.Contains(c.GetHeader("Accept-Encoding"), "gzip") ||
 			c.Writer.Header().Get("Content-Encoding") != "" ||
-			alreadyCompressed(c.Request.URL.Path) {
+			skipCompression(c.Request.URL.Path) {
 			c.Next()
 			return
 		}
 
 		c.Header("Content-Encoding", "gzip")
-		c.Header("Vary", "Accept-Encoding")
+		addVary(c, "Accept-Encoding")
 
 		gz := gzipPool.Get().(*gzip.Writer)
 		gz.Reset(c.Writer)

@@ -61,12 +61,10 @@ type PODocument struct {
 	Final        bool
 }
 
-// GeneratePO menghasilkan dokumen Purchase Order resmi untuk Mitra Sembako.
 func GeneratePO(doc PODocument) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(pdfMarginLeft, 12, pdfMarginRight)
 	pdf.SetAutoPageBreak(false, 0)
-	// Tolak semua page break otomatis agar dokumen tetap 1 halaman
 	pdf.SetAcceptPageBreakFunc(func() bool { return false })
 	pdf.AddPage()
 

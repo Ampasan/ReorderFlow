@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS stok (
 );
 
 CREATE INDEX IF NOT EXISTS idx_stok_rop ON stok (stok_saat_ini, reorder_point);
+CREATE INDEX IF NOT EXISTS idx_stok_pemasok ON stok (id_pemasok);
 
 CREATE TABLE IF NOT EXISTS po_log (
     id SERIAL PRIMARY KEY,
@@ -40,6 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_po_token ON po_log(token);
 CREATE INDEX IF NOT EXISTS idx_po_supplier_status ON po_log(id_pemasok, status);
 CREATE INDEX IF NOT EXISTS idx_po_status_created ON po_log(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_po_status_submitted ON po_log(status, submitted_at);
+CREATE INDEX IF NOT EXISTS idx_po_created_at ON po_log(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS po_detail (
     id SERIAL PRIMARY KEY,

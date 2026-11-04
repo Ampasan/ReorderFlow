@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { UNAUTHORIZED_EVENT } from '../services/api'
 import { getMe, login as loginRequest } from '../services/authService'
 import type { User } from '../types/auth'
+import { invalidateResourceCache } from '../hooks/useResource'
 import { clearSession, getToken, getUser, saveSession } from '../utils/authStorage'
 import { AuthContext } from './authContext'
 import type { AuthContextValue, AuthStatus } from './authContext'
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      invalidateResourceCache()
       setState({ user: null, status: 'anonymous' })
     }
     window.addEventListener(UNAUTHORIZED_EVENT, handleUnauthorized)
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await loginRequest({ email, password })
+    invalidateResourceCache()
     saveSession(result.token, result.user)
     setState({ user: result.user, status: 'authenticated' })
     toast.success('Login berhasil')
@@ -61,6 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession()
+    invalidateResourceCache()
     setState({ user: null, status: 'anonymous' })
     toast.success('Anda telah keluar')
   }, [])

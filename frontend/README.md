@@ -12,7 +12,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-`VITE_API_BASE_URL` mengatur origin API tanpa akhiran `/api`. Jika tidak diatur, frontend memakai `http://localhost:8080`. `VITE_SITE_URL` opsional dan dipakai untuk URL absolut pada JSON-LD.
+`VITE_API_BASE_URL` mengatur origin API tanpa akhiran `/api`. Jika tidak diatur, development memakai `http://localhost:8080`. `VITE_SITE_URL` dipakai untuk canonical, Open Graph, sitemap, dan JSON-LD.
 
 Perintah lain:
 

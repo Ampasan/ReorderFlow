@@ -8,7 +8,10 @@ import { useAuth } from '../hooks/useAuth'
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function LoginPage() {
-  useDocumentTitle('Masuk | ReorderFlow')
+  useDocumentTitle('Masuk | ReorderFlow', {
+    description: 'Masuk ke ReorderFlow untuk mengelola data stok dan purchase order.',
+    noIndex: true,
+  })
 
   const { status, login } = useAuth()
   const navigate = useNavigate()

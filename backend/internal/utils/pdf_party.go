@@ -6,18 +6,15 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-// drawPDFPartyBoxes menggambar kotak pemasok dan lokasi pengiriman.
 func drawPDFPartyBoxes(pdf *gofpdf.Fpdf, doc PODocument) {
-	colW := (pdfContentWidth - 6.0) / 2.0 // 88 mm
+	colW := (pdfContentWidth - 6.0) / 2.0
 
-	// Kotak Kiri: Informasi Pemasok / Vendor
-	pdf.SetDrawColor(203, 213, 225) // Slate 300
-	pdf.SetFillColor(248, 250, 252) // Slate 50
+	pdf.SetDrawColor(203, 213, 225)
+	pdf.SetFillColor(248, 250, 252)
 	pdf.Rect(pdfMarginLeft, pdfPartyBoxY, colW, pdfPartyBoxH, "DF")
 
-	// Header Strip Kotak Kiri
 	pdf.SetXY(pdfMarginLeft, pdfPartyBoxY)
-	pdf.SetFillColor(241, 245, 249) // Slate 100
+	pdf.SetFillColor(241, 245, 249)
 	pdf.SetFont("Helvetica", "B", 8)
 	pdf.SetTextColor(71, 85, 105)
 	pdf.CellFormat(colW, 5.5, "  KEPADA YTH. (PEMASOK / VENDOR)", "B", 1, "L", true, 0, "")
@@ -45,13 +42,11 @@ func drawPDFPartyBoxes(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.SetTextColor(100, 116, 139)
 	pdf.CellFormat(colW-5, 4.5, "Kemitraan Resmi Mitra Sembako", "", 1, "L", false, 0, "")
 
-	// Kotak Kanan: Lokasi Pengiriman (Ship To)
 	col2X := pdfMarginLeft + colW + 6.0
 	pdf.SetDrawColor(203, 213, 225)
 	pdf.SetFillColor(248, 250, 252)
 	pdf.Rect(col2X, pdfPartyBoxY, colW, pdfPartyBoxH, "DF")
 
-	// Header Strip Kotak Kanan
 	pdf.SetXY(col2X, pdfPartyBoxY)
 	pdf.SetFillColor(241, 245, 249)
 	pdf.SetFont("Helvetica", "B", 8)

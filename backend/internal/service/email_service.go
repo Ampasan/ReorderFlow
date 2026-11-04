@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"reorderflow-backend/internal/utils"
@@ -37,8 +38,9 @@ func (s *EmailService) SendManagerApproval(ctx context.Context, data POEmailData
 	}
 
 	subject := fmt.Sprintf("[Action Required] Persetujuan PO #%s - %s", data.NomorPO, data.PemasokNama)
-	approveURL := fmt.Sprintf("%s/api/po/approval?token=%s&action=approve", s.appURL, data.Token)
-	rejectURL := fmt.Sprintf("%s/api/po/approval?token=%s&action=reject", s.appURL, data.Token)
+	token := url.QueryEscape(data.Token)
+	approveURL := fmt.Sprintf("%s/api/po/approval?token=%s&action=approve", s.appURL, token)
+	rejectURL := fmt.Sprintf("%s/api/po/approval?token=%s&action=reject", s.appURL, token)
 	body := managerApprovalBody(data, approveURL, rejectURL)
 
 	return Retry(ctx, 1, SMTPStorageBackoff, func() error {

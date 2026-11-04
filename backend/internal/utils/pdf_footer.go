@@ -2,7 +2,6 @@ package utils
 
 import "github.com/jung-kurt/gofpdf"
 
-// drawPDFFooter menggambar garis dan keterangan footer dokumen resmi.
 func drawPDFFooter(pdf *gofpdf.Fpdf) {
 	footerY := 282.0
 	pdf.SetLineWidth(0.2)

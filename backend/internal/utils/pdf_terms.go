@@ -2,7 +2,6 @@ package utils
 
 import "github.com/jung-kurt/gofpdf"
 
-// drawPDFTermsAndSignatures menggambar syarat ketentuan dan blok tanda tangan.
 func drawPDFTermsAndSignatures(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.Ln(4)
 	termsY := pdf.GetY()
@@ -28,15 +27,13 @@ func drawPDFTermsAndSignatures(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.SetX(pdfMarginLeft + 3)
 	pdf.CellFormat(pdfContentWidth-6, 3.5, "4. Pembayaran diproses sesuai kesepakatan tempo usaha (Net 30) setelah Berita Acara Penerimaan Barang diverifikasi.", "", 1, "L", false, 0, "")
 
-	// Posisikan blok tanda tangan secara rapi (maks sigY=232 agar tidak melewati footer di Y=270)
 	sigY := termsY + termsBoxH + 5.0
 	if sigY > 232 {
 		sigY = 232
 	}
 
-	sigColW := (pdfContentWidth - 12.0) / 3.0 // ~56.6 mm
+	sigColW := (pdfContentWidth - 12.0) / 3.0
 
-	// Kolom 1: Dibuat Oleh (Purchasing)
 	col1SigX := pdfMarginLeft
 	pdf.SetXY(col1SigX, sigY)
 	pdf.SetFont("Helvetica", "", 8)
@@ -53,7 +50,6 @@ func drawPDFTermsAndSignatures(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.SetTextColor(100, 116, 139)
 	pdf.CellFormat(sigColW, 3.5, "Tanggal: "+doc.Tanggal, "", 2, "C", false, 0, "")
 
-	// Kolom 2: Disetujui Oleh (Manajemen Operasional)
 	col2SigX := pdfMarginLeft + sigColW + 6.0
 	pdf.SetXY(col2SigX, sigY)
 	pdf.SetFont("Helvetica", "", 8)
@@ -63,11 +59,10 @@ func drawPDFTermsAndSignatures(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.SetTextColor(15, 23, 42)
 	pdf.CellFormat(sigColW, 4, "Manajemen Operasional", "", 2, "C", false, 0, "")
 
-	// Cap / Stempel status otorisasi resmi
 	if doc.Final {
 		pdf.SetXY(col2SigX+6.0, sigY+9.0)
-		pdf.SetDrawColor(22, 163, 74)   // Emerald 600
-		pdf.SetFillColor(240, 253, 244) // Emerald 50
+		pdf.SetDrawColor(22, 163, 74)
+		pdf.SetFillColor(240, 253, 244)
 		pdf.SetTextColor(21, 128, 61)
 		pdf.Rect(col2SigX+6.0, sigY+9.0, sigColW-12.0, 8.5, "DF")
 		pdf.SetXY(col2SigX+6.0, sigY+9.5)
@@ -91,7 +86,6 @@ func drawPDFTermsAndSignatures(pdf *gofpdf.Fpdf, doc PODocument) {
 	pdf.SetTextColor(100, 116, 139)
 	pdf.CellFormat(sigColW, 3.5, "Mitra Sembako", "", 2, "C", false, 0, "")
 
-	// Kolom 3: Dikonfirmasi & Diterima (Pemasok)
 	col3SigX := pdfMarginLeft + (sigColW+6.0)*2
 	pdf.SetXY(col3SigX, sigY)
 	pdf.SetFont("Helvetica", "", 8)

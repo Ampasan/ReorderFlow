@@ -26,7 +26,6 @@ export function formatNumber(value: number): string {
 export function formatDateWIB(value?: string | null): string {
   if (!value) return '-'
   const date = new Date(value)
-  // Backend mengirim zero time untuk baris yang belum pernah diperbarui.
   if (Number.isNaN(date.getTime()) || date.getUTCFullYear() < 1900) return '-'
   return `${dateFormatter.format(date)} ${timeFormatter.format(date)} WIB`
 }

@@ -21,7 +21,10 @@ const SCAN_DESCRIPTION =
   'Sistem memindai stok dan membuat draf PO untuk produk yang berada di bawah ROP, dikelompokkan per pemasok. Draf belum dikirim ke siapa pun, jadi Anda bisa memeriksa dan mengeditnya dulu di Riwayat PO sebelum mengirim ke manajer. Produk yang sudah punya PO aktif akan dilewati.'
 
 export function Dashboard() {
-  useDocumentTitle('Ringkasan Operasional | ReorderFlow')
+  useDocumentTitle('Ringkasan Operasional | ReorderFlow', {
+    description: 'Ringkasan stok, produk yang perlu reorder, dan status purchase order.',
+    noIndex: true,
+  })
 
   const { data, loading, error, refetch } = useDashboard()
   const [confirmOpen, setConfirmOpen] = useState(false)

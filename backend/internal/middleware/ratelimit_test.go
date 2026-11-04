@@ -66,3 +66,34 @@ func TestLoginRateLimitSeparatesEmailFromIP(t *testing.T) {
 		t.Fatalf("expected second request with same email to be 429, got %d", second.Code)
 	}
 }
+
+func TestRateLimitIgnoresForwardedIPWithoutTrustedProxy(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	limiter := ratelimit.New(nil)
+	router := gin.New()
+	if err := router.SetTrustedProxies(nil); err != nil {
+		t.Fatal(err)
+	}
+	router.Use(RateLimit(limiter, "test", 1, time.Minute))
+	router.GET("/", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	forwardedIPs := []string{"203.0.113.10", "203.0.113.11"}
+	for i, forwardedIP := range forwardedIPs {
+		req := httptest.NewRequest(http.MethodGet, "/", nil)
+		req.RemoteAddr = "192.0.2.1:1234"
+		req.Header.Set("X-Forwarded-For", forwardedIP)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+
+		wantStatus := http.StatusOK
+		if i == 1 {
+			wantStatus = http.StatusTooManyRequests
+		}
+		if rec.Code != wantStatus {
+			t.Fatalf("forwarded IP %s: status = %d, want %d", forwardedIP, rec.Code, wantStatus)
+		}
+	}
+}

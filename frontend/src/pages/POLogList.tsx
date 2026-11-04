@@ -63,7 +63,10 @@ const EMPTY_COPY: Record<POFilter, { title: string; description: string }> = {
 }
 
 export function POLogList() {
-  useDocumentTitle('Riwayat PO | ReorderFlow')
+  useDocumentTitle('Riwayat PO | ReorderFlow', {
+    description: 'Riwayat purchase order, persetujuan, dan penerimaan barang.',
+    noIndex: true,
+  })
 
   const [params] = useSearchParams()
   const rawStatus = params.get('status')

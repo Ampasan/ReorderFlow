@@ -28,7 +28,7 @@ const BLOG_JSON_LD = graph(
 )
 
 export function BlogPage() {
-  useDocumentTitle('Artikel & Panduan | ReorderFlow')
+  useDocumentTitle('Artikel & Panduan | ReorderFlow', { description: BLOG_DESCRIPTION })
 
   return (
     <div className="min-h-screen bg-brand-cream font-sans text-brand-dark">

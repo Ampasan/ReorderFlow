@@ -10,30 +10,31 @@ const DEFAULT_STALE_TIME = 30_000
 const memoryCache = new Map<string, CacheRecord<unknown>>()
 const inFlight = new Map<string, Promise<unknown>>()
 const listeners = new Set<(prefix?: string) => void>()
+const keyGenerations = new Map<string, number>()
+let cacheGeneration = 0
 
-/**
- * Invalidate client cache. If prefix is provided, only keys starting with
- * that prefix are deleted; otherwise all cache entries are cleared.
- */
 export function invalidateResourceCache(prefix?: string) {
   if (!prefix) {
     memoryCache.clear()
+    inFlight.clear()
+    keyGenerations.clear()
+    cacheGeneration += 1
   } else {
-    for (const key of Array.from(memoryCache.keys())) {
+    const keys = new Set([...memoryCache.keys(), ...inFlight.keys()])
+    for (const key of keys) {
       if (key === prefix || key.startsWith(`${prefix}:`)) {
         memoryCache.delete(key)
+        inFlight.delete(key)
+        keyGenerations.set(key, (keyGenerations.get(key) ?? 0) + 1)
       }
     }
   }
 
-  inFlight.clear()
   listeners.forEach((listener) => listener(prefix))
 }
 
 export interface ResourceOptions {
-  /** How long cached data is served without a network request, in milliseconds. */
   staleTime?: number
-  /** Skip fetching while false. Useful for data that is only needed on demand. */
   enabled?: boolean
 }
 
@@ -132,15 +133,25 @@ export function useResource<T>(
     forceRefetch.current = false
 
     let active = true
+    const requestGeneration = cacheGeneration
+    const requestKeyGeneration = key ? (keyGenerations.get(key) ?? 0) : 0
 
     fetchOnce(key, fetcher)
       .then((data) => {
-        if (!active) return
+        if (
+          !active ||
+          requestGeneration !== cacheGeneration ||
+          (key !== null && requestKeyGeneration !== (keyGenerations.get(key) ?? 0))
+        ) return
         if (key) memoryCache.set(key, { data, timestamp: Date.now() })
         setState({ data, loading: false, error: null })
       })
       .catch((error: unknown) => {
-        if (!active) return
+        if (
+          !active ||
+          requestGeneration !== cacheGeneration ||
+          (key !== null && requestKeyGeneration !== (keyGenerations.get(key) ?? 0))
+        ) return
         setState((current) => ({
           ...current,
           loading: false,
