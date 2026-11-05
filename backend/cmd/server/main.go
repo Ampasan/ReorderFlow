@@ -156,6 +156,7 @@ func main() {
 			protected.PUT("/po-draft/:id", middleware.RequireRole(model.RoleAdmin), draftHandler.Update)
 			protected.POST("/po-draft/:id/submit", middleware.RequireRole(model.RoleAdmin), draftHandler.Submit)
 			protected.POST("/po-draft/:id/regenerate-pdf", middleware.RequireRole(model.RoleAdmin), draftHandler.RegeneratePDF)
+			protected.POST("/po-draft/:id/resend-supplier", middleware.RequireRole(model.RoleAdmin), draftHandler.ResendSupplier)
 			protected.GET("/po-penerimaan/:id", penerimaanHandler.Get)
 			protected.POST("/po-penerimaan/:id", middleware.RequireRole(model.RoleAdmin), penerimaanHandler.Create)
 		}

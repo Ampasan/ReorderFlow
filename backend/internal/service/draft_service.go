@@ -20,6 +20,7 @@ var (
 	ErrDraftSupplierMismatch = errors.New("barang bukan milik pemasok PO ini")
 	ErrSupplierEmailInvalid  = errors.New("email pemasok tidak valid")
 	ErrDraftPDFFailed        = errors.New("dokumen PDF draf gagal disiapkan")
+	ErrPONotResendable       = errors.New("PO hanya bisa dikirim ulang dari status SENT atau REQUIRES_MANUAL_REVIEW")
 )
 
 type DraftItem struct {
@@ -264,4 +265,71 @@ func (s *DraftService) buildDetails(supplierID int64, items []DraftItem) ([]mode
 	}
 
 	return details, nil
+}
+
+// ResendSupplier re-queues the supplier email for a PO that is already SENT
+// or stuck in MANUAL_REVIEW after a failed email delivery. The approval
+// decision is not re-evaluated; the PO is reset to SENT and the email task
+// is enqueued again.
+func (s *DraftService) ResendSupplier(ctx context.Context, id int64) (*model.POLog, error) {
+	po, err := s.poRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if po.Status != model.POStatusSent && po.Status != model.POStatusManualReview {
+		return nil, ErrPONotResendable
+	}
+	if po.Pemasok == nil || !isValidEmail(po.Pemasok.Email) {
+		return nil, ErrSupplierEmailInvalid
+	}
+
+	// Ensure the status is SENT before re-sending.
+	if po.Status == model.POStatusManualReview {
+		if err := s.poRepo.UpdateStatus(po.ID, model.POStatusSent); err != nil {
+			return nil, err
+		}
+	}
+
+	emailData := POEmailData{
+		NomorPO:      po.NomorPO,
+		PemasokNama:  po.Pemasok.Nama,
+		PemasokEmail: po.Pemasok.Email,
+		TotalQty:     poTotalQty(po.Details),
+	}
+
+	s.emailQueue.Enqueue(EmailTask{
+		Name: "resend supplier PO " + po.NomorPO,
+		Send: func(ctx context.Context) error {
+			defer s.cache.Invalidate()
+			stockBySKU := loadStockNames(s.stokRepo, detailSKUs(po.Details), po.NomorPO)
+			items, totalQty := pdfItemsFromDetails(po.Details, stockBySKU)
+			pdfBytes, err := utils.GeneratePO(newPODocument(
+				po,
+				items,
+				totalQty,
+				time.Now().Format("02/01/2006"),
+				true,
+			))
+			if err != nil {
+				return fmt.Errorf("%w: %v", ErrDraftPDFFailed, err)
+			}
+			filename := fmt.Sprintf("PO_%s_resend_%d.pdf", po.NomorPO, time.Now().Unix())
+			if pdfURL, uploadErr := uploadPDF(ctx, s.storage, filename, pdfBytes); uploadErr != nil {
+				utils.Logger.Warn("upload resend PDF failed", "nomor_po", po.NomorPO, "error", uploadErr)
+			} else if updateErr := s.poRepo.UpdatePDFURL(po.ID, pdfURL); updateErr != nil {
+				utils.Logger.Warn("update resend PDF URL failed", "nomor_po", po.NomorPO, "error", updateErr)
+			}
+			if sendErr := s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes); sendErr != nil {
+				return fmt.Errorf("send email: %w", sendErr)
+			}
+			return nil
+		},
+		OnFailure: func(err error) {
+			utils.Logger.Error("resend supplier PO failed", "nomor_po", po.NomorPO, "error", err)
+			_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			s.cache.Invalidate()
+		},
+	})
+
+	return s.poRepo.GetByID(po.ID)
 }

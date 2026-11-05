@@ -60,6 +60,8 @@ func NewApprovalService(
 	}
 }
 
+var ErrPDFGenerationFailed = errors.New("generate PDF failed")
+
 func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action string) (*ApprovalOutcome, error) {
 	if action != "approve" && action != "reject" {
 		return nil, ErrInvalidAction
@@ -153,19 +155,24 @@ func (s *ApprovalService) ProcessApproval(ctx context.Context, token, action str
 				true,
 			))
 			if err != nil {
-				return err
+				return fmt.Errorf("%w: %v", ErrPDFGenerationFailed, err)
 			}
 			filename := fmt.Sprintf("PO_%s_final_%d.pdf", po.NomorPO, time.Now().Unix())
 			if pdfURL, uploadErr := uploadPDF(ctx, s.storage, filename, pdfBytes); uploadErr != nil {
 				utils.Logger.Warn("upload supplier PDF failed", "nomor_po", po.NomorPO, "error", uploadErr)
-			} else if err := s.poRepo.UpdatePDFURL(po.ID, pdfURL); err != nil {
-				utils.Logger.Warn("update supplier PDF URL failed", "nomor_po", po.NomorPO, "error", err)
+			} else if updateErr := s.poRepo.UpdatePDFURL(po.ID, pdfURL); updateErr != nil {
+				utils.Logger.Warn("update supplier PDF URL failed", "nomor_po", po.NomorPO, "error", updateErr)
 			}
-			return s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes)
+			if sendErr := s.email.SendSupplierPO(ctx, emailData, po.NomorPO+".pdf", pdfBytes); sendErr != nil {
+				return fmt.Errorf("send email: %w", sendErr)
+			}
+			return nil
 		},
 		OnFailure: func(err error) {
 			utils.Logger.Error("send supplier PO failed", "nomor_po", po.NomorPO, "error", err)
-			_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			if errors.Is(err, ErrPDFGenerationFailed) {
+				_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			}
 			s.cache.Invalidate()
 		},
 	})

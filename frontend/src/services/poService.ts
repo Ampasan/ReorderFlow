@@ -27,6 +27,10 @@ export function regeneratePDF(id: number): Promise<POLog> {
   return post<POLog>(`/api/po-draft/${id}/regenerate-pdf`)
 }
 
+export function resendSupplier(id: number): Promise<POLog> {
+  return post<POLog>(`/api/po-draft/${id}/resend-supplier`)
+}
+
 export function getPenerimaan(id: number): Promise<PenerimaanView> {
   return get<PenerimaanView>(`/api/po-penerimaan/${id}`)
 }

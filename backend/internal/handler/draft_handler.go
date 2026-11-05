@@ -74,6 +74,22 @@ func (h *DraftHandler) Submit(c *gin.Context) {
 	Success(c, http.StatusOK, "Draf PO diterima, email ke manajer sedang dikirim", po)
 }
 
+func (h *DraftHandler) ResendSupplier(c *gin.Context) {
+	id, ok := parseDraftID(c)
+	if !ok {
+		return
+	}
+
+	po, err := h.drafts.ResendSupplier(c.Request.Context(), id)
+	if err != nil {
+		h.respondError(c, err)
+		return
+	}
+
+	h.cache.Invalidate()
+	Success(c, http.StatusOK, "Email ke pemasok sedang dikirim ulang", po)
+}
+
 func (h *DraftHandler) RegeneratePDF(c *gin.Context) {
 	id, ok := parseDraftID(c)
 	if !ok {
@@ -104,6 +120,8 @@ func (h *DraftHandler) respondError(c *gin.Context, err error) {
 		Error(c, http.StatusNotFound, "Draf PO tidak ditemukan", err.Error())
 	case errors.Is(err, service.ErrPONotDraft):
 		Error(c, http.StatusConflict, "PO ini tidak bisa diubah pada status sekarang", err.Error())
+	case errors.Is(err, service.ErrPONotResendable):
+		Error(c, http.StatusConflict, "PO hanya bisa dikirim ulang jika statusnya SENT atau REQUIRES_MANUAL_REVIEW", err.Error())
 	case errors.Is(err, service.ErrDraftEmpty):
 		Error(c, http.StatusBadRequest, "Draf PO harus berisi minimal satu barang", err.Error())
 	case errors.Is(err, service.ErrDraftItemInvalid):

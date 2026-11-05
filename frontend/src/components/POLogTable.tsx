@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { regeneratePDF } from '../services/poService'
+import { regeneratePDF, resendSupplier } from '../services/poService'
 import type { POLog } from '../types/po'
 import { formatDateWIB } from '../utils/formatter'
 import { StatusBadge } from './StatusBadge'
@@ -21,6 +21,7 @@ export function POLogTable({
   onReceive,
 }: POLogTableProps) {
   const [regenerating, setRegenerating] = useState<number | null>(null)
+  const [resending, setResending] = useState<number | null>(null)
 
   async function handleRegenerate(po: POLog) {
     setRegenerating(po.id)
@@ -29,6 +30,16 @@ export function POLogTable({
       onRefresh?.()
     } finally {
       setRegenerating(null)
+    }
+  }
+
+  async function handleResend(po: POLog) {
+    setResending(po.id)
+    try {
+      await resendSupplier(po.id)
+      onRefresh?.()
+    } finally {
+      setResending(null)
     }
   }
 
@@ -94,16 +105,23 @@ export function POLogTable({
                   (po.status === 'DRAFT' ||
                     po.status === 'REJECTED' ||
                     po.status === 'REQUIRES_MANUAL_REVIEW') ? (
-                    <Link
-                      to={`/po-log/${po.id}/draft`}
-                      className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange-strong transition-colors hover:bg-brand-orange/15"
-                    >
-                      {po.status === 'REJECTED'
-                        ? 'Revisi'
-                        : po.status === 'REQUIRES_MANUAL_REVIEW'
-                          ? 'Proses Ulang'
-                          : 'Edit Draf'}
-                    </Link>
+                    po.status === 'REQUIRES_MANUAL_REVIEW' ? (
+                      <button
+                        type="button"
+                        disabled={resending === po.id}
+                        onClick={() => handleResend(po)}
+                        className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange-strong transition-colors hover:bg-brand-orange/15 disabled:opacity-50"
+                      >
+                        {resending === po.id ? 'Mengirim…' : 'Proses Ulang'}
+                      </button>
+                    ) : (
+                      <Link
+                        to={`/po-log/${po.id}/draft`}
+                        className="inline-flex h-8 items-center rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-3 text-xs font-semibold text-brand-orange-strong transition-colors hover:bg-brand-orange/15"
+                      >
+                        {po.status === 'REJECTED' ? 'Revisi' : 'Edit Draf'}
+                      </Link>
+                    )
                   ) : null}
                   <button
                     type="button"
