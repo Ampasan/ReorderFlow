@@ -147,9 +147,11 @@ Backend lalu menyajikan `index.html`, `/assets`, `/fonts`, dan file publik lain 
 | `RATE_LIMIT_API` | Batas permintaan `/api` per IP per menit, default `120`. |
 | `GEMINI_API_KEY` | Opsional. API key Google AI Studio untuk endpoint penjelasan stok low-stock. |
 | `TRUSTED_PROXIES` | Daftar CIDR/IP proxy yang dipisahkan koma agar `ClientIP` membaca `X-Forwarded-For` dengan benar. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD` | Konfigurasi pengiriman email. |
+| `EMAIL_PROVIDER` | `auto` (default), `resend`, atau `smtp`. `auto` memakai Resend bila `RESEND_API_KEY` terisi. |
+| `RESEND_API_KEY`, `RESEND_FROM` | Kredensial Resend (HTTP API). Dipakai di Railway Free/Trial/Hobby karena SMTP diblokir. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD` | Konfigurasi pengiriman email lewat SMTP. |
 
-Untuk Gmail, aktifkan 2-Step Verification dan gunakan App Password 16 karakter pada `SMTP_PASSWORD`.
+Railway Free, Trial, dan Hobby memblokir koneksi SMTP keluar. Di plan tersebut isi `RESEND_API_KEY` dan `RESEND_FROM` (domain terverifikasi di Resend) agar email dikirim lewat HTTP API, atau upgrade ke Pro untuk tetap memakai SMTP. Untuk Gmail di plan Pro, aktifkan 2-Step Verification dan gunakan App Password 16 karakter pada `SMTP_PASSWORD`.
 
 ## Endpoint Ringkas
 

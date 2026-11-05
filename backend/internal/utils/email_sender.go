@@ -27,47 +27,52 @@ type SMTPConfig struct {
 	ManagerEmail string
 }
 
-type EmailSender struct {
+type EmailSender interface {
+	Send(to, subject, htmlBody string) error
+	SendWithAttachment(to, subject, htmlBody, filename string, attachment []byte) error
+}
+
+type SMTPSender struct {
 	cfg  SMTPConfig
 	auth smtp.Auth
 }
 
-type permanentSMTPError struct {
+type permanentEmailError struct {
 	err error
 }
 
-func (e *permanentSMTPError) Error() string   { return e.err.Error() }
-func (e *permanentSMTPError) Unwrap() error   { return e.err }
-func (e *permanentSMTPError) Permanent() bool { return true }
+func (e *permanentEmailError) Error() string   { return e.err.Error() }
+func (e *permanentEmailError) Unwrap() error   { return e.err }
+func (e *permanentEmailError) Permanent() bool { return true }
 
-func NewEmailSender(cfg SMTPConfig) *EmailSender {
-	return &EmailSender{
+func NewSMTPSender(cfg SMTPConfig) *SMTPSender {
+	return &SMTPSender{
 		cfg:  cfg,
 		auth: smtp.PlainAuth("", cfg.Email, cfg.Password, cfg.Host),
 	}
 }
 
-func (s *EmailSender) Send(to, subject, htmlBody string) error {
+func (s *SMTPSender) Send(to, subject, htmlBody string) error {
 	if strings.TrimSpace(to) == "" {
-		return &permanentSMTPError{errors.New("alamat email tujuan kosong")}
+		return &permanentEmailError{errors.New("alamat email tujuan kosong")}
 	}
 	msg := s.buildMessage(to, subject, htmlBody, "", nil)
 	return s.sendMail(to, msg)
 }
 
-func (s *EmailSender) SendWithAttachment(to, subject, htmlBody, filename string, attachment []byte) error {
+func (s *SMTPSender) SendWithAttachment(to, subject, htmlBody, filename string, attachment []byte) error {
 	if strings.TrimSpace(to) == "" {
-		return &permanentSMTPError{errors.New("alamat email tujuan kosong")}
+		return &permanentEmailError{errors.New("alamat email tujuan kosong")}
 	}
 	msg := s.buildMessage(to, subject, htmlBody, filename, attachment)
 	return s.sendMail(to, msg)
 }
 
-func (s *EmailSender) addr() string {
+func (s *SMTPSender) addr() string {
 	return fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 }
 
-func (s *EmailSender) sendMail(to string, msg []byte) error {
+func (s *SMTPSender) sendMail(to string, msg []byte) error {
 	conn, err := net.DialTimeout("tcp", s.addr(), smtpDialTimeout)
 	if err != nil {
 		return fmt.Errorf("dial smtp: %w", err)
@@ -124,12 +129,12 @@ func (s *EmailSender) sendMail(to string, msg []byte) error {
 func classifySMTPError(err error) error {
 	var protocolErr *textproto.Error
 	if errors.As(err, &protocolErr) && protocolErr.Code >= 500 {
-		return &permanentSMTPError{err}
+		return &permanentEmailError{err}
 	}
 	return err
 }
 
-func (s *EmailSender) buildMessage(to, subject, htmlBody, filename string, attachment []byte) []byte {
+func (s *SMTPSender) buildMessage(to, subject, htmlBody, filename string, attachment []byte) []byte {
 	var b strings.Builder
 
 	subject = mime.QEncoding.Encode("UTF-8", subject)

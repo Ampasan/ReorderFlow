@@ -58,6 +58,10 @@ type Config struct {
 	SMTPPassword string
 	ManagerEmail string
 
+	EmailProvider string
+	ResendAPIKey  string
+	ResendFrom    string
+
 	GeminiAPIKey string
 	GeminiModel  string
 }
@@ -119,6 +123,10 @@ func Load() *Config {
 		SMTPEmail:    getEnv("SMTP_EMAIL", ""),
 		SMTPPassword: getEnv("SMTP_PASSWORD", ""),
 		ManagerEmail: getEnv("MANAGER_EMAIL", ""),
+
+		EmailProvider: strings.ToLower(strings.TrimSpace(getEnv("EMAIL_PROVIDER", "auto"))),
+		ResendAPIKey:  strings.TrimSpace(getEnv("RESEND_API_KEY", "")),
+		ResendFrom:    getEnv("RESEND_FROM", "ReorderFlow <onboarding@resend.dev>"),
 
 		GeminiAPIKey: strings.TrimSpace(getEnv("GEMINI_API_KEY", "")),
 		GeminiModel:  getEnv("GEMINI_MODEL", "gemini-flash-lite-latest"),

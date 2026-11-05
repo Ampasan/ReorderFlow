@@ -35,10 +35,11 @@ Atur nilai di `backend/.env`:
 | `RATE_LIMIT_LOGIN`, `RATE_LIMIT_APPROVAL`, `RATE_LIMIT_API` | Batas request per IP. Nilai `0` menonaktifkan batas terkait. |
 | `TRUSTED_PROXIES` | IP/CIDR proxy tepercaya untuk membaca alamat client. Tanpa konfigurasi, header proxy tidak dipercaya. |
 | `CORS_ALLOWED_ORIGINS` | Daftar origin frontend dipisahkan koma. Wajib diisi untuk akses lintas origin di production. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD`, `MANAGER_EMAIL` | Pengiriman email persetujuan dan PO. |
+| `EMAIL_PROVIDER`, `RESEND_API_KEY`, `RESEND_FROM` | Pengiriman email lewat Resend (HTTP API). `auto` memakai Resend bila API key terisi. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_EMAIL`, `SMTP_PASSWORD`, `MANAGER_EMAIL` | Pengiriman email persetujuan dan PO lewat SMTP. |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Opsional, untuk penjelasan dan prioritas stok. |
 
-Untuk Gmail, gunakan App Password, bukan password akun biasa.
+Railway Free, Trial, dan Hobby memblokir SMTP keluar. Isi `RESEND_API_KEY` di plan tersebut, atau upgrade ke Pro untuk memakai SMTP. Untuk Gmail, gunakan App Password, bukan password akun biasa.
 
 
 ## Migrasi Database

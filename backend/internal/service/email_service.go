@@ -19,12 +19,12 @@ type POEmailData struct {
 }
 
 type EmailService struct {
-	sender *utils.EmailSender
+	sender utils.EmailSender
 	cfg    utils.SMTPConfig
 	appURL string
 }
 
-func NewEmailService(sender *utils.EmailSender, cfg utils.SMTPConfig, appURL string) *EmailService {
+func NewEmailService(sender utils.EmailSender, cfg utils.SMTPConfig, appURL string) *EmailService {
 	return &EmailService{
 		sender: sender,
 		cfg:    cfg,

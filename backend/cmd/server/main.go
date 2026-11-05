@@ -83,7 +83,7 @@ func main() {
 	rateLimiter := ratelimit.New(redisRepo)
 
 	smtpCfg := config.NewSMTPConfig(cfg)
-	emailSender := utils.NewEmailSender(smtpCfg)
+	emailSender := config.NewEmailSender(cfg)
 	storage := utils.NewSupabaseStorage(cfg.SupabaseURL, cfg.SupabaseServiceRoleKey, cfg.SupabaseBucket)
 
 	emailService := service.NewEmailService(emailSender, smtpCfg, cfg.AppURL)
@@ -236,8 +236,8 @@ func validateProductionConfig(cfg *config.Config) {
 	if len(cfg.TrustedProxies) == 0 {
 		utils.Logger.Warn("TRUSTED_PROXIES kosong; rate limit akan memakai alamat proxy, bukan IP client")
 	}
-	if cfg.SMTPEmail == "" || cfg.SMTPPassword == "" {
-		utils.Logger.Warn("SMTP belum lengkap; email persetujuan dan PO tidak akan terkirim")
+	if cfg.ResendAPIKey == "" && (cfg.SMTPEmail == "" || cfg.SMTPPassword == "") {
+		utils.Logger.Warn("konfigurasi email belum lengkap; isi RESEND_API_KEY atau SMTP_EMAIL/SMTP_PASSWORD agar email terkirim")
 	}
 }
 
