@@ -3,10 +3,10 @@ BEGIN;
 TRUNCATE TABLE po_penerimaan_detail, po_penerimaan, po_detail, po_log, stok_opname, stok, pemasok RESTART IDENTITY CASCADE;
 
 INSERT INTO pemasok (id, nama, email) VALUES
-    (101, 'PT Sumber Beras Sejahtera', 'n.hajime.2915@gmail.com'),
-    (102, 'PT Minyak & Bumbu Nusantara', 'n.hajime.2915@gmail.com'),
-    (103, 'PT Makanan Instan Makmur', 'n.hajime.2915@gmail.com'),
-    (104, 'PT Kebutuhan Rumah Tangga', 'n.hajime.2915@gmail.com');
+    (101, 'PT Sumber Beras Sejahtera', 'n.rakan.r.2005@gmail.com'),
+    (102, 'PT Minyak & Bumbu Nusantara', 'n.rakan.r.2005@gmail.com'),
+    (103, 'PT Makanan Instan Makmur', 'n.rakan.r.2005@gmail.com'),
+    (104, 'PT Kebutuhan Rumah Tangga', 'n.rakan.r.2005@gmail.com');
 
 INSERT INTO stok (sku, nama, stok_saat_ini, reorder_point, qty_min_order, id_pemasok) VALUES
     ('SKU-BRS-01', 'Beras Premium 5kg', 6, 15, 20, 101),

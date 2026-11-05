@@ -325,8 +325,12 @@ func (s *DraftService) ResendSupplier(ctx context.Context, id int64) (*model.POL
 			return nil
 		},
 		OnFailure: func(err error) {
+			// Keep SENT — the approval is already final. Only fall back to
+			// MANUAL_REVIEW when the PDF itself cannot be generated.
 			utils.Logger.Error("resend supplier PO failed", "nomor_po", po.NomorPO, "error", err)
-			_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			if errors.Is(err, ErrDraftPDFFailed) {
+				_ = s.poRepo.UpdateStatus(po.ID, model.POStatusManualReview)
+			}
 			s.cache.Invalidate()
 		},
 	})
