@@ -37,12 +37,9 @@ func (h *ApprovalHandler) Approval(c *gin.Context) {
 		return
 	}
 
-	applyApprovalHeaders(c)
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(approvalConfirmationPage(token, action)))
-}
-
-func (h *ApprovalHandler) Process(c *gin.Context) {
-	h.process(c, c.PostForm("token"), c.PostForm("action"))
+	// Process immediately on GET — no confirmation page needed.
+	// The link in the manager email is already a deliberate one-click action.
+	h.process(c, token, action)
 }
 
 func (h *ApprovalHandler) process(c *gin.Context, token, action string) {
@@ -130,40 +127,5 @@ func approvalPage(title, message, nomorPO, poStatus, color string) string {
 		html.EscapeString(title),
 		html.EscapeString(message),
 		statusLine,
-	)
-}
-
-func approvalConfirmationPage(token, action string) string {
-	label := "Setujui PO"
-	accent := "#047857"
-	if action == "reject" {
-		label = "Tolak PO"
-		accent = "#BE123C"
-	}
-
-	return fmt.Sprintf(`<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Konfirmasi Persetujuan PO ReorderFlow</title>
-</head>
-<body style="margin:0;padding:40px 16px;background:#FEF3E2;font-family:Arial,Helvetica,sans-serif;color:#2A1A0E;">
-<main style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #EAD8C0;border-radius:16px;padding:32px;">
-<h1 style="margin:0 0 12px;font-size:24px;">Konfirmasi keputusan PO</h1>
-<p style="margin:0 0 24px;line-height:1.5;">Tautan ini belum mengubah status PO. Konfirmasi keputusan Anda untuk melanjutkan.</p>
-<form method="post" action="/api/po/approval">
-<input type="hidden" name="token" value="%s">
-<input type="hidden" name="action" value="%s">
-<button type="submit" style="min-height:44px;border:0;border-radius:8px;background:%s;color:#ffffff;padding:12px 20px;font-size:16px;font-weight:600;cursor:pointer;">%s</button>
-</form>
-</main>
-</body>
-</html>`,
-		html.EscapeString(token),
-		html.EscapeString(action),
-		accent,
-		html.EscapeString(label),
 	)
 }

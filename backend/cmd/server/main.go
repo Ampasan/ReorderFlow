@@ -140,7 +140,6 @@ func main() {
 	{
 		api.POST("/auth/login", middleware.LoginRateLimit(rateLimiter, cfg.RateLimitLogin, loginRateLimitWindow), authHandler.Login)
 		api.GET("/po/approval", middleware.RateLimit(rateLimiter, "approval", cfg.RateLimitApproval, approvalRateLimitWindow), approvalHandler.Approval)
-		api.POST("/po/approval", middleware.RateLimit(rateLimiter, "approval", cfg.RateLimitApproval, approvalRateLimitWindow), approvalHandler.Process)
 
 		protected := api.Group("")
 		protected.Use(middleware.Auth(cfg.JWTSecret))
