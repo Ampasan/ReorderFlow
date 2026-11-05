@@ -21,9 +21,17 @@ func CORS(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 		if origin != "" {
+			scheme := "https"
+			if c.Request.TLS == nil && c.GetHeader("X-Forwarded-Proto") != "https" {
+				scheme = "http"
+			}
+			serverOrigin := scheme + "://" + c.Request.Host
+
 			if !allowAll {
 				addVary(c, "Origin")
-				if _, ok := allowed[origin]; !ok {
+				_, originAllowed := allowed[origin]
+				sameOrigin := strings.EqualFold(origin, serverOrigin)
+				if !originAllowed && !sameOrigin {
 					c.AbortWithStatus(http.StatusForbidden)
 					return
 				}

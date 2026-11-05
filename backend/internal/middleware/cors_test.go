@@ -54,6 +54,26 @@ func TestCORSRejectsUnconfiguredOrigin(t *testing.T) {
 	}
 }
 
+func TestCORSAllowsSameOriginFormPost(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(CORS([]string{"https://app.example"}))
+	router.POST("/api/po/approval", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/po/approval", nil)
+	req.Host = "reorderflow-production-2968.up.railway.app"
+	req.Header.Set("Origin", "https://reorderflow-production-2968.up.railway.app")
+	req.Header.Set("X-Forwarded-Proto", "https")
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("same-origin POST blocked: status = %d, want %d", rec.Code, http.StatusOK)
+	}
+}
+
 func TestSecurityHeadersAndNoStore(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
